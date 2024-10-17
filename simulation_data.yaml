@@ -1,0 +1,33 @@
+---
+Simulation Data:
+- name: CESM2-LENS 1251.001
+  path: /project/mojave/cesm2/LENS/*/month_1/*/*1251.001.*
+  start_year_analysis: 1900
+  end_year_analysis: 2023
+  ensemble_assign: 1-Testing-Al1
+  
+- name: CESM2-LENS 1251.002
+  path: /project/mojave/cesm2/LENS/*/month_1/*/*1251.002.*
+  start_year_analysis: 1900
+  end_year_analysis: 2023
+  ensemble_assign: 1-Testing-Al1
+
+- name: CanESM5 r14i1p1f1
+  path: /project/cas/asphilli/CVDPv6_directory_test/CanESM5_r14i1p1f1/*_*
+  start_year_analysis: 1950
+  end_year_analysis: 2050
+  ensemble_assign: 2-CanESM5
+  
+- name: CanESM5 r14i1p1f1-2
+  path: /project/cas/asphilli/CVDPv6_directory_test/CanESM5_r14i1p1f1_diff/*/
+  start_year_analysis: 1940
+  end_year_analysis: 2050
+  ensemble_assign: 2-CanESM5  
+
+- name: CCSM2
+  path: /project/cas/asphilli/CVDPv6_directory_test/b20.007/
+  start_year_analysis: 571
+  end_year_analysis: 720
+  ensemble_assign: 3-CESM2  
+
+...
