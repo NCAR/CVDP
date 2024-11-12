@@ -108,7 +108,7 @@ for vn in vlist:
         print('Working on '+metrics[gg])
         
         if gg < 7:   # means are 0-6
-
+            print(vres["mean"],"\n")
             #mean_vres = vres["mean"]
             #if "contour_levels_linspace" in mean_vres:
             #    bounds = np.linspace(mean_vres["contour_levels_linspace"])
