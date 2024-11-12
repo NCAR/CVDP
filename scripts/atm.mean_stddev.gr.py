@@ -21,7 +21,7 @@ OUTDIR = os.environ['OUTDIR']
 
 import yaml
 # Load YAML data into Python variables
-with open("../variable_defaults.yaml", "r") as file:
+with open("/glade/work/richling/cvdp-dev/CVDP/variable_defaults.yaml", "r") as file:
     var_def = yaml.safe_load(file)
 
 
