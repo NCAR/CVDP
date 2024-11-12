@@ -19,7 +19,7 @@ print('\nCVDP diagnostics start time: '+st2)
 # get the name of the python interpreter -- this will preserve any conda environment paths
 exec_str = sys.executable
 
-outdir = '/project/cas/asphilli/CVDP-py-devel/'
+outdir = '/glade/derecho/scratch/richling/CVDP-py-testdata/'
 if not os.path.exists(outdir): 
     os.makedirs(outdir) 
 os.putenv('OUTDIR', outdir)
