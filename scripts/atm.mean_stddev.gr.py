@@ -26,7 +26,7 @@ with open("/glade/work/richling/cvdp-dev/CVDP/variable_defaults.yaml", "r") as f
 
 
 
-"""def make_ncl_cmap(cmap_name='ncl_default'):
+def make_ncl_cmap(cmap_name='ncl_default'):
     mcm     = func.get_NCL_colormap(cmap_name)
     set_colors = []
     for i in range(0,mcm2.N):
@@ -35,7 +35,7 @@ with open("/glade/work/richling/cvdp-dev/CVDP/variable_defaults.yaml", "r") as f
                         float(mcm(i)[2]),
                         #float(mcm(i)[3])
                         ))
-    return set_colors"""
+    return set_colors
 
     
     
@@ -125,7 +125,7 @@ for vn in vlist:
 
 
             cmap_name = mean_vres["cmap"]
-            set_colors = func.get_NCL_colormap(cmap_name)
+            set_colors = make_ncl_cmap(cmap_name)
             print(set_colors)
             cmap = LinearSegmentedColormap.from_list(cmap_name, set_colors)
             
@@ -138,7 +138,7 @@ for vn in vlist:
             if "contour_levels_range" in std_vres:
                 bounds = np.array(std_vres["contour_levels_range"])
 
-            set_colors2 = func.get_NCL_colormap(cmap_name2)
+            set_colors2 = make_ncl_cmap(cmap_name2)
             cmap = LinearSegmentedColormap.from_list(cmap_name2, set_colors2)
 
         if not every_other_label:
