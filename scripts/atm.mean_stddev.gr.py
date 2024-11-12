@@ -29,7 +29,7 @@ with open("/glade/work/richling/cvdp-dev/CVDP/variable_defaults.yaml", "r") as f
 def make_ncl_cmap(cmap_name='ncl_default'):
     mcm     = func.get_NCL_colormap(cmap_name)
     set_colors = []
-    for i in range(0,mcm2.N):
+    for i in range(0,mcm.N):
         set_colors.append((float(mcm(i)[0]),
                         float(mcm(i)[1]),
                         float(mcm(i)[2]),
