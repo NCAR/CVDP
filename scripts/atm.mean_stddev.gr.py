@@ -17,36 +17,26 @@ print('\nCVDP atm_ocn.mean_stddev.gr starting')
 
 OUTDIR = os.environ['OUTDIR']
 
-# NCL rainbow - used for most plots
-#---------------------------------
-#amwg = pd.read_csv("colormaps/ncl_default.csv")
-#set_colors = []
-#for i in range(0,254):
-#    set_colors.append((float(amwg["r "][i]),
-#                               float(amwg["g"][i]),
-#                               float(amwg["b"][i]),
-#                               #float(amwg["a"][i])
-#                             ))
 
-cmap_name = 'ncl_default'   # used for means
-mcm     = func.get_NCL_colormap(cmap_name)
-set_colors = []
-for i in range(0,mcm.N):
-    set_colors.append((float(mcm(i)[0]),
-                       float(mcm(i)[1]),
-                       float(mcm(i)[2]),
-                       #float(mcm(i)[3])
-                      ))  
 
-cmap_name2 = 'BlueDarkOrange18'    # used for standard deviations
-mcm2     = func.get_NCL_colormap(cmap_name2)
-set_colors2 = []
-for i in range(0,mcm2.N):
-    set_colors2.append((float(mcm2(i)[0]),
-                       float(mcm2(i)[1]),
-                       float(mcm2(i)[2]),
-                       #float(mcm2(i)[3])
-                      ))    
+import yaml
+# Load YAML data into Python variables
+with open("../variable_defaults.yaml", "r") as file:
+    var_def = yaml.safe_load(file)
+
+
+
+"""def make_ncl_cmap(cmap_name='ncl_default'):
+    mcm     = func.get_NCL_colormap(cmap_name)
+    set_colors = []
+    for i in range(0,mcm2.N):
+        set_colors.append((float(mcm(i)[0]),
+                        float(mcm(i)[1]),
+                        float(mcm(i)[2]),
+                        #float(mcm(i)[3])
+                        ))
+    return set_colors"""
+
     
     
 vdict = {'prect':'pr','psl':'psl','trefht':'tas','ts':'ts'}
@@ -58,6 +48,13 @@ vlist = list(vdict.values())
 
 ff = -1
 for vn in vlist:
+
+    # Get dictionaries from variable defaults yaml file
+    vres = var_def[vn]
+    std_vres = vres["stddev"]
+    mean_vres = vres["mean"]
+
+
     ff = ff+1
     names = []
     paths = []
@@ -103,46 +100,52 @@ for vn in vlist:
 
     metrics = [vn + s for s in metrics]
     ptitle = [vn + t for t in ptitle]
-    
+
     gg = -1
+    every_other_label = False
     for met in metrics:
         gg = gg+1
         print('Working on '+metrics[gg])
         
         if gg < 7:   # means are 0-6
-            cmap = LinearSegmentedColormap.from_list(cmap_name, set_colors)
-            if vn=='pr':
-                bounds = np.array([0.5,1,2,3,4,5,6,7,8,9,10,12,14,16,18])
-                cbar_labels = [f'{x:.1f}' for x in bounds]
-            if vn=='psl':
-                bounds =  np.linspace(972, 1044, 19)
-                cbar_labels = [f'{x:.0f}' for x in bounds]
-            if vn=='tas':
-                bounds = np.linspace(-40, 40, 41)
-                cbar_labels = [f'{x:.0f}' for x in bounds]
+            print(vres["mean"],"\n")
+            #mean_vres = vres["mean"]
+            #if "contour_levels_linspace" in mean_vres:
+            #    bounds = np.linspace(mean_vres["contour_levels_linspace"])
+            if "contour_levels_range" in mean_vres:
+                bounds = np.array(mean_vres["contour_levels_range"])
+
+            if "every_other_label" in mean_vres:
+                every_other_label = True
                 for i, x in enumerate(bounds):    #-- hide every 2nd cbar tick label
                     if i % 2:
                         cbar_labels[i] = ''
                     else:
                         cbar_labels[i] = str(int(x))
-            if vn=='ts':
-                bounds =  np.linspace(0, 36, 19)
-                cbar_labels = [f'{x:.0f}' for x in bounds]
-        else:     # standard deviations are 7-13
-            cmap = LinearSegmentedColormap.from_list(cmap_name2, set_colors2)
-            if vn=='pr':
-                bounds = np.array([0.2,0.4,0.6,1,1.5,2,2.5,3.5])
-                cbar_labels = [f'{x:.1f}' for x in bounds]
-            if vn=='psl':
-                bounds = np.array([0.4,1.2,2,2.8,3.6,4.4,5.2,6,6.8,7.6])
-                cbar_labels = [f'{x:.1f}' for x in bounds]
-            if vn=='tas':
-                bounds = np.linspace(0.4, 3.2, 8)
-                cbar_labels = [f'{x:.1f}' for x in bounds]
-            if vn=='ts':            
-                bounds = np.linspace(0.200000, 2.00000, 10)
-                cbar_labels = [f'{x:.1f}' for x in bounds]
 
+
+            cmap_name = mean_vres["cmap"]
+            set_colors = func.make_ncl_cmap(cmap_name)
+            cmap = LinearSegmentedColormap.from_list(cmap_name, set_colors)
+            
+        else:     # standard deviations are 7-13
+            
+            #std_vres = vres["stddev"]
+            cmap_name2 = std_vres["cmap"]
+            if "contour_levels_linspace" in std_vres:
+                bounds = np.linspace(std_vres["contour_levels_linspace"])
+            if "contour_levels_range" in std_vres:
+                bounds = np.array(std_vres["contour_levels_range"])
+
+            set_colors2 = func.make_ncl_cmap(cmap_name2)
+            cmap = LinearSegmentedColormap.from_list(cmap_name2, set_colors2)
+
+        if not every_other_label:
+            # Check if any item is a float
+            if any(isinstance(item, float) for item in bounds):
+                cbar_labels = [f'{x:.1f}' for x in bounds]
+            else:
+                cbar_labels = [f'{x:.0f}' for x in bounds]
 
 #        cmap.set_extremes(under=set_colors[0][:], bad=[0.5, 0.5, 0.5, 1.], over=set_colors[-1][:])
         projection = ccrs.Robinson(central_longitude=210.)
