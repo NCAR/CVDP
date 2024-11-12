@@ -110,8 +110,8 @@ for vn in vlist:
         if gg < 7:   # means are 0-6
 
             #mean_vres = vres["mean"]
-            if "contour_levels_linspace" in mean_vres:
-                bounds = np.linspace(mean_vres["contour_levels_linspace"])
+            #if "contour_levels_linspace" in mean_vres:
+            #    bounds = np.linspace(mean_vres["contour_levels_linspace"])
             if "contour_levels_range" in mean_vres:
                 bounds = np.array(mean_vres["contour_levels_range"])
 
