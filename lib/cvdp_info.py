@@ -44,7 +44,6 @@ import xarray as xr
 
 #ADF modules:
 from adf_config import AdfConfig
-from adf_base   import AdfError
 
 #+++++++++++++++++++
 #Define Obs class
@@ -62,7 +61,7 @@ class AdfInfo(AdfConfig):
     def __init__(self, config_file, debug=False):
 
         """
-        Initalize ADF Info object.
+        Initalize CVDP Info object.
         """
 
         #Initialize Config attributes:

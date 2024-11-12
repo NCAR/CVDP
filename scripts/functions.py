@@ -424,7 +424,7 @@ def get_NCL_colormap(cmap_name, extend='None'):
     NCARG_URL = 'https://www.ncl.ucar.edu/Document/Graphics/ColorTables/Files/'
 
     #-- read the NCL colormap RGB file
-    colormap_file = cmap_name+'.rgb'
+    colormap_file = "../colormaps/"+cmap_name+'.rgb'
     cfile = os.path.split(colormap_file)[1]
 
     if os.path.isfile(colormap_file) == False:
@@ -489,4 +489,16 @@ def get_NCL_colormap(cmap_name, extend='None'):
     cmap.set_extremes(under=color_list[0], bad=bad, over=color_list[-1])
 
     return cmap
+
+
+def make_ncl_cmap(cmap_name='ncl_default'):
+    mcm     = func.get_NCL_colormap(cmap_name)
+    set_colors = []
+    for i in range(0,mcm.N):
+        set_colors.append((float(mcm(i)[0]),
+                        float(mcm(i)[1]),
+                        float(mcm(i)[2]),
+                        #float(mcm(i)[3])
+                        ))
+    return set_colors
 
