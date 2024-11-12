@@ -125,7 +125,7 @@ for vn in vlist:
 
 
             cmap_name = mean_vres["cmap"]
-            set_colors = func.make_ncl_cmap(cmap_name)
+            set_colors = func.get_NCL_colormap(cmap_name)
             cmap = LinearSegmentedColormap.from_list(cmap_name, set_colors)
             
         else:     # standard deviations are 7-13
