@@ -37,6 +37,8 @@ def make_ncl_cmap(cmap_name='ncl_default'):
                         ))
     return set_colors
 
+
+
     
     
 vdict = {'prect':'pr','psl':'psl','trefht':'tas','ts':'ts'}
@@ -126,7 +128,6 @@ for vn in vlist:
 
             cmap_name = mean_vres["cmap"]
             set_colors = make_ncl_cmap(cmap_name)
-            print(set_colors)
             cmap = LinearSegmentedColormap.from_list(cmap_name, set_colors)
             
         else:     # standard deviations are 7-13
