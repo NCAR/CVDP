@@ -138,7 +138,7 @@ for vn in vlist:
             if "contour_levels_range" in std_vres:
                 bounds = np.array(std_vres["contour_levels_range"])
 
-            set_colors2 = func.make_ncl_cmap(cmap_name2)
+            set_colors2 = func.get_NCL_colormap(cmap_name2)
             cmap = LinearSegmentedColormap.from_list(cmap_name2, set_colors2)
 
         if not every_other_label:
