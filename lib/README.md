@@ -1,1 +1,0 @@
-# CVDP library directory
