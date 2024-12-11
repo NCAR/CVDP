@@ -30,10 +30,8 @@ import scipy
 from scipy.stats import linregress
 
 import xskillscore as xs
-
 import xesmf as xe
 
-import geocat.viz as gv
 from geocat.comp import eofunc_eofs, eofunc_pcs, month_to_season
 
 import warnings

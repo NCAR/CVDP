@@ -2,7 +2,6 @@ import os
 import xarray as xr 
 import numpy as np
 import pandas as pd
-import functions as func
 import calendar as calendar
 import matplotlib as mpl
 import matplotlib.pyplot as plt
@@ -10,6 +9,8 @@ import cartopy.crs as ccrs
 import yaml
 import glob
 import os.path
+
+from cvdp.scripts import functions as func
 
 
 def createNameList(ref_path: str, sim_path: str, namels_dir_path="variable_namelists"):
@@ -339,4 +340,4 @@ def createNameList(ref_path: str, sim_path: str, namels_dir_path="variable_namel
     with open(f'{namels_dir_path}/namelist_zos', 'w') as f:
         for line in namelist_zos:
             f.write(f"{line}\n")
-    return True
+    return namels_dir_path
