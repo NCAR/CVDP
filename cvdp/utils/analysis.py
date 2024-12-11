@@ -39,13 +39,8 @@ from geocat.comp import eofunc_eofs, eofunc_pcs, month_to_season
 import warnings
 warnings.simplefilter(action='ignore', category=FutureWarning)
 
-import sys
 import os
 
-# Add the directory to sys.path
-#avg_functions.py
-script_dir = '/glade/work/richling/CVDP-LE/dev/utils/'
-sys.path.append(script_dir)
 
 # Now you can import the script
 import analysis as an
@@ -56,7 +51,7 @@ import file_creation as fc
 #from analysis import interp_mask, mask_ocean, land_mask
 
 
-def land_mask():
+def land_mask(land_sea_path):
     """
     Mask land over TS variable to simulate SST's
 
@@ -74,7 +69,7 @@ def land_mask():
      - lsmask: xarray.DataArray
         data array of the masked data set
     """
-    ncl_masks = xr.open_mfdataset("../landsea.nc", decode_times=True)
+    ncl_masks = xr.open_mfdataset(land_sea_path, decode_times=True)
     lsmask = ncl_masks.LSMASK
     ncl_masks.close()
     return lsmask, ncl_masks
