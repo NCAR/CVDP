@@ -5,7 +5,6 @@ import xarray as xr
 import numpy as np
 import pandas as pd
 import glob
-import functions as func
 from scipy import signal
 
 def yyyymm_time(yrStrt, yrLast, t=int):
@@ -54,7 +53,7 @@ def create_empty_array( yS, yE, mS, mE, opt_type):
         blank_array = xr.DataArray(blank_array_values.copy(), dims=('time', 'lev', 'lat'),
                                    coords={'time' : time, 'lev' : lev, 'lat' : lat})
     
-    timeT2 = func.yyyymm_time(yS, yE, "integer")    # reassign time coordinate to YYYYMM
+    timeT2 = yyyymm_time(yS, yE, "integer")    # reassign time coordinate to YYYYMM
     time2 = timeT2.sel(time=slice(yS*100+mS, yE*100+mE))
     blank_array = blank_array.assign_coords(time=time2) 
     blank_array = blank_array.sel(time=slice(int(yS)*100+1,int(yE)*100+12))
@@ -93,9 +92,9 @@ def data_read_in_3D(fil0,sy,ey,vari):
     tfiles = fil0
     cpathS = tfiles[0]
     cpathE = tfiles[len(tfiles)-1]
-    sydata = int(cpathS[len(cpathS)-16:len(cpathS)-12])  # start year of data (specified in file name)
+    sydata = int(sy)  # start year of data (specified in file name)
     smdata = int(cpathS[len(cpathS)-12:len(cpathS)-10])  # start month of data
-    eydata = int(cpathE[len(cpathE)-9:len(cpathE)-5])    # end year of data 
+    eydata = int(ey)    # end year of data 
     emdata = int(cpathE[len(cpathE)-5:len(cpathE)-3])    # end month of data
     
     if vari == 'pr':
@@ -158,12 +157,12 @@ def data_read_in_3D(fil0,sy,ey,vari):
         tarr = arr
     except NameError:    # tested!
         print('Variable '+vari+' not found within file '+fil0[0])
-        arr = func.create_empty_array( sydata, eydata, 1, 12, 'time_lat_lon')
+        arr = create_empty_array( sydata, eydata, 1, 12, 'time_lat_lon')
     
     nd = arr.ndim
     if (nd <= 2):   # (needs testing)
         print('Whoa, less than 3 dimensions, columnar data is not currently allowed')
-        arr = func.create_empty_array( sydata, eydata, 1, 12, 'time_lat_lon')
+        arr = create_empty_array( sydata, eydata, 1, 12, 'time_lat_lon')
 
     if '_FillValue' not in arr.attrs:   # assign _FillValue if one is not present
         if 'missing_value' in arr.attrs:
@@ -195,13 +194,13 @@ def data_read_in_3D(fil0,sy,ey,vari):
             arr = arr.sortby(arr.lon)  
     
     if int(sy) < sydata or int(ey) > eydata:   # check that the data file falls within the specified data analysis range
-        arr = func.create_empty_array( sydata, eydata, 1, 12, 'time_lat_lon')
+        arr = create_empty_array( sydata, eydata, 1, 12, 'time_lat_lon')
         print('Analyzation dates are outside the range of the dataset')
     else:
         if hasattr(arr,"is_all_missing"):
             print('')
         else:    
-            timeT = func.yyyymm_time(sydata, eydata, "integer")    # reassign time coordinate to YYYYMM
+            timeT = yyyymm_time(sydata, eydata, "integer")    # reassign time coordinate to YYYYMM
             time = timeT.sel(time=slice(sydata*100+smdata, eydata*100+emdata))
             arr = arr.assign_coords(time=time)
             arr = arr.sel(time=slice(int(sy)*100+1,int(ey)*100+12))
@@ -217,7 +216,7 @@ def data_read_in_3D(fil0,sy,ey,vari):
             print(f'Incomplete data year(s) requested for file {fil0}, printing out time and creating blank array')
             print(f'Time requested: {sy}-{ey}')
             print(arr.coords['time'])
-            arr = func.create_empty_array(sydata, eydata, 1, 12, 'time_lat_lon')
+            arr = create_empty_array(sydata, eydata, 1, 12, 'time_lat_lon')
  
     time_yyyymm = arr.time.values
     tsize = time_yyyymm.shape
@@ -492,7 +491,7 @@ def get_NCL_colormap(cmap_name, extend='None'):
 
 
 def make_ncl_cmap(cmap_name='ncl_default'):
-    mcm     = func.get_NCL_colormap(cmap_name)
+    mcm     = get_NCL_colormap(cmap_name)
     set_colors = []
     for i in range(0,mcm.N):
         set_colors.append((float(mcm(i)[0]),
