@@ -47,10 +47,12 @@ def main():
     parser.add_argument("-c", nargs = 1, metavar = "--config", type = str, help = "Optional path to YML file to override default variable configurations.")
 
     args = parser.parse_args()
-    var_configs = args.config[0]
+    var_configs = args.c
     
-    if args.config is None:
+    if args.c is None:
         var_configs = cvdp.definitions.PATH_VARIABLE_DEFAULTS
+    else:
+        var_configs = args.c[]
     
     cvdp.createNameList(args.ref_yml[0], args.sim_yml[0])
     cvdp.calcAtmOcnMeanStd(args.output_dir[0])
