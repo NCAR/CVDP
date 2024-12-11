@@ -44,8 +44,13 @@ classifiers = [
 Homepage = "https://www.cesm.ucar.edu/projects/cvdp"
 Issues = "https://github.com/NCAR/CVDP/issues"
 
+[project.scripts]
+gents = "cvdp.run_cvdp:main"
+
 [tool.setuptools]
 packages = ["cvdp"]
 
-[project.scripts]
-gents = "cvdp.run_cvdp:main"
+[tool.setuptools.package-data]
+cvdp = [
+    "colormaps/*"
+]
