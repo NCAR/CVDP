@@ -12,6 +12,9 @@ import os.path
 import argparse
 from importlib.metadata import version as getVersion
 import cvdp
+from cvdp.scripts.namelist import createNameList
+from cvdp.scripts.atm_ocn_mean_stddev_calc import calcAtmOcnMeanStd
+from cvdp.scripts.atm_mean_stddev_gr import calcAtmOcnMeanStdGR
 
 def main():
     # st = np.datetime64('now')
@@ -52,11 +55,11 @@ def main():
     if args.c is None:
         var_configs = cvdp.definitions.PATH_VARIABLE_DEFAULTS
     else:
-        var_configs = args.c[]
+        var_configs = args.c[0]
     
-    cvdp.createNameList(args.ref_yml[0], args.sim_yml[0])
-    cvdp.calcAtmOcnMeanStd(args.output_dir[0])
-    cvdp.calcAtmOcnMeanStdGR(args.output_dir[0], var_configs)
+    namelist_dir_path = createNameList(args.ref_yml[0], args.sim_yml[0], namels_dir_path=f"{args.output_dir[0]}/variable_namelists/")
+    calcAtmOcnMeanStd(args.output_dir[0], namelist_dir_path)
+    calcAtmOcnMeanStdGR(args.output_dir[0], var_configs, namelist_dir_path)
 
 if __name__ == '__main__':
     main()
