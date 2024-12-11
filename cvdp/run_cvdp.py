@@ -40,14 +40,21 @@ def main():
     # sys.exit(0)
     """Finish times should be printed if the CVDP runs upon recieving appropriate inputs"""
 
-    parser = argparse.ArgumentParser(description = f"Command Line Interface (CLI) for Climate Variability and Diagnostics Package (CVDP) Version {getVersion("cvdp")}")
-    parser.add_argument("output_dir", nargs = 1, metavar = "hf_head_dir", type = str, help = "Path to output directory.")
-    parser.add_argument("output_dir", nargs = 1, metavar = "hf_head_dir", type = str, help = "Path to output directory.")
-    parser.add_argument("output_dir", nargs = 1, metavar = "hf_head_dir", type = str, help = "Path to output directory.")
+    parser = argparse.ArgumentParser(description = f"Command Line Interface (CLI) for Climate Variability and Diagnostics Package (CVDP) Version {getVersion('cvdp')}")
+    parser.add_argument("output_dir", nargs = 1, metavar = "output_dir", type = str, help = "Path to output directory.")
+    parser.add_argument("ref_yml", nargs = 1, metavar = "ref_yml", type = str, help = "Path to reference dataset YML file.")
+    parser.add_argument("sim_yml", nargs = 1, metavar = "sim_yml", type = str, help = "Path to simulation dataset YML file.")
+    parser.add_argument("-c", nargs = 1, metavar = "--config", type = str, help = "Optional path to YML file to override default variable configurations.")
+
+    args = parser.parse_args()
+    var_configs = args.config[0]
     
-    if args.output_dir is not None:
-        output_dir = args.output_dir[0]
+    if args.config is None:
+        var_configs = cvdp.definitions.PATH_VARIABLE_DEFAULTS
     
+    cvdp.createNameList(args.ref_yml[0], args.sim_yml[0])
+    cvdp.calcAtmOcnMeanStd(args.output_dir[0])
+    cvdp.calcAtmOcnMeanStdGR(args.output_dir[0], var_configs)
 
 if __name__ == '__main__':
     main()
