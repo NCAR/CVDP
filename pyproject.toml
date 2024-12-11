@@ -1,0 +1,51 @@
+[build-system]
+requires = [
+  "setuptools",
+  "setuptools-scm",
+  "numpy",
+  "matplotlib",
+  "xarray",
+  "scipy",
+  "cartopy",
+  "xskillscore",
+  "xesmf",
+  "geocat"
+]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "CVDP"
+version = "0.1"
+authors = [
+  { name="Adam Phillips", email="asphilli@ucar.edu" },
+  { name="Justin Richling", email="richling@ucar.edu" },
+  { name="Cameron Cummins", email="cameron.cummins@utexas.edu" },
+]
+description = "An automated analysis tool and data repository for assessing modes of climate variability and trends in models and observations."
+readme = "README.md"
+requires-python = ">=3.10"
+dependencies = [
+  "numpy",
+  "matplotlib",
+  "xarray",
+  "scipy",
+  "cartopy",
+  "xskillscore",
+  "xesmf",
+  "geocat"
+]
+classifiers = [
+    "Programming Language :: Python :: 3",
+    "License :: OSI Approved :: MIT License",
+    "Operating System :: OS Independent",
+]
+
+[project.urls]
+Homepage = "https://www.cesm.ucar.edu/projects/cvdp"
+Issues = "https://github.com/NCAR/CVDP/issues"
+
+[tool.setuptools]
+packages = ["cvdp"]
+
+[project.scripts]
+gents = "cvdp.run_cvdp:main"
