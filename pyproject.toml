@@ -47,7 +47,7 @@ Homepage = "https://www.cesm.ucar.edu/projects/cvdp"
 Issues = "https://github.com/NCAR/CVDP/issues"
 
 [project.scripts]
-cvdp = "cvdp.run_cvdp:main"
+cvdp = "cvdp.cli:main"
 
 [tool.setuptools]
 packages = ["cvdp"]
