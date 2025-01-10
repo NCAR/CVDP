@@ -1,9 +1,8 @@
 #!/usr/bin/env python
 """
-visualize.py
+vis.py
 
 Centralizes visualization functions to a single import script
 """
 
-def test():
-    print("Hello from visualize.py")
+from cvdp.visualization.colormaps import *
