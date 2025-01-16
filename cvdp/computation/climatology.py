@@ -2,7 +2,7 @@
 """
 climatology.py
 
-CVDP functions for calculating climatological means, standard deviations, and linear trends.
+CVDP functions for calculating climatological means and standard deviations.
 """
 import xarray
 
