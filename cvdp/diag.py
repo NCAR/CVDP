@@ -5,5 +5,4 @@ diag.py
 Centralizes diagnostic (computation) functions to a single import script
 """
 
-def test():
-    print("Hello from diag.py")
+from cvdp.computation.climatology import compute_seasonal_avgs, compute_seasonal_stds
