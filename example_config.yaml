@@ -1,0 +1,8 @@
+---
+Data:
+  TREFHTMN_test:
+    reference: False
+    variable: "TREFHTMN"
+    paths: "/projects/dgs/persad_research/SIMULATION_DATA/DATA/LENS1/CESM1/all/*/day/TREFHTMN/*TREFHTMN.20810101-21001231.nc"
+    members: ['.001.', '.002.', '.003.', '.004.', '.005.']
+...
