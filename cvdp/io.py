@@ -43,7 +43,7 @@ def get_input_data(config_path: str) -> dict:
 
         var_data_array = read_datasets(paths, ds_info["members"])[ds_info["variable"]]
         calendar = var_data_array.time.values[0].calendar
-        
+
         if "start_yr" in ds_info:
             start_time = cftime.datetime(int(ds_info["start_yr"]), 1, 1, calendar=calendar)
         else:
@@ -55,9 +55,15 @@ def get_input_data(config_path: str) -> dict:
             end_yr = var_data_array.time.values[-1].year
             end_time = cftime.datetime(end_yr, 1, 1, calendar=calendar)
         
+        var_data_array = var_data_array.sel(time=slice(start_time, end_time))
+        
         if ds_info["reference"]:
             ref_datasets[ds_name] = var_data_array
         else:
             sim_datasets[ds_name] = var_data_array
+
+    # Check time_bnds
+    #
+    #
     
     return (ref_datasets, sim_datasets)
