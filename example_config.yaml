@@ -1,0 +1,15 @@
+---
+Data:
+  LENS1_TREFHTMN:
+    reference: False
+    variable: "TREFHTMN"
+    start_yr: 2090
+    end_yr: 2095
+    paths: "/projects/dgs/persad_research/SIMULATION_DATA/DATA/LENS1/CESM1/all/*/day/TREFHTMN/*TREFHTMN.20810101-21001231.nc"
+    members: ['.001.', '.002.', '.003.', '.004.', '.005.']
+  LENS1_TREFHTMX:
+    reference: False
+    variable: "TREFHTMX"
+    paths: "/projects/dgs/persad_research/SIMULATION_DATA/DATA/LENS1/CESM1/all/*/day/TREFHTMX/*TREFHTMX.20810101-21001231.nc"
+    members: ['.001.', '.002.', '.003.', '.004.', '.005.']
+...

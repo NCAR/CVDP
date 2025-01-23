@@ -1,4 +1,4 @@
-import sys
+import cvdp
 import os
 import xarray as xr
 import numpy as np
@@ -34,17 +34,13 @@ from geocat.comp import eofunc_eofs, eofunc_pcs, month_to_season
 import warnings
 warnings.simplefilter(action='ignore', category=FutureWarning)
 
-# Add the directory to sys.path
-script_dir = '/glade/work/richling/CVDP-LE/dev/utils/'
-sys.path.append(script_dir)
-
 # Now you can import the script
-import analysis as an
-import avg_functions as af
-import file_creation as fc
+import cvdp.utils.analysis as an
+import cvdp.utils.avg_functions as af
+import cvdp.utils.file_creation as fc
 
 # Grab land mask data
-lsmask, ncl_masks = an.land_mask()
+lsmask, ncl_masks = an.land_mask(definitions.PATH_LANDSEA_MASK_NC)
 # Or import specific functions or classes from the script
 #from analysis import interp_mask, mask_ocean, land_mask
 
@@ -54,7 +50,7 @@ lsmask, ncl_masks = an.land_mask()
 
 # NCL rainbow - used for most plots
 #---------------------------------
-amwg = pd.read_csv("/glade/work/richling/CVDP-LE/dev/ncl_default.csv")
+amwg = pd.read_csv(f"{cvdp.PATH_COLORMAPS_DIR}ncl_default.csv")
 amwg_colors = []
 for i in range(0,254):
     amwg_colors.append((float(amwg["r "][i]),
@@ -69,7 +65,7 @@ amwg_cmap = LinearSegmentedColormap.from_list(
 
 # Blue Green - used for Rank plots
 #---------------------------------
-bg = pd.read_csv("/glade/work/richling/CVDP-LE/dev/BlueGreen14.csv")
+bg = pd.read_csv(f"{cvdp.PATH_COLORMAPS_DIR}BlueGreen14.csv")
 bg_colors = []
 for i in range(1,14):
     bg_colors.append((float(bg["r"][i]/255),
@@ -1688,19 +1684,3 @@ def timeseries_plot(var, season, test, obs, debug=False):
         plt.show()
     else:
         plt.close()
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
