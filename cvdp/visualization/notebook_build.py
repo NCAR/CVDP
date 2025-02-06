@@ -6,7 +6,6 @@ from io import BytesIO
 from datetime import datetime
 
 class CVDPNotebook():
-
     def create_section(self, section_name, label=None, rank=1, label_hidden=False):
         if label_hidden:
             label = None
@@ -88,34 +87,3 @@ class CVDPNotebook():
         
         with open(path, 'w') as nb_file:
             nbformat.write(notebook_node, nb_file)
-
-
-
-def generate_cvdp_notebook():
-    figure_nb = nbformat.v4.new_notebook()
-    
-    with open(PATH_BANNER_PNG, 'rb') as img_file:
-        img_data = img_file.read()
-    
-    img_base64 = base64.b64encode(img_data).decode('utf-8')
-    image_tag = f'![banner.png](data:image/png;base64,{img_base64})'
-    
-    header = [
-        image_tag,
-        "\n",
-        datetime.today().strftime("%B %d, %Y %X")
-    ]
-    figure_nb.cells.append(nbformat.v4.new_markdown_cell(source=header))
-    return figure_nb
-
-
-def new_fig_output_cell(figure, text="Figure"):
-    img_buffer = BytesIO()
-    figure.savefig(img_buffer, format='png')
-    img_buffer.seek(0)
-
-    img_base64 = base64.b64encode(img_buffer.getvalue()).decode('utf-8')
-    image_tag = f'![{text}](data:image/png;base64,{img_base64})'
-    
-    img_buffer.close()
-    return nbformat.v4.new_markdown_cell(image_tag)
