@@ -1,8 +1,9 @@
-#!/usr/bin/env python
+#!/usr/bin/env python3
 """
 climatology.py
 
 CVDP functions for calculating climatological means and standard deviations.
+License: MIT
 """
 import xarray
 
@@ -19,6 +20,16 @@ CLIMATOLOGY_SEASON_MONTHS = {
 
 
 def compute_seasonal_avgs(var_data: xarray.DataArray, seasons: dict=CLIMATOLOGY_SEASON_MONTHS) -> xarray.DataArray:
+    """
+    Computes the sesonal averages for a given time series variable.
+    
+    :param var_data: Variable DataArray to compute the seasonal averages for.
+    :type var_data: xarray.DataArray
+    :param seasons: (Optional) Dictionary that maps the seasonal code (key) to its respective month integers (values)
+    :type seasons: dict
+    :return: Variable DataArray with the 'time' dimension reduced to seasons and their average values.
+    :rtype: xarray.DataArray
+    """
     monthly_avgs = var_data.groupby("time.month").mean().rename(f"{var_data.name}_avg")
     seasonal_avgs = []
     for season_label in CLIMATOLOGY_SEASON_MONTHS:
