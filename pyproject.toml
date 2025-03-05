@@ -55,5 +55,6 @@ packages = ["cvdp"]
 [tool.setuptools.package-data]
 cvdp = [
     "colormaps/*",
-    "utils/landsea.nc"
+    "old_utils/landsea.nc",
+    "visualization/banner.png"
 ]
