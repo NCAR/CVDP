@@ -1,9 +1,9 @@
-from cvdp.definitions import PATH_BANNER_PNG
 import matplotlib.pyplot as plt
 import base64
 import nbformat
 from io import BytesIO
 from datetime import datetime
+
 
 class CVDPNotebook():
     def create_section(self, section_name, label=None, rank=1, label_hidden=False):
@@ -17,25 +17,13 @@ class CVDPNotebook():
             "rank": rank,
             "label": label
         }
-
+    
     
     def __init__(self):
         self.__sections = {}
-        
-        with open(PATH_BANNER_PNG, 'rb') as img_file:
-            img_data = img_file.read()
+        self.__num_figs = 0
 
-        img_base64 = base64.b64encode(img_data).decode('utf-8')        
-        header_data = [
-            f'![banner.png](data:image/png;base64,{img_base64})',
-            "\n",
-            datetime.today().strftime("%B %d, %Y %X")
-        ]
-
-        self.create_section("header", rank=0, label_hidden=True)
-        self.add_markdown_cell(cell_data=header_data, section_name="header")
-
-
+    
     def add_markdown_cell(self, cell_data, section_name):
         if section_name not in self.__sections:
             self.create_section(section_name)
@@ -52,6 +40,7 @@ class CVDPNotebook():
         img_buffer.close()
         
         self.add_markdown_cell(cell_data=cell_data, section_name=section_name)
+        self.__num_figs += 1
 
     
     def set_section_label(section_name, section_label):
@@ -62,7 +51,31 @@ class CVDPNotebook():
         return f"## {label}"
     
     
-    def save_notebook(self, path):
+    def save_notebook(self, path="CVDP_output.ipynb", title=None):
+        from cvdp.utils import get_version, get_time_stamp
+        from cvdp.definitions import PATH_BANNER_PNG
+
+        cell_data = ""
+        with open(PATH_BANNER_PNG, "rb") as image_file:
+            img_base64 = base64.b64encode(image_file.read()).decode('utf-8')
+            header_img_data = f'![CVDP Banner](data:image/png;base64,{img_base64})'
+        
+        header_data = [
+            header_img_data,
+            '\n',
+            '' if title is None else f'## Deck Title: {title}\n',
+            '\n',
+            '```\n',
+            'Webpage: https://github.com/NCAR/CVDP/tree/main\n',
+            f'Version: CVDP {get_version()}\n',
+            f'Generation Timestamp: {get_time_stamp()}\n',
+            f'Figures Generated: {self.__num_figs}\n',
+            '```\n'
+        ]
+
+        self.create_section("header", rank=0, label_hidden=True)
+        self.add_markdown_cell(header_data, "header")
+        
         notebook_node = nbformat.v4.new_notebook()
         ranked_cells = {}
         for section_name in self.__sections:
@@ -79,7 +92,8 @@ class CVDPNotebook():
             for section_name in ranked_cells[rank]:
                 label = self.__sections[section_name]["label"]
                 if label is not None:
-                    label_cell = nbformat.v4.new_markdown_cell(self._format_section_label(label))
+                    label_cell = nbformat.v4.new_markdown_cell(self._format_section_label(label), metadata={"jp-MarkdownHeadingCollapsed": True})
+                    
                     notebook_node.cells.append(label_cell)
                 
                 for cell in self.__sections[section_name]["cells"]:   
