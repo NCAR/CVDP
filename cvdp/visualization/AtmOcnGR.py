@@ -2,7 +2,7 @@
 """
 AtmOcnGR.py
 
-CVDP functions for plotting means, standard deviations, and trends.
+CVDP functions for plotting means, standard deviations, trends, timeseries, metrics tables, etc.
 License: MIT
 """
 
