@@ -27,7 +27,6 @@ def mean_seasonal_calc(ref_dataset, sim_dataset):
         sim_seas_avgs = sim_seas_avgs.mean(dim="member")
         sim_seas_avgs.attrs = attrs
         sim_seas_avgs.attrs["members"] = members
-    print("AHHHH",sim_seas_avgs,"\n\n")
 
     # If the cases are different shapes, we need to interpolate one to the other first
     #NOTE: the value that comes out of interp_diff is either None, or interpolated difference array
