@@ -1,15 +1,39 @@
 ---
 Data:
-  LENS1_TREFHTMN:
+  #LENS1_TREFHTMN:
+  #  reference: False
+  #  variable: "TREFHTMN"
+  #  start_yr: 2090
+  #  end_yr: 2095
+  #  paths: "/projects/dgs/persad_research/SIMULATION_DATA/DATA/LENS1/CESM1/all/*/day/TREFHTMN/*TREFHTMN.20810101-21001231.nc"
+  #  members: ['.001.', '.002.', '.003.', '.004.', '.005.']
+  #LENS1_TREFHTMX:
+  #  reference: False
+  #  variable: "TREFHTMX"
+  #  paths: "/projects/dgs/persad_research/SIMULATION_DATA/DATA/LENS1/CESM1/all/*/day/TREFHTMX/*TREFHTMX.20810101-21001231.nc"
+  #  members: ['.001.', '.002.', '.003.', '.004.', '.005.']
+  #CanESM5:
+  #  reference: False
+  #  variable: "psl"
+  #  start_yr: 2015
+  #  end_yr: 2088
+  #  paths: "/glade/campaign/cgd/cas/asphilli/CVDPv6_directory_test/CanESM5_r14i1p1f1_diff/psl/psl_Amon_CanESM5_ssp585_r14i1p1f1_gn_201501-210012.nc"
+  #  #paths: "/glade/campaign/cgd/cas/asphilli/CVDPv6_directory_test/CanESM5_r14i1p1f1_diff/psl/*.nc"
+  CESM2-LE:
     reference: False
-    variable: "TREFHTMN"
-    start_yr: 2090
-    end_yr: 2095
-    paths: "/projects/dgs/persad_research/SIMULATION_DATA/DATA/LENS1/CESM1/all/*/day/TREFHTMN/*TREFHTMN.20810101-21001231.nc"
-    members: ['.001.', '.002.', '.003.', '.004.', '.005.']
-  LENS1_TREFHTMX:
-    reference: False
-    variable: "TREFHTMX"
-    paths: "/projects/dgs/persad_research/SIMULATION_DATA/DATA/LENS1/CESM1/all/*/day/TREFHTMX/*TREFHTMX.20810101-21001231.nc"
-    members: ['.001.', '.002.', '.003.', '.004.', '.005.']
+    variable: "PSL"
+    start_yr: 1979
+    end_yr: 2013
+    paths: "/glade/campaign/cgd/cesm/CESM2-LE/*/proc/tseries/month_1/*/*1251.001.**.PSL.*"
+    #paths: "/glade/campaign/cgd/cesm/CESM2-LE/*/proc/tseries/month_1/*/*1251.**.PSL.*"
+    #members: ['.001.', '.002.']
+  ERA5:
+    reference: True
+    variable: "msl"
+    start_yr: 1950
+    end_yr: 2023
+    paths: "/glade/campaign/cgd/cas/observations/ERA5/mon/msl/era5.msl.194001-202312.nc"
+
+Paths:
+  nc_save_loc: "/glade/derecho/scratch/richling/cvdp-output/netcdf/"
 ...

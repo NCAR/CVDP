@@ -5,38 +5,100 @@ import os
 import xarray as xr
 import numpy as np
 import pandas as pd
-import functions as func
+import os
 import calendar as calendar
-from glob import glob
-from pathlib import Path
-import json
-
-import cartopy.feature as cfeature
-import cartopy.crs as ccrs
-from cartopy.util import add_cyclic_point
-from cartopy.mpl.gridliner import LONGITUDE_FORMATTER, LATITUDE_FORMATTER
-
-import matplotlib.pyplot as plt
-import matplotlib as mpl
-import matplotlib
-matplotlib.rcParams['axes.unicode_minus'] = False
-from matplotlib.colors import LinearSegmentedColormap
-from mpl_toolkits.axes_grid1.inset_locator import inset_axes
-import matplotlib.ticker as mticker
-from matplotlib import ticker
-import matplotlib.path as mpath
-from matplotlib.ticker import (MultipleLocator,
-                               FormatStrFormatter,
-                               AutoMinorLocator)
-
-from scipy import signal
-import scipy
-from scipy.stats import linregress
-import xskillscore as xs
-import xesmf as xe
-
 import warnings
 warnings.simplefilter(action='ignore', category=FutureWarning)
+
+
+def yyyymm_time(yrStrt, yrLast, t=int):
+    ''' usage
+          yyyymm = yyyymm_time(1800,2001,int|float)'''
+    nmos = 12
+    mons = np.arange(1,13)
+    nyrs = int(yrLast)-int(yrStrt)+1
+    ntim = nmos*nyrs
+    timeType = np.int_
+    if t == float:
+        timeType = float
+    timeValsNP = np.empty(ntim, dtype=timeType)
+#    month = np.empty(ntim, dtype=timeType)
+
+    n = 0
+    for yr in range(yrStrt, yrLast+1):
+        timeValsNP[n:n+nmos] = yr*100 + mons
+#        month[n:n+nmos] = mons
+        n = n+nmos
+    
+    timeVals = xr.DataArray(timeValsNP, dims=('time'), coords={'time': timeValsNP},
+                            attrs={'long_name' : 'time', 'units' : 'YYYYMM'})
+#                            attrs={'long_name' : 'time', 'units' : 'YYYYMM', 'month' : month})
+
+    return timeVals
+
+# Author - Isla Simpson
+#
+def YYYYMM2date(time, caltype='standard'):
+    """ Convert a date of the form YYYYMM to a datetime64 object """
+    date = pd.to_datetime(time, format='%Y%m')
+    return date
+#
+def create_empty_array( yS, yE, mS, mE, opt_type):
+    '''create array of nans for use when something may be/is wrong.'''
+    if yS is None or yE is None:
+        yS.values[:] = 1
+        yE.values[:] = 50
+
+    timeT = yyyymm_time(yS, yE, int)
+    time = timeT.sel(time=slice(yS*100+mS, yE*100+mE))
+
+    if opt_type == 'time_lat_lon':
+        blank_array_values = np.full((time.sizes['time'], 90, 180), np.nan, dtype=np.float32)
+        lat = xr.DataArray(np.linspace(-89,89,90), dims=('lat'), attrs={'units':'degrees_north'})
+        lon = xr.DataArray(np.linspace(0,358,180), dims=('lon'), attrs={'units':'degrees_east'})
+        blank_array = xr.DataArray(blank_array_values.copy(), dims=('time', 'lat', 'lon'),
+                                   coords={'time':time, 'lat':lat, 'lon':lon})
+
+    elif opt_type == 'time_lev_lat':
+        blank_array_values = np.full((time.sizes['time'], 41, 90), np.nan, dtype=np.float32)
+        lat = xr.DataArray(np.linspace(-89,89,90), dims=('lat'), attrs={'units':'degrees_north'})
+        lev = xr.DataArray(np.linspace(0,500,41), dims=('lev'), attrs={'units':'m', 'positive':'down'})
+        blank_array = xr.DataArray(blank_array_values.copy(), dims=('time', 'lev', 'lat'),
+                                   coords={'time' : time, 'lev' : lev, 'lat' : lat})
+    
+    timeT2 = yyyymm_time(yS, yE, "integer")    # reassign time coordinate to YYYYMM
+    time2 = timeT2.sel(time=slice(yS*100+mS, yE*100+mE))
+    blank_array = blank_array.assign_coords(time=time2) 
+    blank_array = blank_array.sel(time=slice(int(yS)*100+1,int(yE)*100+12))
+    
+    blank_array.attrs['units'] = ''
+    blank_array.attrs['is_all_missing'] = True
+
+    return blank_array
+
+
+
+
+# Function to convert time to cftime.DatetimeNoLeap
+import cftime
+# Function to convert time to cftime.DatetimeNoLeap
+def convert_to_cftime_no_leap(time_values):
+    # Check if time is already a cftime object (for specific cftime classes)
+    if isinstance(time_values[0], cftime.DatetimeNoLeap):
+        return time_values  # Already the correct type
+    
+    # Handle np.datetime64 or other numpy time types
+    elif isinstance(time_values[0], np.datetime64):
+        # Extract year, month, day from np.datetime64 objects
+        return [cftime.DatetimeNoLeap(
+                    dt.astype('datetime64[Y]').item().year, 
+                    dt.astype('datetime64[M]').item().month, 
+                    dt.astype('datetime64[D]').item().day
+                ) for dt in time_values]
+    
+    else:
+        raise TypeError("Unsupported time type")
+
 
 
 def data_read_in_3D(fil0,sy,ey,vari, lsmask=None):
@@ -65,55 +127,75 @@ def data_read_in_3D(fil0,sy,ey,vari, lsmask=None):
     eydata = int(cpathE[len(cpathE)-9:len(cpathE)-5])    # end year of data
     emdata = int(cpathE[len(cpathE)-5:len(cpathE)-3])    # end month of data
 
-    if vari == 'prect':
-        vname = ("PRECC","PRECL","PRECT","pr","PPT","ppt","p","P","precip","PRECIP","tp","prcp","prate")
-    if vari == 'psl':
-        vname = ("PSL","psl","slp","SLP","prmsl","msl","slp_dyn")
-    if vari == 'trefht':
-        vname = ("TREFHT","tas","temp","air","temperature_anomaly","temperature","t2m","t_ref","T2","tempanomaly")
-    if vari == 'ts':
-        vname = ("sst","TS","ts","t_surf","skt")
+    vname = {"sst":'ts',"TS":'ts',"ts":'ts',"t_surf":'ts',"skt":'ts',
+             "TREFHT":'trefht',"tas":'trefht',"temp":'trefht',"air":'trefht',"temperature_anomaly":'trefht',"temperature":'trefht',"t2m":'trefht',"t_ref":'trefht',"T2":'trefht',"tempanomaly":'trefht',
+             "PSL":'psl',"psl":'psl',"slp":'psl',"SLP":'psl',"prmsl":'psl',"msl":'psl',"slp_dyn":'psl',
+             "PRECC":'prect',"PRECL":'prect',"PRECT":'prect',"pr":'prect',"PPT":'prect',"ppt":'prect',"p":'prect',"P":'prect',"precip":'prect',"PRECIP":'prect',"tp":'prect',"prcp":'prect',"prate":'prect'
+            }
+    #print("type(vname)",type(vname))
+    #print("type(vari)",type(vari))
+    if vari in vname:
+        cvdp_v = vname[vari]
+    print(f" File Var: {vari}\n")
+    """if (vari == "sst") or (vari == "SST"):
+        ds = xr.open_mfdataset(fil0,coords="minimal", compat="override", decode_times=True)
+        if vari in ds:
+            #print(f"This variable {v} is used for {fil0}\n")
+            print(f"    ** The variable '{vari}' is used for CVDP variable: {cvdp_v} **\n")
+            arr = ds.data_vars[vari]
 
-    for i,v in enumerate(vname):
-        print(f"  Var: {v}?\n")
-        if (v == "sst") or (v == "SST"):
-            var = "sst"
+    # Isolate TS (ts) to apply land mask to simulate SST's
+    elif (vari == "ts") or (vari == "TS"):
+        # For TS, we need to drop land values to mimic SST's
+        ds = xr.open_mfdataset(fil0,coords="minimal", compat="override", decode_times=True)
+        if vari in ds:
+            #print(f"This variable {v} is used for {fil0}\n")
+            print(f"    ** The variable {vari} is used for {cvdp_v} **\n")
+            arr = ds.data_vars[vari]
+    else:
+        ds = xr.open_mfdataset(fil0,coords="minimal", compat="override", decode_times=True)
+        if vari in ds:
+            #print(f"This variable {v} is used for {fil0}\n")
+            print(f"    ** The variable {vari} is used for {cvdp_v} **\n")
+            arr = ds.data_vars[vari]
+    """
 
-            ds = xr.open_mfdataset(fil0,coords="minimal", compat="override", decode_times=True)
-            if v in ds:
-                #print(f"This variable {v} is used for {fil0}\n")
-                print(f"    ** The variable {v} is used for {vari} **\n")
-                arr = ds.data_vars[v]
-
-        # Isolate TS (ts) to apply land mask to simulate SST's
-        elif (v == "ts") or (v == "TS"):
-            # For TS, we need to drop land values to mimic SST's
-            var = "tas"
-
-            ds = xr.open_mfdataset(fil0,coords="minimal", compat="override", decode_times=True)
-            if v in ds:
-                #print(f"This variable {v} is used for {fil0}\n")
-                print(f"    ** The variable {v} is used for {vari} **\n")
-                arr = ds.data_vars[v]
-        else:
-            ds = xr.open_mfdataset(fil0,coords="minimal", compat="override", decode_times=True)
-            if v in ds:
-                #print(f"This variable {v} is used for {fil0}\n")
-                print(f"    ** The variable {v} is used for {vari} **\n")
-                arr = ds.data_vars[v]
-        ds.close()
+    ds = xr.open_mfdataset(fil0,coords="minimal", compat="override", decode_times=True)
+    print("ADAM: ds",ds,"\n\n")
+    #print(ds['time'].values,type(ds['time'].values[0]),"\n")
+    ds['time'] = convert_to_cftime_no_leap(ds['time'].values)
+    sydata = ds['time'].values[0].year  # start year of data (specified in file name)
+    smdata = ds['time'].values[0].month  # start month of data
+    eydata = ds['time'].values[-1].year   # end year of data
+    emdata = ds['time'].values[-1].month   # end month of data
+    #Average time dimension over time bounds, if bounds exist:
+    if 'time_bnds' in ds:
+        print("Array has 'time_bnds', force time fix (even if this is a new CESM run)")
+        time = ds['time']
+        # NOTE: force `load` here b/c if dask & time is cftime, throws a NotImplementedError:
+        if 'nbnd' in ds['time_bnds'].dims:
+            print("AHHH, no 'nbnd' dim in 'time_bnds' coordinate, I guess we'll keep the current time. Ok?")
+            time = xr.DataArray(ds['time_bnds'].load().mean(dim='nbnd').values, dims=time.dims, attrs=time.attrs)
+            ds['time'] = time
+            ds.assign_coords(time=time)
+            ds = xr.decode_cf(ds)
+    if vari in ds:
+        print(f"    ** The variable {vari} is used for CVDP variable {cvdp_v} **\n")
+    ds = ds.rename({vari : cvdp_v})
+    arr = ds.data_vars[cvdp_v]
+    ds.close()
 
     # maybe this needs to be integrated in earlier??
     try:
         tarr = arr
     except NameError:    # tested!
         print('Variable '+vari+' not found within file '+fil0[0])
-        arr = func.create_empty_array( sydata, eydata, 1, 12, 'time_lat_lon')
+        arr = create_empty_array( sydata, eydata, 1, 12, 'time_lat_lon')
 
     nd = arr.ndim
     if (nd <= 2):   # (needs testing)
         print('Whoa, less than 3 dimensions, curvilinear data is not currently allowed')
-        arr = func.create_empty_array( sydata, eydata, 1, 12, 'time_lat_lon')
+        arr = create_empty_array( sydata, eydata, 1, 12, 'time_lat_lon')
 
     if '_FillValue' not in arr.attrs:   # assign _FillValue if one is not present
         if 'missing_value' in arr.attrs:
@@ -141,13 +223,13 @@ def data_read_in_3D(fil0,sy,ey,vari, lsmask=None):
         arr = arr.sortby(arr.lon)
 
     if int(sy) < sydata or int(ey) > eydata:   # check that the data file falls within the specified data analysis range
-        arr = func.create_empty_array( sydata, eydata, 1, 12, 'time_lat_lon')
+        arr = create_empty_array( sydata, eydata, 1, 12, 'time_lat_lon')
         print('Analyzation dates are outside the range of the dataset')
     else:
         if hasattr(arr,"is_all_missing"):
             print('')
         else:
-            timeT = func.yyyymm_time(sydata, eydata, "integer")    # reassign time coordinate to YYYYMM
+            timeT = yyyymm_time(sydata, eydata, "integer")    # reassign time coordinate to YYYYMM
             time = timeT.sel(time=slice(sydata*100+smdata, eydata*100+emdata))
             arr = arr.assign_coords(time=time)
             arr = arr.sel(time=slice(int(sy)*100+1,int(ey)*100+12))
@@ -161,10 +243,10 @@ def data_read_in_3D(fil0,sy,ey,vari, lsmask=None):
             print(f'Incomplete data year(s) requested for file {fil0}, printing out time and creating blank array')
             print(f'Time requested: {sy}-{ey}')
             print(arr.coords['time'])
-            arr = func.create_empty_array(sydata, eydata, 1, 12, 'time_lat_lon')
+            arr = create_empty_array(sydata, eydata, 1, 12, 'time_lat_lon')
 
     time_yyyymm = arr.time.values
-    time2 = func.YYYYMM2date(time_yyyymm,'standard')   #switch from YYYYMM->datetime64
+    time2 = YYYYMM2date(time_yyyymm,'standard')   #switch from YYYYMM->datetime64
     arr = arr.assign_coords(time=time2)
 
     # fix units if necessary, but first convert from dask array -> numpy array  by calling compute
@@ -172,7 +254,7 @@ def data_read_in_3D(fil0,sy,ey,vari, lsmask=None):
     # that should be kept is the units attribute (set below)
     # if it is decided later on to keep the units: source_attrs = arr.attrs ; and reassign below all calculations
     # other option: result = arr * 3.  ; result.attrs.update(arr.attrs)
-    print("  Units:",arr.units,"\n")
+    #print("  Units:",arr.units,"\n")
     arr = arr.compute()
     if (arr.units == 'Pa'):
         arr = arr/100.

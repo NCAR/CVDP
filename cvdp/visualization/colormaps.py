@@ -1,4 +1,5 @@
-from cvdp.definitions import PATH_COLORMAPS_DIR
+from definitions import PATH_COLORMAPS_DIR
+#from cvdp.definitions import PATH_COLORMAPS_DIR
 from matplotlib.colors import ListedColormap
 import requests
 import errno

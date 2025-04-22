@@ -2,42 +2,9 @@
 
 """
 
-import os
 import xarray as xr
 import numpy as np
-import pandas as pd
-import functions as func
-import calendar as calendar
-from glob import glob
-from pathlib import Path
-import json
-
-import cartopy.feature as cfeature
-import cartopy.crs as ccrs
-from cartopy.util import add_cyclic_point
-from cartopy.mpl.gridliner import LONGITUDE_FORMATTER, LATITUDE_FORMATTER
-
-import matplotlib.pyplot as plt
-import matplotlib as mpl
-import matplotlib
-matplotlib.rcParams['axes.unicode_minus'] = False
-from matplotlib.colors import LinearSegmentedColormap
-from mpl_toolkits.axes_grid1.inset_locator import inset_axes
-import matplotlib.ticker as mticker
-from matplotlib import ticker
-import matplotlib.path as mpath
-from matplotlib.ticker import (MultipleLocator,
-                               FormatStrFormatter,
-                               AutoMinorLocator)
-
-from scipy import signal
-import scipy
-from scipy.stats import linregress
-
 import xskillscore as xs
-
-import xesmf as xe
-
 
 
 season_dict = {"NDJFM":0,
@@ -52,11 +19,7 @@ season_dict = {"NDJFM":0,
 
 
 # Normalization of data
-
-import numpy as np
-import matplotlib.pyplot as plt
 from matplotlib.colors import Normalize
-
 class PiecewiseNorm(Normalize):
     """
     Nomralize and interp data?
@@ -78,7 +41,7 @@ class PiecewiseNorm(Normalize):
 import sys
 import os
 
-# Add the directory to sys.path
+"""# Add the directory to sys.path
 #avg_functions.py
 script_dir = '/glade/work/richling/CVDP-LE/dev/utils/'
 sys.path.append(script_dir)
@@ -89,10 +52,10 @@ import avg_functions as af
 import file_creation as fc
 
 # Or import specific functions or classes from the script
-#from analysis import interp_mask, mask_ocean, land_mask
+#from analysis import interp_mask, mask_ocean, land_mask"""
 
 
-
+from definitions import *
 
 # Land mask: for TS -> SST masking
 def land_mask():
@@ -113,7 +76,7 @@ def land_mask():
      - lsmask: xarray.DataArray
         data array of the masked data set
     """
-    ncl_masks = xr.open_mfdataset("landsea.nc", decode_times=True)
+    ncl_masks = xr.open_mfdataset(PATH_LANDSEA_MASK_NC, decode_times=True)
     lsmask = ncl_masks.LSMASK
     ncl_masks.close()
     return lsmask, ncl_masks
@@ -466,10 +429,3 @@ def seasonal_timeseries(arr, arr_anom, var_name, run_name):
     ds.attrs['yrs']=[season_yrs[0],season_yrs[-1]]
 
     return ds
-
-
-
-
-
-
-
