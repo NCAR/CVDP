@@ -55,7 +55,6 @@ def main():
             return None"""
 
     from file_io import get_input_data
-    #from io import get_input_data
 
     ref_datasets, sim_datasets = get_input_data(f"{PARENT_DIR}/example_config.yaml")
 

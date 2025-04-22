@@ -8,7 +8,6 @@ IO library for CVDP workflow:
     - Check format input data, raise exceptions and/or make modifications if necessary
 """
 import xarray
-import cftime
 from glob import glob
 from pathlib import Path
 import yaml
@@ -28,7 +27,6 @@ def read_datasets(paths: str, vn: str, yrs: list, members: str=None) -> xarray.D
     """
     paths = [path for path in paths if ".nc" in path]
     if members is not None:
-        print("Looks like an ensemble?")
         grouped_datasets = []
         for member in members:
             # da will be a monthly time dimension array
@@ -38,7 +36,6 @@ def read_datasets(paths: str, vn: str, yrs: list, members: str=None) -> xarray.D
             grouped_datasets.append(da)
         da = xarray.concat(grouped_datasets, dim=xarray.DataArray(members, dims="member"))
     else:
-        print("vn BEFORE going into read_3D...",vn,type(vn))
         da,err = fc.data_read_in_3D(paths,yrs[0],yrs[1],vn)
         if not isinstance(da, xarray.DataArray):
             print("Borken")
@@ -84,8 +81,6 @@ def get_input_data(config_path: str) -> dict:
         # Add desired start and end years to metadata
         season_yrs = np.unique(var_data_array["time.year"])
         var_data_array.attrs['yrs'] = [season_yrs[0],season_yrs[-1]]
-        print("var_data_array",var_data_array,"\n",type(var_data_array),"\n\n\n")
-
         
         vn = ds_info["variable"]
         """
