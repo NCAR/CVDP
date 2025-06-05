@@ -1,0 +1,25 @@
+name: cvdp-dev
+channels:
+  - conda-forge
+dependencies:
+  - cartopy
+  - cftime
+  - geocat-comp
+  - matplotlib
+  - nc-time-axis
+  - netcdf4
+  - numpy
+  - xesmf
+  - xskillscore
+  - pandas
+  - pip
+  - python
+  - xarray
+  - yaml
+  - zarr
+  - jupyterlab
+  - jupyterlab-git
+  - sphinx
+  - pip:
+    - pytest
+    - -e .

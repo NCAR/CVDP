@@ -1,6 +1,6 @@
-from cvdp import cvdp
-from cvdp import file_io
-from cvdp import diag
-from cvdp import vis
-from cvdp import utils
-from cvdp import definitions
+from cvdp.cvdp import init as init
+import cvdp.io as io
+import cvdp.diag as diag
+import cvdp.vis as vis
+import cvdp.utils as utils
+import cvdp.definitions as definitions

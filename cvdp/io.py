@@ -12,7 +12,7 @@ from glob import glob
 from pathlib import Path
 import yaml
 import numpy as np
-import old_utils.file_creation as fc
+import cvdp.utils.file_creation as fc
 
 vname = {"sst":'ts',"TS":'ts',"ts":'ts',"t_surf":'ts',"skt":'ts',
              "TREFHT":'trefht',"tas":'trefht',"temp":'trefht',"air":'trefht',"temperature_anomaly":'trefht',"temperature":'trefht',"t2m":'trefht',"t_ref":'trefht',"T2":'trefht',"tempanomaly":'trefht',
