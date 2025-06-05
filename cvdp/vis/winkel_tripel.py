@@ -1,3 +1,4 @@
+# Call using 'from cvdp.vis import WinkelTripel'
 from cartopy.crs import _WarpedRectangularProjection, Globe, WGS84_SEMIMAJOR_AXIS
 
 class WinkelTripel(_WarpedRectangularProjection):
