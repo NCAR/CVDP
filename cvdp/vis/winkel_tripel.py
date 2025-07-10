@@ -11,12 +11,14 @@ class WinkelTripel(_WarpedRectangularProjection):
     for most of the maps they produce.
     """
 
-    def __init__(self, central_longitude=0.0, globe=None):
+    def __init__(self, central_longitude=0.0, central_latitude=0.0, globe=None):
         globe = globe or Globe(semimajor_axis=WGS84_SEMIMAJOR_AXIS)
         proj4_params = [('proj', 'wintri'),
-                        ('lon_0', central_longitude)]
-
-        super().__init__(proj4_params, central_longitude, globe=globe)
+                        ('lon_0', central_longitude),
+                        ('lat_0', central_latitude)]
+    
+        super(WinkelTripel, self).__init__(proj4_params, central_longitude, globe=globe)
+    
 
     @property
     def threshold(self):
