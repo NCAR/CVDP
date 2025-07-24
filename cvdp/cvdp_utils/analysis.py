@@ -1,14 +1,49 @@
-#!/usr/bin/env python3
-"""
-interp_funcs.py
-
-CVDP function for calculating linear regression for trends plots
-License: MIT
-"""
-
-import xesmf as xe
+import os
 import xarray as xr
 import numpy as np
+import xesmf as xe
+from geocat.comp import eofunc_eofs, eofunc_pcs, month_to_season
+
+import warnings
+warnings.simplefilter(action='ignore', category=FutureWarning)
+
+import os
+
+
+# Now you can import the script
+#import analysis as an
+#import avg_functions as af
+#import file_creation as fc
+
+# Or import specific functions or classes from the script
+#from analysis import interp_mask, mask_ocean, land_mask
+
+
+def land_mask(land_sea_path):
+    """
+    Mask land over TS variable to simulate SST's
+
+    Takes premade land/sea classification netCDF file
+        - 0: sea?
+        - 1: land?
+        - 2: ice?
+        - 3: lakes?
+
+    returns
+    -------
+     - ncl_masks: xarray.DataSet
+        data set of the 4 classifications
+
+     - lsmask: xarray.DataArray
+        data array of the masked data set
+    """
+    ncl_masks = xr.open_mfdataset(land_sea_path, decode_times=True)
+    lsmask = ncl_masks.LSMASK
+    ncl_masks.close()
+    return lsmask, ncl_masks
+
+#######
+
 
 def mask_ocean(arr,msk,use_nan=True):
     """
@@ -33,6 +68,8 @@ def mask_ocean(arr,msk,use_nan=True):
     arr2.attrs["missing_value"] = missing_value
     #arr2.attrs["units"] = arr.units
     return(arr2)
+
+#######
 
 
 def interp_mask(arr, lsmask):
@@ -133,7 +170,7 @@ def interp_diff(arr_anom1, arr_anom2):
 
     if (not same_lons) and (not same_lats):
 
-        ds_out = xr.Dataset(
+        """ds_out = xr.Dataset(
             {
                 "lat": (["lat"], obs_lats.values, {"units": "degrees_north"}),
                 "lon": (["lon"], obs_lons.values, {"units": "degrees_east"}),
@@ -142,9 +179,91 @@ def interp_diff(arr_anom1, arr_anom2):
 
         # Regrid to the ensemble grid to make altered obs grid
         regridder = xe.Regridder(arr_anom1, ds_out, "bilinear", periodic=True)
-        arr_prime = regridder(arr_anom1, keep_attrs=True)
+        arr_prime = regridder(arr_anom1, keep_attrs=True)"""
+
+        ds_out = xr.Dataset(
+            {
+                "lat": (["lat"], test_lats.values, {"units": "degrees_north"}),
+                "lon": (["lon"], test_lons.values, {"units": "degrees_east"}),
+            }
+        )
+
+        # Regrid to the ensemble grid to make altered obs grid
+        regridder = xe.Regridder(arr_anom2, ds_out, "bilinear", periodic=True)
+        arr_prime = regridder(arr_anom2, keep_attrs=True)
+
+        #print("\n\narr_prime",arr_prime,"\n\n")
 
     # Return the new interpolated obs array
     return arr_prime
 
 #######
+
+
+
+
+
+
+def get_eof(ds, season, latlon_dict, neof):
+    """
+    EOF
+    """
+
+    latS = latlon_dict['s']
+    latN = latlon_dict['n']
+
+    #neof = 3  # number of EOFs
+
+    # To facilitate data subsetting
+    ds2 = ds.copy()
+    #print("ds2",ds2)
+    #season = "DJF"
+    SLP = month_to_season(ds2, season)
+
+    clat = SLP['lat'].astype(np.float64)
+    clat = np.sqrt(np.cos(np.deg2rad(clat)))
+
+    wSLP = SLP
+    wSLP = SLP * clat
+
+    # For now, metadata for slp must be copied over explicitly; it is not preserved by binary operators like multiplication.
+    wSLP.attrs = ds2.attrs
+
+    xw = wSLP.sel(lat=slice(latS, latN))
+
+    # Transpose data to have 'time' in the first dimension
+    # as `eofunc` functions expects so for xarray inputs for now
+    xw_slp = xw.transpose('time', 'lat', 'lon')
+
+    # Doesn't look like we use the actual eofs functions...
+    eofs = eofunc_eofs(xw_slp, neofs=neof, meta=True)
+
+    # Gather time series calcuation
+    pcs = eofunc_pcs(xw_slp, npcs=neof, meta=True)
+
+    # Change the sign of the second EOF and its time-series for
+    # consistent visualization purposes. See this explanation:
+    # https://www.ncl.ucar.edu/Support/talk_archives/2009/2015.html
+    # about that EOF signs are arbitrary and do not change the physical
+    # interpretation.
+    for i in range(neof):
+        if i == 1:
+            pcs[i, :] *= (-1)
+            eofs[i, :, :] *= (-1)
+        
+
+    """
+    eofs[1, :, :] = eofs[1, :, :] #* (-1)
+
+    pcs[1, :] = pcs[1, :] #* (-1)
+    """
+
+    # Sum spatial weights over the area used.
+    nLon = xw.sizes["lon"]
+
+    # Bump the upper value of the slice, so that latitude values equal to latN are included.
+    clat_subset = clat.sel(lat=slice(latS, latN + 0.01))
+    weightTotal = clat_subset.sum() * nLon
+    pcs = pcs / weightTotal
+
+    return eofs, pcs, SLP

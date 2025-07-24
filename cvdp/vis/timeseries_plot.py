@@ -66,10 +66,11 @@ def timeseries_plot(var, test_da, obs_da):
     ax[1].yaxis.set_minor_locator(MultipleLocator(0.2))
     plt.subplots_adjust(hspace=0.3)
     
-    plt.suptitle(f'Ensemble Summary: {var.upper()} Timeseries ({season})', fontsize=20, y=1.025)
+    """plt.suptitle(f'Ensemble Summary: {var.upper()} Timeseries ({season})', fontsize=20, y=1.025)
     
     plot_name = f"output/{var.lower()}_timeseries_{season.lower()}.summary.png"
     
     # Save figure
     #------------
-    plt.savefig(plot_name,bbox_inches="tight")
+    plt.savefig(plot_name,bbox_inches="tight")"""
+    return fig

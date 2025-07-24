@@ -6,7 +6,7 @@ Command Line Interface (CLI) for CVDP.
 
 Parses user input from command line and passes arguments to automation in cvdp.py
 """
-import xarray as xr
+
 import argparse
 from importlib.metadata import version as getVersion
 
@@ -15,11 +15,15 @@ from importlib.metadata import version as getVersion
 from cvdp.scripts.atm_ocn_mean_stddev_calc import calcAtmOcnMeanStd
 from cvdp.scripts.atm_mean_stddev_gr import calcAtmOcnMeanStdGR
 """
-#from cvdp.visualization.AtmOcnGR import *
-from computation.AtmOcnMean import *
-from visualization.AtmOcnGR import *
+
+from diag.AtmOcnMean import *
+from vis.AtmOcnGR import *
 from definitions import * #PARENT_DIR,PATH_VARIABLE_DEFAULTS
-from vis import *
+
+#from cvdp.diag.AtmOcnMean import *
+#from cvdp.vis.AtmOcnGR import *
+#from cvdp.definitions import * #PARENT_DIR,PATH_VARIABLE_DEFAULTS
+#from vis import *
 
 def main():
     #parser = argparse.ArgumentParser(description = f"Command Line Interface (CLI) for Climate Variability and Diagnostics Package (CVDP) Version {getVersion('cvdp')}")
@@ -54,22 +58,24 @@ def main():
             #var_data_array.to_netcdf(save_loc)
             return None"""
 
+    #from io import get_input_data
     from file_io import get_input_data
-
+    print("PARENT_DIR",PARENT_DIR)
     ref_datasets, sim_datasets = get_input_data(f"{PARENT_DIR}/example_config.yaml")
 
-    vn = "psl"
     ref_0 = list(ref_datasets.keys())[0]
     sim_0 = list(sim_datasets.keys())[0]
 
 
-    #from computation.AtmOcnMean import mean_seasonal_calc
-    ref_seas_avgs, sim_seas_avgs, arr_diff = mean_seasonal_calc(ref_datasets[ref_0][vn], sim_datasets[sim_0][vn])
+    vns = ["psl"]
+    for vn in vns:
+        ref_seas_avgs, sim_seas_avgs, ref_season_anom_avgs, sim_season_anom_avgs, ref_seas_ts, sim_seas_ts = mean_seasonal_calc(ref_datasets[ref_0][vn], sim_datasets[sim_0][vn], vn)
 
-    #from visualization.AtmOcnGR import graphics
-    kwargs = {"ref_seas":ref_seas_avgs, "sim_seas":sim_seas_avgs,
-              "diff_seas":arr_diff}
-    graphics(plot_loc, **kwargs)
+        kwargs = {"ref_seas":ref_seas_avgs, "sim_seas":sim_seas_avgs,
+                  "ref_seas_ts":ref_seas_ts, "sim_seas_ts":sim_seas_ts,
+                  "ref_season_anom_avgs":ref_season_anom_avgs, "sim_season_anom_avgs":sim_season_anom_avgs,
+                "vn": vn}
+        graphics(plot_loc, **kwargs)
 
 
 if __name__ == '__main__':

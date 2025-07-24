@@ -165,8 +165,8 @@ def interp_diff(arr_anom1, arr_anom2):
     else:
         same_lats = False
         same_lons = False
-        print("The ensemble array lat/lon shape does not match the " \
-             "obs mask array.\nRegridding to ensemble lats and lons")
+        #print("The ensemble array lat/lon shape does not match the " \
+        #     "obs mask array.\nRegridding to ensemble lats and lons")
 
     if (not same_lons) and (not same_lats):
 

@@ -19,14 +19,24 @@ Data:
   #  end_yr: 2088
   #  paths: "/glade/campaign/cgd/cas/asphilli/CVDPv6_directory_test/CanESM5_r14i1p1f1_diff/psl/psl_Amon_CanESM5_ssp585_r14i1p1f1_gn_201501-210012.nc"
   #  #paths: "/glade/campaign/cgd/cas/asphilli/CVDPv6_directory_test/CanESM5_r14i1p1f1_diff/psl/*.nc"
-  CESM2-LE:
+  
+  #CESM2-LE:
+  #  reference: False
+  #  variable: "PSL"
+  #  start_yr: 1979
+  #  end_yr: 2013
+  #  paths: "/glade/campaign/cgd/cesm/CESM2-LE/*/proc/tseries/month_1/*/*1251.001.**.PSL.*"
+  #  #paths: "/glade/campaign/cgd/cesm/CESM2-LE/*/proc/tseries/month_1/*/*1251.**.PSL.*"
+  #  #members: ['.001.', '.002.']
+
+  1-CESM1-LENS_1-10:
     reference: False
     variable: "PSL"
+    #variable: "TS"
     start_yr: 1979
     end_yr: 2013
-    paths: "/glade/campaign/cgd/cesm/CESM2-LE/*/proc/tseries/month_1/*/*1251.001.**.PSL.*"
-    #paths: "/glade/campaign/cgd/cesm/CESM2-LE/*/proc/tseries/month_1/*/*1251.**.PSL.*"
-    #members: ['.001.', '.002.']
+    paths: "/glade/campaign/cesm/collections/cesmLE/CESM-CAM5-BGC-LE/atm/proc/tseries/monthly/*/b.e11.B*C5CNBDRD.f09_g16.001.cam**.PSL.*.nc"
+  
   ERA5:
     reference: True
     variable: "msl"

@@ -5,6 +5,57 @@ time_series.py
 CVDP function for calculating time series
 License: MIT
 """
+import xarray as xr
+import numpy as np
+
+season_dict = {"NDJFM":0,
+               "DJF":0,
+               "JFM":1,
+               "MAM":3,
+               "JJA":6,
+               "JAS":7,
+               "SON":9
+}
+
+def weighted_temporal_mean(ds):
+    """
+    weight by days in each month
+    """
+    # Determine the month length
+    month_length = ds.time.dt.days_in_month
+
+    # Calculate the weights
+    wgts = month_length.groupby("time.year") / month_length.groupby("time.year").sum()
+
+    # Setup our masking for nan values
+    cond = ds.isnull()
+    ones = xr.where(cond, 0.0, 1.0)
+
+    # Calculate the numerator
+    ds_sum = (ds * wgts).resample(time="AS").sum(dim="time")
+
+    # Calculate the denominator
+    ones_out = (ones * wgts).resample(time="AS").sum(dim="time")
+
+    # Return the weighted average
+    return ds_sum / ones_out
+
+
+def make_seasonal_da(var_name, run_name, da, units, season, season_yrs, ptype):
+    """
+    Get seasonal averaged data array
+
+    - set variable data types
+    - set attributes
+    """
+    da = da.fillna(1.e20).astype("float32")
+    da.attrs = {'units':units,'long_name':f"{var_name}_{ptype}_({season.upper()})",'run':run_name,
+                             'yrs':[season_yrs[0],season_yrs[-1]]}
+    da = da.rename(f'{var_name}_{ptype}_{season.lower()}')
+    timefix = np.arange(season_yrs[0],season_yrs[-1]+1,1)
+    da["time"] = timefix
+    return da
+
 
 def seasonal_timeseries(arr, arr_anom, var_name, run_name):
     """

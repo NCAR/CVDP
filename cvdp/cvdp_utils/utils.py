@@ -8,7 +8,8 @@ from time import time
 from importlib.metadata import version
 import datetime
 import yaml
-from cvdp.definitions import *
+#from cvdp.definitions import *
+from definitions import *
 
 
 def log(msg: str):

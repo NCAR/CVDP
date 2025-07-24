@@ -35,9 +35,9 @@ import warnings
 warnings.simplefilter(action='ignore', category=FutureWarning)
 
 # Now you can import the script
-import cvdp.utils.analysis as an
-import cvdp.utils.avg_functions as af
-import cvdp.utils.file_creation as fc
+import cvdp.cvdp_utils.analysis as an
+import cvdp.cvdp_utils.avg_functions as af
+import cvdp.cvdp_utils.file_creation as fc
 
 # Grab land mask data
 lsmask, ncl_masks = an.land_mask(definitions.PATH_LANDSEA_MASK_NC)

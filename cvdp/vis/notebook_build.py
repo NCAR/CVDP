@@ -52,7 +52,7 @@ class CVDPNotebook():
     
     
     def save_notebook(self, path="CVDP_output.ipynb", title=None):
-        from cvdp.utils import get_version, get_time_stamp
+        from cvdp.cvdp_utils import get_version, get_time_stamp
         from cvdp.definitions import PATH_BANNER_PNG
 
         cell_data = ""
