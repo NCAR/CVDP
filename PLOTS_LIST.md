@@ -1,27 +1,23 @@
-# List of plots
+# List of plots (ordered by priority)
 ---
+* Spatial Means (Seasonal (DJF,JFM,MAM,JJA,JAS,SON,ANN), all variables: PSL/psl, PRECT/pr, TS/ts/SST, TREFHT/t2m)
+* Spatial Standard Deviations (Same options as Spatial Means)
+* Linear Trends (Same options as Spatial Means)
+* ENSO (Most metrics based on monthly SST nino3.4 timeseries. Autocorrelation, spectra, monthly standard deviation, hovmoller, spatial composites)
+* NAM (Seasonal, spatial plot (regression onto timeseries) and timeseries, variables: PSL)
+* PDO (Monthly, spatial plot (regression onto timeseries) and timeseries, main variable: SST (index), other: psl,pr,t2m (regress onto timeseries)
+* IPV-Henley definition (Same options as PDO)
+* IPV (Same options as PDO)
+* SAM (Same options as NAM)
+* PSA1 (Same options as NAM)
+* PSA2 (Same options as NAM)
+* AMV (Same options as PDO)
+* NAO (Same options as NAM)
+* NAM (Same options as NAM)
+* PNA (Same options as NAM)
+* NPO (Same options as NAM)
+* SO (Same options as NAM)
+* Global area-averaged timeseries (Same options as Spatial Means)
+* Regional timeseries (Monthly, all variables: PSL/psl, PRECT/pr, TS/ts/SST, TREFHT/t2m)
 
-### Time Series
-
-* AMOC
-* AMV
-* AMV Prime
-* NAO
-* NPO
-* [x] NAM
-* NINO12
-* NINO34
-* North Pacific Meridional Mode
-* North Atlantic
-* North Tropical Atlantic
-* PDV
-* PDV Prime
-* PNA
-* [x] PSA1
-* [x] PSA2
-* [x] SAM
-* SO
-* South Pacific Meridional Mode
-* South Tropical Atlantic
-* Southern Ocean
-* Tropical Indian Ocean
+**** Need global option to specify detrending method by month prior to all calculations (minus linear trends and spatial means)
