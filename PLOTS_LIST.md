@@ -1,23 +1,30 @@
 # List of plots (ordered by priority)
 ---
-* Spatial Means (Seasonal (DJF,JFM,MAM,JJA,JAS,SON,ANN), all variables: PSL/psl, PRECT/pr, TS/ts/SST, TREFHT/t2m)
-* Spatial Standard Deviations (Same options as Spatial Means)
-* Linear Trends (Same options as Spatial Means)
-* ENSO (Most metrics based on monthly SST nino3.4 timeseries. Autocorrelation, spectra, monthly standard deviation, hovmoller, spatial composites)
-* NAM (Seasonal, spatial plot (regression onto timeseries) and timeseries, variables: PSL)
-* PDO (Monthly, spatial plot (regression onto timeseries) and timeseries, main variable: SST (index), other: psl,pr,t2m (regress onto timeseries)
-* IPV-Henley definition (Same options as PDO)
-* IPV (Same options as PDO)
-* SAM (Same options as NAM)
-* PSA1 (Same options as NAM)
-* PSA2 (Same options as NAM)
-* AMV (Same options as PDO)
-* NAO (Same options as NAM)
-* NAM (Same options as NAM)
-* PNA (Same options as NAM)
-* NPO (Same options as NAM)
-* SO (Same options as NAM)
-* Global area-averaged timeseries (Same options as Spatial Means)
-* Regional timeseries (Monthly, all variables: PSL/psl, PRECT/pr, TS/ts/SST, TREFHT/t2m)
-
-**** Need global option to specify detrending method by month prior to all calculations (minus linear trends and spatial means)
+* Spatial Means (Seasonal (DJF,JFM,MAM,JJA,JAS,SON,ANN), all variables: psl, pr, ts/SST, t2m)
+* Spatial Standard Deviations (Seasonal (DJF,JFM,MAM,JJA,JAS,SON,ANN), all variables: psl, pr, ts/SST, t2m)
+* Linear Trends (Seasonal (DJF,JFM,MAM,JJA,JAS,SON,ANN), all variables: psl, pr, ts/SST, t2m)
+* Niño3.4 index (Monthly, SST) Area-averaged SST anomalies (in Celsius) computed over 5°S:5°N, 120:170°W.
+* Niño3.4 monthly standard deviations (by month, niño3.4 index)
+* Niño3.4 autocorrelations (Monthly, niño3.4 index)
+* Niño3.4 power spectra (Monthly, niño3.4 index)
+* ENSO Spatial Composites (Monthly, main variable: SST (nino3.4 index), other: psl,pr,t2m) El Niño (La Niña) events are defined based on the December value of the Nino34 SST Index (smoothed with a 3-point binomial filter) greater than or equal to 1 (less than or equal to -1) standard deviation. The number of El Niño/La Niña events composited is indicated in the subtitle located to the upper right of each panel. 
+* El Niño and La Niña Hovmöllers (Monthly, SST) El Niño (La Niña) events are defined based on the December value of the Nino34 SST Index (smoothed with a 3-point binomial filter) greater than or equal to 1 (less than or equal to -1) standard deviation. The number of El Niño/La Niña events composited is indicated in the subtitle located to the upper right of each panel. Meridional averages are calculated by averaging from 3°S:3°N, and spatial patterns are formed by compositing from Jan year 0 to May year 2.
+* (Most metrics based on monthly SST nino3.4 timeseries. Autocorrelation, spectra, monthly standard deviation, hovmoller, spatial composites)
+* NAM (Seasonal, spatial plot and timeseries, variables: PSL) Seasonal/annual PSL averages are formed, square root of the cosine of the latitude weighting is applied, and then the leading EOF and associated principal component (PC) timeseries are computed over 20:90°N, 0:360°E. Pattern created by regressing global PSL anomalies (in hPa) onto normalized PC timeseries.
+* PDO (Monthly, spatial plot and timeseries, main variable: SST (index), other: psl,pr,t2m (regress onto timeseries)) Monthly index timeseries defined as the leading principal component (PC) of North Pacific (20:70°N, 110°E:100°W) area-weighted SST anomalies. Pattern created by regressing SST anomalies (in Celsius) at each grid box onto the normalized PC timeseries. Low pass-filtered timeseries is based on a 61-month running mean.
+* IPV-Henley definition (Monthly, spatial plot and timeseries, main variable: SST (index), other: psl,pr,t2m (regress onto timeseries)) Monthly index timeseries defined as the area-weighted SST anomalies averaged over the central tropical Pacific (10°S:10°N, 170°E:90°W) minus the average of the area-weighted SST anomalies averaged over the north (25°:45°N, 140°E:145°W) and south (15°:50°S, 150°E:160°W) Pacific. Pattern created by regressing SST anomalies (in Celsius) at each grid box onto the timeseries.
+* IPV (Monthly, spatial plot and timeseries, main variable: SST (index), other: psl,pr,t2m (regress onto timeseries)) Monthly index timeseries defined as the leading principal component (PC) of 13yr low pass filtered Pacific (40°S:60°N, 110°E:70°W) area-weighted SST anomalies. Pattern created by regressing SST anomalies (in Celsius) at each grid box onto the normalized PC timeseries. At least 40 years of data are required for the standard IPV index to be calculated. 
+* SAM (Seasonal, spatial plot and timeseries, variables: PSL) Seasonal/annual PSL averages are formed, square root of the cosine of latitude weighting is applied, and then the 1st (SAM), 2nd (PSA1) and 3rd (PSA2) EOFs and associated principal component (PC) timeseries are computed over 20:90°S, 0:360°E. Patterns created by regressing global PSL anomalies (in hPa) onto normalized PC timeseries.
+* PSA1 (Same options/calculation as SAM)
+* PSA2 (Same options/calculation as SAM)
+* AMV (Monthly, spatial plot and timeseries, main variable: SST (index), other: psl,pr,t2m (regress onto timeseries)) Monthly index timeseries defined as area-weighted SST anomalies averaged over the North Atlantic (0:60°N, 80°W:0°E). Pattern created by regressing SST anomalies onto the index timeseries and smoothing with a 9-point spatial filter. Low pass-filtered timeseries (black curve superimposed on the monthly timeseries) is based on a 61-month running mean. Low-pass filtered regression maps ("Regr LP") use a 10-year running mean on both the index timeseries and the field being regressed.
+* NAO (Seasonal, spatial plot and timeseries, variables: PSL) Seasonal/annual PSL averages are formed, square root of the cosine of latitude weighting is applied, and then the leading EOF and associated principal component (PC) timeseries are computed over 20:80°N, 90°W:40°E. Pattern created by regressing global PSL anomalies (in hPa) onto normalized PC timeseries.
+* PNA (Seasonal, spatial plot (regression onto timeseries) and timeseries, variables: PSL) Seasonal/annual PSL averages are formed, the square root of the cosine of the latitude weighting is applied, and then the 1st (PNA) and 2nd (NPO) EOFs and associated principal component (PC) timeseries are computed over 20:85°N, 120°E:120°W. 
+* NPO (Same options/calculation as PNA)
+* SO (Seasonal, spatial plot and timeseries, variables: PSL) The Southern Oscillation Index is defined as the difference between area-averaged PSL anomalies (in hPa) computed over 30°S:0°N, 70:170°E and area-averaged PSL anomalies computed over 30°S:0°N, 160:80°W. Pattern created by regressing global PSL anomalies (in hPa) onto the timeseries.
+* Global area-averaged timeseries (Seasonal (DJF,JFM,MAM,JJA,JAS,SON,ANN), variables: pr, ts/SST, t2m)
+* Regional timeseries (Monthly, all variables: psl, pr, ts/SST, t2m) A number of different indices are calculated, see the bottom of this existing CVDP-ncl comparison page: https://webext.cgd.ucar.edu/Multi-Case/CVDP_repository/cesm2-lens_quadquad_1850-2100/methodology.html.
+* Niño3.4 wavelet (Monthly, niño3.4 index)  A wavelet transform is computed using a Morlet wavelet with a wavenumber of 6. Areas significant at the 95% based on a chi-square test are stippled and the “cone of influence” is hatched. CVDP-ncl package uses NCL's wavelet function.
+* 
+* Note #1: For some calculations the patterns are created by regressing anomalies onto a normalized timeseries, others do not use a normalized timeseries.
+* Note #2: Need global option to specify detrending method by month prior to all calculations (minus linear trends and spatial means)
