@@ -5,6 +5,9 @@
 import xarray as xr
 import numpy as np
 import xskillscore as xs
+import sys
+import os
+from definitions import *
 
 
 season_dict = {"NDJFM":0,
@@ -15,7 +18,6 @@ season_dict = {"NDJFM":0,
                "JAS":7,
                "SON":9
 }
-
 
 
 # Normalization of data
@@ -36,26 +38,6 @@ class PiecewiseNorm(Normalize):
         # linearly interpolate to get the normalized value
         return np.ma.masked_array(np.interp(value, self._levels, self._normed))
 
-
-
-import sys
-import os
-
-"""# Add the directory to sys.path
-#avg_functions.py
-script_dir = '/glade/work/richling/CVDP-LE/dev/utils/'
-sys.path.append(script_dir)
-
-# Now you can import the script
-import analysis as an
-import avg_functions as af
-import file_creation as fc
-
-# Or import specific functions or classes from the script
-#from analysis import interp_mask, mask_ocean, land_mask"""
-
-
-from definitions import *
 
 # Land mask: for TS -> SST masking
 def land_mask():
@@ -85,7 +67,6 @@ def land_mask():
 
 
 # Weighted time mean
-
 def weighted_temporal_mean(ds):
     """
     weight by days in each month
@@ -108,7 +89,6 @@ def weighted_temporal_mean(ds):
 
     # Return the weighted average
     return ds_sum / ones_out
-
 
 
 # Creation of array of zeros with shape lat,lon
@@ -138,8 +118,6 @@ def zeros_array(lat_shape, lon_shape):
     return zeros_array
 
 
-
-
 # Detrending of data
 def detrend_dim(da, dim, deg=1):
     """
@@ -159,8 +137,6 @@ def detrend_dim(da, dim, deg=1):
          resulting array of zeros
     """
     p = da.polyfit(dim=dim, deg=deg, skipna = True)
-    #display(p)
-    #display("Polynomial Coefficients:\n",p.polyfit_coefficients)
     fit = xr.polyval(da[dim], p.polyfit_coefficients)
 
     # Return residual: original array minus polynomial fit
@@ -198,14 +174,29 @@ def lin_regress(arrSEAS_anom):
     da = xr.DataArray(data=a, dims=["time"], coords=dict(time=time))
     arr_anom = xs.linslope(da, arrSEAS_anom)*len(a)
 
-    # My linear detrend
     res,fit = detrend_dim(arrSEAS_anom,deg=1,dim="time")
-    #fit.weighted(np.cos(np.radians(fit.lat))).mean(dim=('lat','lon')).plot(color="red",label="slope")
-    #res.weighted(np.cos(np.radians(res.lat))).mean(dim=('lat','lon')).plot(lw=3,color="k",label="my detrend")
 
     return arr_anom, res, fit
 
 
+def linear_trend(da):
+    """
+    Compute linear trend (slope) along time dimension.
+
+    Parameters
+    ----------
+    da : xarray.DataArray
+        Seasonal anomaly time series
+
+    Returns
+    -------
+    slope : xarray.DataArray
+        Linear trend (units per time)
+    """
+    p = da.polyfit(dim="time", deg=1, skipna=True)
+    slope = p.polyfit_coefficients.sel(degree=1)
+
+    return slope
 
 
 def make_seasonal_da(var_name, run_name, da, units, season, season_yrs, ptype):
@@ -215,136 +206,13 @@ def make_seasonal_da(var_name, run_name, da, units, season, season_yrs, ptype):
     - set variable data types
     - set attributes
     """
-    da = da.fillna(1.e20).astype("float32")
-    da.attrs = {'units':units,'long_name':f"{var_name}_{ptype}_({season.upper()})",'run':run_name,
+    #da = da.fillna(1.e20).astype("float32")
+    da.attrs = {'units':units,'long_name':f"{var_name} {ptype} {season.upper()}",'run':run_name,
                              'yrs':[season_yrs[0],season_yrs[-1]]}
     da = da.rename(f'{var_name}_{ptype}_{season.lower()}')
-    timefix = np.arange(season_yrs[0],season_yrs[-1]+1,1)
-    da["time"] = np.arange(season_yrs[0],season_yrs[-1]+1,1)
+    if ptype != "spatialstddev":
+        da["time"] = np.arange(season_yrs[0],season_yrs[-1]+1,1)
     return da
-
-
-
-
-
-
-def seasonal_trends_timeseries(arr, arr_anom, var_name, run_name):
-    """
-    arr - 
-    arr_anom - 
-    var_name - 
-    run_name - 
-    ----
-        anomolies
-
-
-    Get linear regressed seasonal anomolies
-
-    * Requires weighted_temporal_mean function in avg_functions.py
-
-    Args
-    ----
-       - arrSEAS_anom: xarray.DataArray
-          sesasonally averaged anomoly array
-
-    Returns
-    -------
-       - arr_anom: xarray.DataArray
-          sesasonally averaged linearly regressed anomoly array
-       
-       - res: xarray.DataArray
-          result detrended array
-
-       - fit: xarray.DataArray
-          detrended slope
-
-
-    """
-
-    units = arr.units
-    season_yrs = np.unique(arr["time.year"])
-
-    """
-    forward and back fill from previously known values -- but one could also use more
-    sophisticated methods like taking the mean of adjacent values or interpolating
-    """
-
-    # Spatial Mean
-    #-------------
-    trnd_dict = {}
-    ptype = "mean"
-    arr3 = arr.rolling(time=3, center=True).mean()
-    arr3 = arr3.ffill(dim='time').bfill(dim='time').compute()
-
-    arrANN = weighted_temporal_mean(arr)#.mean(dim='time')
-    lintrndANN = arrANN.rename(var_name+'_ann')
-    lintrndANN.attrs = {'units':units,'long_name':var_name+' (annual)','run':run_name,
-                             'yrs':[season_yrs[0],season_yrs[-1]]}
-    timefix = np.arange(season_yrs[0],season_yrs[-1]+1,1)
-    lintrndANN["time"] = np.arange(season_yrs[0],season_yrs[-1]+1,1)
-    trnd_dict[f'{var_name}_{ptype}_ann'] = lintrndANN
-
-    for s in season_dict:
-        lintrnd_da = arr3.isel( time=slice(season_dict[s], None, 12) )
-        lintrnd_da = make_seasonal_da(var_name, run_name, lintrnd_da, units, s, season_yrs, ptype)
-        trnd_dict[f'{var_name}_{ptype}_{s.lower()}'] = lintrnd_da
-    if var_name == "psl":
-        s = 'NDJFM'
-        arr5 = arr.rolling(time=5, center=True).mean()
-        arr5 = arr5.ffill(dim='time').bfill(dim='time').compute()
-        lintrnd_da = arr5.isel( time=slice(season_dict[s], None, 12) )
-        lintrnd_da = make_seasonal_da(var_name, run_name, lintrnd_da, units, s, season_yrs, ptype)
-        trnd_dict[f'{var_name}_{ptype}_ndjfm'] = lintrnd_da
-        #ds_list.append(lintrnd_da)
-
-
-    # Anomolies
-    #----------
-    #trnd_dict = {}
-    ptype = "trends"
-    # setup 3-month averages
-    arr_anom3 = arr_anom.rolling(time=3, center=True).mean()
-    arr_anom3 = arr_anom3.ffill(dim='time').bfill(dim='time').compute()
-
-    arrANN_anom = weighted_temporal_mean(arr_anom)#.mean(dim='time')
-    lintrndANN_anom = arrANN_anom.rename(var_name+'_ann')
-    lintrndANN_anom.attrs = {'units':units,'long_name':var_name+' (annual)','run':run_name,
-                             'yrs':[season_yrs[0],season_yrs[-1]]}
-    #lintrndANN = lin_regress(lintrndANN)
-    timefix = np.arange(season_yrs[0],season_yrs[-1]+1,1)
-    lintrndANN_anom["time"] = np.arange(season_yrs[0],season_yrs[-1]+1,1)
-    trnd_dict[f'{var_name}_{ptype}_ann'] = lintrndANN_anom
-
-    for s in season_dict:
-        lintrnd_da = arr_anom3.isel( time=slice(season_dict[s], None, 12) )
-        lintrnd_da = make_seasonal_da(var_name, run_name, lintrnd_da, units, s, season_yrs, ptype)
-        #lintrnd_da = lin_regress(lintrnd_da)
-        lintrnd_da = lintrnd_da.drop_vars('month')
-        trnd_dict[f'{var_name}_{ptype}_{s.lower()}'] = lintrnd_da
-    if var_name == "psl":
-        s = 'NDJFM'
-        arr5 = arr_anom.rolling(time=5, center=True).mean()
-        arr5 = arr5.ffill(dim='time').bfill(dim='time').compute()
-        lintrnd_da = arr5.isel( time=slice(season_dict[s], None, 12) )
-
-        lintrnd_da = make_seasonal_da(var_name, run_name, lintrnd_da, units, s, season_yrs, ptype)
-        #lintrnd_da = lin_regress(lintrnd_da)
-        lintrnd_da = lintrnd_da.drop_vars('month')
-        trnd_dict[f'{var_name}_trends_ndjfm'] = lintrnd_da
-
-    #print(trnd_dict)
-
-    ds = xr.Dataset(trnd_dict)
-    ds.attrs['units']=units
-    ds.attrs['run']=run_name
-    ds.attrs['yrs']=[season_yrs[0],season_yrs[-1]]
-
-
-    #arrDJF_anom, res, fit = lin_regress(arrDJF_anom)
-
-
-    return ds#, ds_anom
-
 
 
 def seasonal_timeseries(arr, arr_anom, var_name, run_name):
@@ -372,11 +240,10 @@ def seasonal_timeseries(arr, arr_anom, var_name, run_name):
     arr3 = arr.rolling(time=3, center=True).mean()
     arr3 = arr3.ffill(dim='time').bfill(dim='time').compute()
 
-    arrANN = weighted_temporal_mean(arr)#.mean(dim='time')
+    arrANN = weighted_temporal_mean(arr)
     lintrndANN = arrANN.rename(var_name+'_ann')
     lintrndANN.attrs = {'units':units,'long_name':var_name+' (annual)','run':run_name,
                              'yrs':[season_yrs[0],season_yrs[-1]]}
-    timefix = np.arange(season_yrs[0],season_yrs[-1]+1,1)
     lintrndANN["time"] = np.arange(season_yrs[0],season_yrs[-1]+1,1)
     trnd_dict[f'{var_name}_{ptype}_ann'] = lintrndANN
 
@@ -393,36 +260,60 @@ def seasonal_timeseries(arr, arr_anom, var_name, run_name):
         trnd_dict[f'{var_name}_{ptype}_ndjfm'] = lintrnd_da
 
 
-    # Anomolies
-    #----------
+    # Trends
+    #-------
     ptype = "trends"
-    # setup 3-month averages
     arr_anom3 = arr_anom.rolling(time=3, center=True).mean()
     arr_anom3 = arr_anom3.ffill(dim='time').bfill(dim='time').compute()
 
-    arrANN_anom = weighted_temporal_mean(arr_anom)#.mean(dim='time')
-    lintrndANN_anom = arrANN_anom.rename(var_name+'_ann')
-    lintrndANN_anom.attrs = {'units':units,'long_name':var_name+' (annual)','run':run_name,
+    ann_anom_da = weighted_temporal_mean(arr_anom)
+    ann_anom_da = ann_anom_da.rename(var_name+'_ann')
+    ann_anom_da.attrs = {'units':units,'long_name':var_name+' (annual)','run':run_name,
                              'yrs':[season_yrs[0],season_yrs[-1]]}
-    timefix = np.arange(season_yrs[0],season_yrs[-1]+1,1)
-    lintrndANN_anom["time"] = np.arange(season_yrs[0],season_yrs[-1]+1,1)
-    trnd_dict[f'{var_name}_{ptype}_ann'] = lintrndANN_anom
+    ann_anom_da["time"] = np.arange(season_yrs[0],season_yrs[-1]+1,1)
+    trnd_dict[f'{var_name}_{ptype}_ann'] = ann_anom_da
 
     for s in season_dict:
-        lintrnd_da = arr_anom3.isel( time=slice(season_dict[s], None, 12) )
-        lintrnd_da = make_seasonal_da(var_name, run_name, lintrnd_da, units, s, season_yrs, ptype)
-        lintrnd_da = lintrnd_da.drop_vars('month')
-        trnd_dict[f'{var_name}_{ptype}_{s.lower()}'] = lintrnd_da
+        anom_da = arr_anom3.isel( time=slice(season_dict[s], None, 12) )
+        s_anom_da = make_seasonal_da(var_name, run_name, anom_da, units, s, season_yrs, ptype)
+        s_anom_da = s_anom_da.drop_vars('month')
+        trnd_dict[f'{var_name}_{ptype}_{s.lower()}'] = s_anom_da
     if var_name == "psl":
         s = 'NDJFM'
         arr5 = arr_anom.rolling(time=5, center=True).mean()
         arr5 = arr5.ffill(dim='time').bfill(dim='time').compute()
-        lintrnd_da = arr5.isel( time=slice(season_dict[s], None, 12) )
+        anom_da = arr5.isel( time=slice(season_dict[s], None, 12) )
 
-        lintrnd_da = make_seasonal_da(var_name, run_name, lintrnd_da, units, s, season_yrs, ptype)
-        lintrnd_da = lintrnd_da.drop_vars('month')
-        trnd_dict[f'{var_name}_trends_ndjfm'] = lintrnd_da
+        s_anom_da = make_seasonal_da(var_name, run_name, anom_da, units, s, season_yrs, ptype)
+        s_anom_da = s_anom_da.drop_vars('month')
+        trnd_dict[f'{var_name}_{ptype}_{s.lower()}'] = s_anom_da
 
+
+    # Interannual variability (spatialstddev)
+    # ---------------------------------
+    ptype = "spatialstddev"
+
+    arr_anom3 = arr_anom.rolling(time=3, center=True).mean()
+    arr_anom3 = arr_anom3.ffill(dim='time').bfill(dim='time')
+
+    arrANN_std = weighted_temporal_mean(arr_anom)#.mean(dim='time')
+    lintrndANN_std = arrANN_std.rename(var_name+'_ann')
+    lintrndANN_std.attrs = {'units':units,'long_name':var_name+' (annual)','run':run_name,
+                             'yrs':[season_yrs[0],season_yrs[-1]]}
+    lintrndANN_std["time"] = np.arange(season_yrs[0],season_yrs[-1]+1,1)
+    trnd_dict[f'{var_name}_{ptype}_ann'] = lintrndANN_std
+
+    for s in season_dict:
+        da_season = arr_anom3.isel(time=slice(season_dict[s], None, 12))
+        attrs = da_season.attrs
+        da_std = da_season.std(dim="time", ddof=0)
+        da_std = make_seasonal_da(
+            var_name, run_name, da_std,
+            units, s, season_yrs, ptype
+        )
+        da_std.attrs = attrs
+        trnd_dict[f'{var_name}_{ptype}_{s.lower()}'] = da_std
+    
     ds = xr.Dataset(trnd_dict)
     ds.attrs['units']=units
     ds.attrs['run']=run_name

@@ -7,18 +7,15 @@ Command Line Interface (CLI) for CVDP.
 Parses user input from command line and passes arguments to automation in cvdp.py
 """
 
+#import cvdp
+
 import argparse
 from importlib.metadata import version as getVersion
-
-#import cvdp
-"""from cvdp.scripts.namelist import createNameList
-from cvdp.scripts.atm_ocn_mean_stddev_calc import calcAtmOcnMeanStd
-from cvdp.scripts.atm_mean_stddev_gr import calcAtmOcnMeanStdGR
-"""
-
-from diag.AtmOcnMean import *
-from vis.AtmOcnGR import *
-from definitions import * #PARENT_DIR,PATH_VARIABLE_DEFAULTS
+#from diag.AtmOcnMean import *
+from diag.AtmOcnMean import mean_seasonal_calc
+#from vis.AtmOcnGR import *
+from vis.AtmOcnGR import graphics
+from definitions import PARENT_DIR, PATH_VARIABLE_DEFAULTS
 
 #from cvdp.diag.AtmOcnMean import *
 #from cvdp.vis.AtmOcnGR import *
@@ -35,7 +32,7 @@ def main():
 
     args = parser.parse_args()
     var_configs = args.c
-
+    print(args)
     from pathlib import Path
     plot_loc = Path(args.output_dir[0])
     if not plot_loc.is_dir():
@@ -48,35 +45,71 @@ def main():
         var_configs = args.c[0]
 
     from pathlib import Path
-    """def check_or_save_nc(save_loc, clobber, var_data_array=None):
-        if Path(save_loc).is_file() and not clobber:
-            var_data_array = xr.open_mfdataset(save_loc,coords="minimal", compat="override", decode_times=True)
-            return var_data_array
-        else:
-            #var_data_array = read_datasets(paths, ds_info["variable"], [syr, eyr], mems)
-            #Path(save_loc).unlink(missing_ok=True)
-            #var_data_array.to_netcdf(save_loc)
-            return None"""
-
     #from io import get_input_data
     from file_io import get_input_data
-    print("PARENT_DIR",PARENT_DIR)
-    ref_datasets, sim_datasets = get_input_data(f"{PARENT_DIR}/example_config.yaml")
+    #from cvdp.io import get_input_data
 
-    ref_0 = list(ref_datasets.keys())[0]
-    sim_0 = list(sim_datasets.keys())[0]
-
+    if "c" not in args:
+        # These are dictionaries of datasets
+        ref_datasets, sim_datasets, config_dict = get_input_data(f"{PARENT_DIR}/example_config.yaml")
+    else:
+        ref_datasets, sim_datasets, config_dict = get_input_data(f"{args.c[0]}")
+    ref_names = list(ref_datasets.keys())
+    sim_names = list(sim_datasets.keys())
+    print("Reference Names:",ref_names)
+    print("Simulation Names:",sim_names,"\n")
 
     vns = ["psl"]
     for vn in vns:
-        ref_seas_avgs, sim_seas_avgs, ref_season_anom_avgs, sim_season_anom_avgs, ref_seas_ts, sim_seas_ts = mean_seasonal_calc(ref_datasets[ref_0][vn], sim_datasets[sim_0][vn], vn)
+        kwargs = {}
+        for ref_name in ref_names:
+            print(f"Trying reference {ref_name} for climatologies")
+            if ref_name not in kwargs:
+                kwargs[ref_name] = {}
+            kwargs[f"{ref_name}_run_type"] = "reference"
+            ref_var = ref_datasets[ref_name][vn]
+            data_dict = mean_seasonal_calc(ref_name, ref_var,
+                                               vn, config_dict)
+            kwargs[f"{ref_name}_season_trnd_avgs"] = ref_var
+            ref_seas_ts = data_dict["seas_ts"]
+            kwargs[ref_name] = ref_seas_ts
+            if "members" in ref_seas_ts.attrs:
+                members = ref_seas_ts.attrs["members"]
+                kwargs[ref_name]["members"] = members
+                for member in members:
+                    kwargs[f"{ref_name}{member[:-1]}"] = data_dict[f"seas_ts{member[:-1]}"]
+        for sim_name in sim_names:
+            print(f"Trying simulation {sim_name} for climatologies")
+            if sim_name not in kwargs:
+                kwargs[sim_name] = {}
+            kwargs[f"{sim_name}_run_type"] = "simulation"
+            sim_var = sim_datasets[sim_name][vn]
+            data_dict = mean_seasonal_calc(sim_name, sim_var,
+                                               vn, config_dict)
+            kwargs[f"{sim_name}_season_trnd_avgs"] = sim_var
+            sim_seas_ts = data_dict["seas_ts"]
+            kwargs[sim_name] = sim_seas_ts
 
-        kwargs = {"ref_seas":ref_seas_avgs, "sim_seas":sim_seas_avgs,
-                  "ref_seas_ts":ref_seas_ts, "sim_seas_ts":sim_seas_ts,
-                  "ref_season_anom_avgs":ref_season_anom_avgs, "sim_season_anom_avgs":sim_season_anom_avgs,
-                "vn": vn}
+            if "members" in sim_seas_ts.attrs:
+                members_sub = config_dict[sim_name]["members"]
+                members = sim_seas_ts.attrs["members"]
+                huh = [mem for mem in members if mem in members_sub]
+                kwargs[f"{sim_name}_members"] = huh
+                for member in huh:
+                    try:
+                        kwargs[f"{sim_name}{member[:-1]}"] = data_dict[f"seas_ts{member[:-1]}"]
+                        kwargs[f"{sim_name}{member[:-1]}_trnds"] = sim_var.sel(member=member)
+                    except KeyError as e:
+                        print(f"seas_ts{member[:-1]}")
+
+        kwargs["ref_seas_ts"] = ref_seas_ts
+        kwargs["sim_seas_ts"] = sim_seas_ts
+        #kwargs["ref_season_trnd_avgs"] = ref_season_trnd_avgs
+        #kwargs["sim_season_trnd_avgs"] = sim_season_trnd_avgs
+        kwargs["vn"] = vn
+        kwargs["sim_names"] = sim_names
+        kwargs["ref_names"] = ref_names
         graphics(plot_loc, **kwargs)
-
 
 if __name__ == '__main__':
     main()

@@ -8,8 +8,8 @@ from time import time
 from importlib.metadata import version
 import datetime
 import yaml
-#from cvdp.definitions import *
-from definitions import *
+#from cvdp.definitions import PATH_VARIABLE_DEFAULTS
+from definitions import PATH_VARIABLE_DEFAULTS
 
 
 def log(msg: str):
@@ -35,7 +35,7 @@ nh_vars = ["NAM"]
 sh_vars = ["SAM", "PSA1", "PSA2"]
 eof_vars = nh_vars+sh_vars
             
-ptypes = ["trends","spatialmean"]#,"spatialstddev"
+ptypes = ["trends","spatialmean","spatialstddev"]
 
 
 
