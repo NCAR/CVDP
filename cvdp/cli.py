@@ -49,7 +49,7 @@ def main():
     from file_io import get_input_data
     #from cvdp.io import get_input_data
 
-    if "c" not in args:
+    if not args.c:
         # These are dictionaries of datasets
         ref_datasets, sim_datasets, config_dict = get_input_data(f"{PARENT_DIR}/example_config.yaml")
     else:
