@@ -7,18 +7,16 @@ Command Line Interface (CLI) for CVDP.
 Parses user input from command line and passes arguments to automation in cvdp.py
 """
 
+#import cvdp
+
 import argparse
 from importlib.metadata import version as getVersion
-
-#import cvdp
-"""from cvdp.scripts.namelist import createNameList
-from cvdp.scripts.atm_ocn_mean_stddev_calc import calcAtmOcnMeanStd
-from cvdp.scripts.atm_mean_stddev_gr import calcAtmOcnMeanStdGR
-"""
-
-from diag.AtmOcnMean import *
-from vis.AtmOcnGR import *
-from definitions import * #PARENT_DIR,PATH_VARIABLE_DEFAULTS
+#from diag.AtmOcnMean import *
+from diag.AtmOcnMean import get_run_dict
+#from vis.AtmOcnGR import *
+from vis.AtmOcnGR import graphics
+import cvdp_utils.web as web
+from definitions import PARENT_DIR, PATH_VARIABLE_DEFAULTS
 
 #from cvdp.diag.AtmOcnMean import *
 #from cvdp.vis.AtmOcnGR import *
@@ -35,9 +33,10 @@ def main():
 
     args = parser.parse_args()
     var_configs = args.c
-
+    print(args)
     from pathlib import Path
     plot_loc = Path(args.output_dir[0])
+    print(f"\nSaving CVDP output to: {plot_loc}")
     if not plot_loc.is_dir():
         print(f"\tINFO: Directory not found, making new plot save location")
         plot_loc.mkdir(parents=True)
@@ -48,35 +47,48 @@ def main():
         var_configs = args.c[0]
 
     from pathlib import Path
-    """def check_or_save_nc(save_loc, clobber, var_data_array=None):
-        if Path(save_loc).is_file() and not clobber:
-            var_data_array = xr.open_mfdataset(save_loc,coords="minimal", compat="override", decode_times=True)
-            return var_data_array
-        else:
-            #var_data_array = read_datasets(paths, ds_info["variable"], [syr, eyr], mems)
-            #Path(save_loc).unlink(missing_ok=True)
-            #var_data_array.to_netcdf(save_loc)
-            return None"""
-
     #from io import get_input_data
     from file_io import get_input_data
-    print("PARENT_DIR",PARENT_DIR)
-    ref_datasets, sim_datasets = get_input_data(f"{PARENT_DIR}/example_config.yaml")
+    #from cvdp.io import get_input_data
 
-    ref_0 = list(ref_datasets.keys())[0]
-    sim_0 = list(sim_datasets.keys())[0]
+    if not args.c:
+        # These are dictionaries of datasets
+        ref_datasets, sim_datasets, config_dict = get_input_data(f"{PARENT_DIR}/example_config.yaml")
+    else:
+        ref_datasets, sim_datasets, config_dict = get_input_data(f"{args.c[0]}")
+    ref_names = list(ref_datasets.keys())
+    sim_names = list(sim_datasets.keys())
+    print("\nReference Names:",ref_names)
+    print("Simulation Names:",sim_names,"\n")
 
-
+    #vns = ["psl","tas"]
+    #vns = ["tas"]
     vns = ["psl"]
+    plot_dict = {}
+    config_dict["plot_loc"] = plot_loc
+    kwargs = {}
     for vn in vns:
-        ref_seas_avgs, sim_seas_avgs, ref_season_anom_avgs, sim_season_anom_avgs, ref_seas_ts, sim_seas_ts = mean_seasonal_calc(ref_datasets[ref_0][vn], sim_datasets[sim_0][vn], vn)
+        #if vn not in plot_dict_vars:
+        #    plot_dict_vars[vn] = {}
+        #kwargs = {}
+        kwargs["nc_save_loc"] = config_dict["nc_save_loc"]
+        kwargs["vn"] = vn
+        kwargs["sim_names"] = sim_names
+        kwargs["ref_names"] = ref_names
+        kwargs = get_run_dict(vn, ref_names, sim_names, ref_datasets, sim_datasets, config_dict, kwargs)
 
-        kwargs = {"ref_seas":ref_seas_avgs, "sim_seas":sim_seas_avgs,
-                  "ref_seas_ts":ref_seas_ts, "sim_seas_ts":sim_seas_ts,
-                  "ref_season_anom_avgs":ref_season_anom_avgs, "sim_season_anom_avgs":sim_season_anom_avgs,
-                "vn": vn}
-        graphics(plot_loc, **kwargs)
+        plot_dict = graphics(plot_loc, plot_dict, **kwargs)
 
+    # Generate webpages
+    from pathlib import Path
+    import shutil
+
+    src = Path("cas_cvdp-le.png")
+    src2 = Path("file_not_found_image.png")
+
+    shutil.copy2(src, plot_loc)
+    shutil.copy2(src2, plot_loc)
+    web.generate_webpages(config_dict)
 
 if __name__ == '__main__':
     main()
