@@ -78,7 +78,31 @@ def polar_ensemble_plot(arrs: list, arr_diff, vn, ptype, plot_dict, title, var=N
     if var in sh_vars:
         proj = ccrs.SouthPolarStereo(central_longitude=0)
         extent = [-180, 180, -20, -90]
-        space = -16.5
+        space = -16.5    
+
+    # Create subplots
+    n_cases = len(arrs)
+    ncols = 10
+    nrows = (n_cases + ncols - 1) // ncols  # Calculate the required rows
+    if n_cases <= ncols:
+        ncols = n_cases
+    #print("n_cases",n_cases,"nrows",nrows,"ncols",ncols)
+
+    """if n_cases == 2 or n_cases == 3 or n_cases == 4:
+        hgt = nrows*2
+        wdth = ncols*3
+    else:
+        hgt = nrows*2.5
+        wdth = ncols*4
+    hgt = nrows*6
+    #wdth = 10/n_cases
+
+    print("\n\nhgt,wdth",hgt,wdth)
+    if wdth > 40:
+        wdth = 40
+        print("hgt,NEW wdth",hgt,wdth,"\n\n")
+    else:
+        print("\n")"""
 
     # Get variable plot info
     #-----------------------

@@ -186,7 +186,6 @@ def graphics(plot_loc, plot_dict, **kwargs):
             #print(f"  *** Map Type: {map_type}")
 
             seasons = VAR_SEASONS[vn][map_type] if isinstance(VAR_SEASONS[vn], dict) else VAR_SEASONS[vn]
-
             for season in seasons:
                 print("season",season)
                 key = f"{vn}_{atype}_{season.lower()}"

@@ -534,6 +534,8 @@ def global_indmem_latlon_plot(vn, arrs, plot_dict, title, ptype):
         axs[i].text(-0.05, 0.98, yrs_text, transform=axs[i].transAxes, fontsize=10, verticalalignment="top")
     
 
+    
+
     # COLORBARS
     # ----------------
     # Set up axis to insert into color bar
