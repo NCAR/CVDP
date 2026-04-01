@@ -1,0 +1,2043 @@
+<html><head><title>Climate Variability Diagnostics Package</title>
+<link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.1.3/css/bootstrap.min.css" integrity="sha384-MCw98/SFnGE8fJT3GXwEOngsV7Zt27NXFoaoApmYm81iuXoPkFOJwJ8ERdknLPMO" crossorigin="anonymous">
+<script src="https://code.jquery.com/jquery-3.3.1.slim.min.js" integrity="sha384-q8i/X+965DzO0rT7abK41JStQIAqVgRVzpbzo5smXKp4YfRvH+8abtTE1Pi6jizo" crossorigin="anonymous"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/popper.js/1.14.3/umd/popper.min.js" integrity="sha384-ZMP7rVo3mIykV+2+9J3UJ46jBk0WLaUAdn689aCwoqbBJiSnjAK/l8WvCWPIPm49" crossorigin="anonymous"></script>
+<script src="https://stackpath.bootstrapcdn.com/bootstrap/4.1.3/js/bootstrap.min.js" integrity="sha384-ChfqqxuZUCnJSK3+MXmPNIyE6ZbWh2IMqE241rYiqJxyMiZ6OW/JmZQ5stwEULTy" crossorigin="anonymous"></script>
+<STYLE>body {background-color: WhiteSmoke; font-family: Verdana, Geneva, sans-serif}
+img.title {width:990; height:105; align:left}
+p.subtitle {font-size:20pt; color:black; text-align:center; font-weight:bold}
+p.btext {font-size:11pt; text-align:left}
+font.s1 {font-size:13.5pt; text-align:left}
+td {text-align:center; font-size:12pt}
+td.s1 {text-align:left; font-size:11pt}
+td.s2 {border-bottom: 4px double darkgray}
+CAPTION {text-align:left; font-size:14pt; font-weight:bold}
+</style></head>
+<body>
+<div class="container">
+<div class="row">
+<img class="img-fluid" src="cas_cvdp-le.png" alt="CVDP-LE logo">
+</div>
+<div class="row">
+<div class="col">
+<table class="table my-0">
+<tr>
+<td class="text-left">
+<ul class="list-inline my-0">
+<li class="list-inline-item"><a href="http://dx.doi.org/10.5065/h7c7-f961">User's Guide</a></li><br>
+<li class="list-inline-item">Metrics: <a href="metrics.ensemble.pc.html">Graphics</a> | <a href="metrics.table_0E.html">Ensemble Tables</a> | 
+<li class="list-inline-item">Namelists: <a href="namelist_obs.html">Input</a> | <a href="namelist_msftmz.html">Derived</a></li>
+<li class="list-inline-item">Created: {{ create_time }}<br>CVDP-Python Version 0.0.1</li>
+<li class="list-inline-item"><a href="index.html">Ensemble Summary</a> | <b>Individual Members</b></li>
+</ul></td>
+</tr>
+</table>
+</div>
+<div class="col align-self-center">
+<h2 class="text-center">Python Images - Individual Members</h2>
+</div>
+</div>
+<div class="row">
+<div class="col">
+<table class="table table-striped table-bordered">
+<h3 class="display-6">Climatological Averages</h3>
+<tr class="d-flex">
+<td class="col"><b>SST</b></td>
+<td class="col">
+<a class="collapse-link" data-toggle="collapse" href="#sst_mean_djf" role="button" aria-expanded="false" aria-controls="sst_mean_djf">DJF</a>
+<div class="collapse" id="sst_mean_djf">
+<ul class="list-inline my-0">
+<!--<td class="col"><a href="#" onclick="showImage('{{ img('sst_spatialmean_djf.summary.png') }}'); return false;">DJF</a></td>-->
+<li class="list-inline-item"><a href="#" onclick="showImage('{{ img('sst_spatialmean_djf.indmem.png') }}'); return false;" class="badge badge-info">Indiv</a></li>
+<li class="list-inline-item"><a href="#" onclick="showImage('{{ img('sst_spatialmean_djf.indmemdiff.png') }}'); return false;" class="badge badge-info">Bias</a></li>
+</ul></div></td>
+<td class="col">
+<a class="collapse-link" data-toggle="collapse" href="#sst_mean_jfm" role="button" aria-expanded="false" aria-controls="sst_mean_jfm">JFM</a>
+<div class="collapse" id="sst_mean_jfm">
+<ul class="list-inline my-0">
+<li class="list-inline-item"><a href="#" onclick="showImage('{{ img('sst_spatialmean_jfm.indmem.png') }}'); return false;" class="badge badge-info">Indiv</a></li>
+<li class="list-inline-item"><a href="#" onclick="showImage('{{ img('sst_spatialmean_jfm.indmemdiff.png') }}'); return false;" class="badge badge-info">Bias</a></li>
+</ul></div></td>
+<td class="col">
+<a class="collapse-link" data-toggle="collapse" href="#sst_mean_mam" role="button" aria-expanded="false" aria-controls="sst_mean_mam">MAM</a>
+<div class="collapse" id="sst_mean_mam">
+<ul class="list-inline my-0">
+<li class="list-inline-item"><a href="#" onclick="showImage('{{ img('sst_spatialmean_mam.indmem.png') }}'); return false;" class="badge badge-info">Indiv</a></li>
+<li class="list-inline-item"><a href="#" onclick="showImage('{{ img('sst_spatialmean_mam.indmemdiff.png') }}'); return false;" class="badge badge-info">Bias</a></li>
+</ul></div></td>
+<td class="col">
+<a class="collapse-link" data-toggle="collapse" href="#sst_mean_jja" role="button" aria-expanded="false" aria-controls="sst_mean_jja">JJA</a>
+<div class="collapse" id="sst_mean_jja">
+<ul class="list-inline my-0">
+<li class="list-inline-item"><a href="#" onclick="showImage('{{ img('sst_spatialmean_jja.indmem.png') }}'); return false;" class="badge badge-info">Indiv</a></li>
+<li class="list-inline-item"><a href="#" onclick="showImage('{{ img('sst_spatialmean_jja.indmemdiff.png') }}'); return false;" class="badge badge-info">Bias</a></li>
+</ul></div></td>
+<td class="col">
+<a class="collapse-link" data-toggle="collapse" href="#sst_mean_jas" role="button" aria-expanded="false" aria-controls="sst_mean_jas">JAS</a>
+<div class="collapse" id="sst_mean_jas">
+<ul class="list-inline my-0">
+<li class="list-inline-item"><a href="#" onclick="showImage('{{ img('sst_spatialmean_jas.indmem.png') }}'); return false;" class="badge badge-info">Indiv</a></li>
+<li class="list-inline-item"><a href="#" onclick="showImage('{{ img('sst_spatialmean_jas.indmemdiff.png') }}'); return false;" class="badge badge-info">Bias</a></li>
+</ul></div></td>
+<td class="col">
+<a class="collapse-link" data-toggle="collapse" href="#sst_mean_son" role="button" aria-expanded="false" aria-controls="sst_mean_son">SON</a>
+<div class="collapse" id="sst_mean_son">
+<ul class="list-inline my-0">
+<li class="list-inline-item"><a href="#" onclick="showImage('{{ img('sst_spatialmean_son.indmem.png') }}'); return false;" class="badge badge-info">Indiv</a></li>
+<li class="list-inline-item"><a href="#" onclick="showImage('{{ img('sst_spatialmean_son.indmemdiff.png') }}'); return false;" class="badge badge-info">Bias</a></li>
+</ul></div></td>
+<td class="col">
+<a class="collapse-link" data-toggle="collapse" href="#sst_mean_ann" role="button" aria-expanded="false" aria-controls="sst_mean_ann">ANN</a>
+<div class="collapse" id="sst_mean_ann">
+<ul class="list-inline my-0">
+<li class="list-inline-item"><a href="#" onclick="showImage('{{ img('sst_spatialmean_ann.indmem.png') }}'); return false;" class="badge badge-info">Indiv</a></li>
+<li class="list-inline-item"><a href="#" onclick="showImage('{{ img('sst_spatialmean_ann.indmemdiff.png') }}'); return false;" class="badge badge-info">Bias</a></li>
+</ul></div></td>
+</tr>
+<tr class="d-flex">
+<td class="col"><b>TAS</b></td>
+<td class="col">
+<a class="collapse-link" data-toggle="collapse" href="#tas_mean_djf" role="button" aria-expanded="false" aria-controls="tas_mean_djf">DJF</a>
+<div class="collapse" id="tas_mean_djf">
+<ul class="list-inline my-0">
+<li class="list-inline-item"><a href="#" onclick="showImage('{{ img('tas_spatialmean_djf.indmem.png') }}'); return false;" class="badge badge-info">Indiv</a></li>
+<li class="list-inline-item"><a href="#" onclick="showImage('{{ img('tas_spatialmean_djf.indmemdiff.png') }}'); return false;" class="badge badge-info">Bias</a></li>
+</ul></div></td>
+<td class="col">
+<a class="collapse-link" data-toggle="collapse" href="#tas_mean_jfm" role="button" aria-expanded="false" aria-controls="tas_mean_jfm">JFM</a>
+<div class="collapse" id="tas_mean_jfm">
+<ul class="list-inline my-0">
+<li class="list-inline-item"><a href="#" onclick="showImage('{{ img('tas_spatialmean_jfm.indmem.png') }}'); return false;" class="badge badge-info">Indiv</a></li>
+<li class="list-inline-item"><a href="#" onclick="showImage('{{ img('tas_spatialmean_jfm.indmemdiff.png') }}'); return false;" class="badge badge-info">Bias</a></li>
+</ul></div></td>
+<td class="col">
+<a class="collapse-link" data-toggle="collapse" href="#tas_mean_mam" role="button" aria-expanded="false" aria-controls="tas_mean_mam">MAM</a>
+<div class="collapse" id="tas_mean_mam">
+<ul class="list-inline my-0">
+<li class="list-inline-item"><a href="#" onclick="showImage('{{ img('tas_spatialmean_mam.indmem.png') }}'); return false;" class="badge badge-info">Indiv</a></li>
+<li class="list-inline-item"><a href="#" onclick="showImage('{{ img('tas_spatialmean_mam.indmemdiff.png') }}'); return false;" class="badge badge-info">Bias</a></li>
+</ul></div></td>
+<td class="col">
+<a class="collapse-link" data-toggle="collapse" href="#tas_mean_jja" role="button" aria-expanded="false" aria-controls="tas_mean_jja">JJA</a>
+<div class="collapse" id="tas_mean_jja">
+<ul class="list-inline my-0">
+<li class="list-inline-item"><a href="#" onclick="showImage('{{ img('tas_spatialmean_jja.indmem.png') }}'); return false;" class="badge badge-info">Indiv</a></li>
+<li class="list-inline-item"><a href="#" onclick="showImage('{{ img('tas_spatialmean_jja.indmemdiff.png') }}'); return false;" class="badge badge-info">Bias</a></li>
+</ul></div></td>
+<td class="col">
+<a class="collapse-link" data-toggle="collapse" href="#tas_mean_jas" role="button" aria-expanded="false" aria-controls="tas_mean_jas">JAS</a>
+<div class="collapse" id="tas_mean_jas">
+<ul class="list-inline my-0">
+<li class="list-inline-item"><a href="#" onclick="showImage('{{ img('tas_spatialmean_jas.indmem.png') }}'); return false;" class="badge badge-info">Indiv</a></li>
+<li class="list-inline-item"><a href="#" onclick="showImage('{{ img('tas_spatialmean_jas.indmemdiff.png') }}'); return false;" class="badge badge-info">Bias</a></li>
+</ul></div></td>
+<td class="col">
+<a class="collapse-link" data-toggle="collapse" href="#tas_mean_son" role="button" aria-expanded="false" aria-controls="tas_mean_son">SON</a>
+<div class="collapse" id="tas_mean_son">
+<ul class="list-inline my-0">
+<li class="list-inline-item"><a href="#" onclick="showImage('{{ img('tas_spatialmean_son.indmem.png') }}'); return false;" class="badge badge-info">Indiv</a></li>
+<li class="list-inline-item"><a href="#" onclick="showImage('{{ img('tas_spatialmean_son.indmemdiff.png') }}'); return false;" class="badge badge-info">Bias</a></li>
+</ul></div></td>
+<td class="col">
+<a class="collapse-link" data-toggle="collapse" href="#tas_mean_ann" role="button" aria-expanded="false" aria-controls="tas_mean_ann">ANN</a>
+<div class="collapse" id="tas_mean_ann">
+<ul class="list-inline my-0">
+<li class="list-inline-item"><a href="#" onclick="showImage('{{ img('tas_spatialmean_ann.indmem.png') }}'); return false;" class="badge badge-info">Indiv</a></li>
+<li class="list-inline-item"><a href="#" onclick="showImage('{{ img('tas_spatialmean_ann.indmemdiff.png') }}'); return false;" class="badge badge-info">Bias</a></li>
+</ul></div></td>
+</tr>
+<tr class="d-flex">
+<td class="col"><b>PSL</b></td>
+<td class="col">
+<a class="collapse-link" data-toggle="collapse" href="#psl_mean_djf" role="button" aria-expanded="false" aria-controls="psl_mean_djf">DJF</a>
+<div class="collapse" id="psl_mean_djf">
+<ul class="list-inline my-0">
+<li class="list-inline-item"><a href="#" onclick="showImage('{{ img('psl_spatialmean_djf.indmem.png') }}'); return false;" class="badge badge-info">Indiv</a></li>
+<li class="list-inline-item"><a href="#" onclick="showImage('{{ img('psl_spatialmean_djf.indmemdiff.png') }}'); return false;" class="badge badge-info">Bias</a></li>
+</ul></div></td>
+<td class="col">
+<a class="collapse-link" data-toggle="collapse" href="#psl_mean_jfm" role="button" aria-expanded="false" aria-controls="psl_mean_jfm">JFM</a>
+<div class="collapse" id="psl_mean_jfm">
+<ul class="list-inline my-0">
+<li class="list-inline-item"><a href="#" onclick="showImage('{{ img('psl_spatialmean_jfm.indmem.png') }}'); return false;" class="badge badge-info">Indiv</a></li>
+<li class="list-inline-item"><a href="#" onclick="showImage('{{ img('psl_spatialmean_jfm.indmemdiff.png') }}'); return false;" class="badge badge-info">Bias</a></li>
+</ul></div></td>
+<td class="col">
+<a class="collapse-link" data-toggle="collapse" href="#psl_mean_mam" role="button" aria-expanded="false" aria-controls="psl_mean_mam">MAM</a>
+<div class="collapse" id="psl_mean_mam">
+<ul class="list-inline my-0">
+<li class="list-inline-item"><a href="#" onclick="showImage('{{ img('psl_spatialmean_mam.indmem.png') }}'); return false;" class="badge badge-info">Indiv</a></li>
+<li class="list-inline-item"><a href="#" onclick="showImage('{{ img('psl_spatialmean_mam.indmemdiff.png') }}'); return false;" class="badge badge-info">Bias</a></li>
+</ul></div></td>
+<td class="col">
+<a class="collapse-link" data-toggle="collapse" href="#psl_mean_jja" role="button" aria-expanded="false" aria-controls="psl_mean_jja">JJA</a>
+<div class="collapse" id="psl_mean_jja">
+<ul class="list-inline my-0">
+<li class="list-inline-item"><a href="#" onclick="showImage('{{ img('psl_spatialmean_jja.indmem.png') }}'); return false;" class="badge badge-info">Indiv</a></li>
+<li class="list-inline-item"><a href="#" onclick="showImage('{{ img('psl_spatialmean_jja.indmemdiff.png') }}'); return false;" class="badge badge-info">Bias</a></li>
+</ul></div></td>
+<td class="col">
+<a class="collapse-link" data-toggle="collapse" href="#psl_mean_jas" role="button" aria-expanded="false" aria-controls="psl_mean_jas">JAS</a>
+<div class="collapse" id="psl_mean_jas">
+<ul class="list-inline my-0">
+<li class="list-inline-item"><a href="#" onclick="showImage('{{ img('psl_spatialmean_jas.indmem.png') }}'); return false;" class="badge badge-info">Indiv</a></li>
+<li class="list-inline-item"><a href="#" onclick="showImage('{{ img('psl_spatialmean_jas.indmemdiff.png') }}'); return false;" class="badge badge-info">Bias</a></li>
+</ul></div></td>
+<td class="col">
+<a class="collapse-link" data-toggle="collapse" href="#psl_mean_son" role="button" aria-expanded="false" aria-controls="psl_mean_son">SON</a>
+<div class="collapse" id="psl_mean_son">
+<ul class="list-inline my-0">
+<li class="list-inline-item"><a href="#" onclick="showImage('{{ img('psl_spatialmean_son.indmem.png') }}'); return false;" class="badge badge-info">Indiv</a></li>
+<li class="list-inline-item"><a href="#" onclick="showImage('{{ img('psl_spatialmean_son.indmemdiff.png') }}'); return false;" class="badge badge-info">Bias</a></li>
+</ul></div></td>
+<td class="col">
+<a class="collapse-link" data-toggle="collapse" href="#psl_mean_ann" role="button" aria-expanded="false" aria-controls="psl_mean_ann">ANN</a>
+<div class="collapse" id="psl_mean_ann">
+<ul class="list-inline my-0">
+<li class="list-inline-item"><a href="#" onclick="showImage('{{ img('psl_spatialmean_ann.indmem.png') }}'); return false;" class="badge badge-info">Indiv</a></li>
+<li class="list-inline-item"><a href="#" onclick="showImage('{{ img('psl_spatialmean_ann.indmemdiff.png') }}'); return false;" class="badge badge-info">Bias</a></li>
+</ul></div></td>
+</tr>
+<tr class="d-flex">
+<td class="col"><b>PR</b></td>
+<td class="col">
+<a class="collapse-link" data-toggle="collapse" href="#pr_mean_djf" role="button" aria-expanded="false" aria-controls="pr_mean_djf">DJF</a>
+<div class="collapse" id="pr_mean_djf">
+<ul class="list-inline my-0">
+<li class="list-inline-item"><a href="#" onclick="showImage('{{ img('pr_spatialmean_djf.indmem.png') }}'); return false;" class="badge badge-info">Indiv</a></li>
+<li class="list-inline-item"><a href="#" onclick="showImage('{{ img('pr_spatialmean_djf.indmemdiff.png') }}'); return false;" class="badge badge-info">Bias</a></li>
+</ul></div></td>
+<td class="col">
+<a class="collapse-link" data-toggle="collapse" href="#pr_mean_jfm" role="button" aria-expanded="false" aria-controls="pr_mean_jfm">JFM</a>
+<div class="collapse" id="pr_mean_jfm">
+<ul class="list-inline my-0">
+<li class="list-inline-item"><a href="#" onclick="showImage('{{ img('pr_spatialmean_jfm.indmem.png') }}'); return false;" class="badge badge-info">Indiv</a></li>
+<li class="list-inline-item"><a href="#" onclick="showImage('{{ img('pr_spatialmean_jfm.indmemdiff.png') }}'); return false;" class="badge badge-info">Bias</a></li>
+</ul></div></td>
+<td class="col">
+<a class="collapse-link" data-toggle="collapse" href="#pr_mean_mam" role="button" aria-expanded="false" aria-controls="pr_mean_mam">MAM</a>
+<div class="collapse" id="pr_mean_mam">
+<ul class="list-inline my-0">
+<li class="list-inline-item"><a href="#" onclick="showImage('{{ img('pr_spatialmean_mam.indmem.png') }}'); return false;" class="badge badge-info">Indiv</a></li>
+<li class="list-inline-item"><a href="#" onclick="showImage('{{ img('pr_spatialmean_mam.indmemdiff.png') }}'); return false;" class="badge badge-info">Bias</a></li>
+</ul></div></td>
+<td class="col">
+<a class="collapse-link" data-toggle="collapse" href="#pr_mean_jja" role="button" aria-expanded="false" aria-controls="pr_mean_jja">JJA</a>
+<div class="collapse" id="pr_mean_jja">
+<ul class="list-inline my-0">
+<li class="list-inline-item"><a href="#" onclick="showImage('{{ img('pr_spatialmean_jja.indmem.png') }}'); return false;" class="badge badge-info">Indiv</a></li>
+<li class="list-inline-item"><a href="#" onclick="showImage('{{ img('pr_spatialmean_jja.indmemdiff.png') }}'); return false;" class="badge badge-info">Bias</a></li>
+</ul></div></td>
+<td class="col">
+<a class="collapse-link" data-toggle="collapse" href="#pr_mean_jas" role="button" aria-expanded="false" aria-controls="pr_mean_jas">JAS</a>
+<div class="collapse" id="pr_mean_jas">
+<ul class="list-inline my-0">
+<li class="list-inline-item"><a href="#" onclick="showImage('{{ img('pr_spatialmean_jas.indmem.png') }}'); return false;" class="badge badge-info">Indiv</a></li>
+<li class="list-inline-item"><a href="#" onclick="showImage('{{ img('pr_spatialmean_jas.indmemdiff.png') }}'); return false;" class="badge badge-info">Bias</a></li>
+</ul></div></td>
+<td class="col">
+<a class="collapse-link" data-toggle="collapse" href="#pr_mean_son" role="button" aria-expanded="false" aria-controls="pr_mean_son">SON</a>
+<div class="collapse" id="pr_mean_son">
+<ul class="list-inline my-0">
+<li class="list-inline-item"><a href="#" onclick="showImage('{{ img('pr_spatialmean_son.indmem.png') }}'); return false;" class="badge badge-info">Indiv</a></li>
+<li class="list-inline-item"><a href="#" onclick="showImage('{{ img('pr_spatialmean_son.indmemdiff.png') }}'); return false;" class="badge badge-info">Bias</a></li>
+</ul></div></td>
+<td class="col">
+<a class="collapse-link" data-toggle="collapse" href="#pr_mean_ann" role="button" aria-expanded="false" aria-controls="pr_mean_ann">ANN</a>
+<div class="collapse" id="pr_mean_ann">
+<ul class="list-inline my-0">
+<li class="list-inline-item"><a href="#" onclick="showImage('{{ img('pr_spatialmean_ann.indmem.png') }}'); return false;" class="badge badge-info">Indiv</a></li>
+<li class="list-inline-item"><a href="#" onclick="showImage('{{ img('pr_spatialmean_ann.indmemdiff.png') }}'); return false;" class="badge badge-info">Bias</a></li>
+</ul></div></td>
+</tr>
+
+<!--<tr class="d-flex">
+<td class="col"><b>NPI</b></td>
+<td class="col"></td>
+<a class="collapse-link" data-toggle="collapse" href="#npi_mean_njdfm" role="button" aria-expanded="false" aria-controls="npi_mean_njdfm">NDJFM</a>
+<div class="collapse" id="npi_mean_njdfm">
+<ul class="list-inline my-0">
+<li class="list-inline-item"><a href="#" onclick="showImage('{{ img('npi_pattern_ndjfm.indmem.png') }}'); return false;" class="badge badge-info">Indiv</a></li>
+<li class="list-inline-item"><a href="#" onclick="showImage('{{ img('npi_pattern_ndjfm.indmemdiff.png') }}'); return false;" class="badge badge-info">Bias</a></li>
+</ul></div></td>
+</tr>-->
+
+
+
+<tr class="d-flex">
+<td class="col"><b>NPI</b></td>
+<td class="col">
+<a class="collapse-link" data-toggle="collapse" href="#npi_mean_njdfm" role="button" aria-expanded="false" aria-controls="npi_mean_njdfm">NDJFM</a>
+<div class="collapse" id="npi_mean_njdfm">
+<ul class="list-inline my-0">
+<li class="list-inline-item"><a href="#" onclick="showImage('{{ img('npi_pattern_ndjfm.indmem.png') }}'); return false;" class="badge badge-info">Indiv</a></li>
+<li class="list-inline-item"><a href="#" onclick="showImage('{{ img('npi_pattern_ndjfm.indmemdiff.png') }}'); return false;" class="badge badge-info">Bias</a></li>
+</ul></div></td>
+<td class="col">
+<a class="collapse-link" data-toggle="collapse" href="#pr_mean_jfm" role="button" aria-expanded="false" aria-controls="pr_mean_jfm"></a>
+<div class="collapse" id="pr_mean_jfm">
+<ul class="list-inline my-0">
+<li class="list-inline-item"><a href="#" onclick="showImage('{{ img('pr_spatialmean_jfm.indmem.png') }}'); return false;" class="badge badge-info">Indiv</a></li>
+<li class="list-inline-item"><a href="#" onclick="showImage('{{ img('pr_spatialmean_jfm.indmemdiff.png') }}'); return false;" class="badge badge-info">Bias</a></li>
+</ul></div></td>
+<td class="col">
+<a class="collapse-link" data-toggle="collapse" href="#pr_mean_mam" role="button" aria-expanded="false" aria-controls="pr_mean_mam"></a>
+<div class="collapse" id="pr_mean_mam">
+<ul class="list-inline my-0">
+<li class="list-inline-item"><a href="#" onclick="showImage('{{ img('pr_spatialmean_mam.indmem.png') }}'); return false;" class="badge badge-info">Indiv</a></li>
+<li class="list-inline-item"><a href="#" onclick="showImage('{{ img('pr_spatialmean_mam.indmemdiff.png') }}'); return false;" class="badge badge-info">Bias</a></li>
+</ul></div></td>
+<td class="col">
+<a class="collapse-link" data-toggle="collapse" href="#pr_mean_jja" role="button" aria-expanded="false" aria-controls="pr_mean_jja"></a>
+<div class="collapse" id="pr_mean_jja">
+<ul class="list-inline my-0">
+<li class="list-inline-item"><a href="#" onclick="showImage('{{ img('pr_spatialmean_jja.indmem.png') }}'); return false;" class="badge badge-info">Indiv</a></li>
+<li class="list-inline-item"><a href="#" onclick="showImage('{{ img('pr_spatialmean_jja.indmemdiff.png') }}'); return false;" class="badge badge-info">Bias</a></li>
+</ul></div></td>
+<td class="col">
+<a class="collapse-link" data-toggle="collapse" href="#pr_mean_jas" role="button" aria-expanded="false" aria-controls="pr_mean_jas"></a>
+<div class="collapse" id="pr_mean_jas">
+<ul class="list-inline my-0">
+<li class="list-inline-item"><a href="#" onclick="showImage('{{ img('pr_spatialmean_jas.indmem.png') }}'); return false;" class="badge badge-info">Indiv</a></li>
+<li class="list-inline-item"><a href="#" onclick="showImage('{{ img('pr_spatialmean_jas.indmemdiff.png') }}'); return false;" class="badge badge-info">Bias</a></li>
+</ul></div></td>
+<td class="col">
+<a class="collapse-link" data-toggle="collapse" href="#pr_mean_son" role="button" aria-expanded="false" aria-controls="pr_mean_son"></a>
+<div class="collapse" id="pr_mean_son">
+<ul class="list-inline my-0">
+<li class="list-inline-item"><a href="#" onclick="showImage('{{ img('pr_spatialmean_son.indmem.png') }}'); return false;" class="badge badge-info">Indiv</a></li>
+<li class="list-inline-item"><a href="#" onclick="showImage('{{ img('pr_spatialmean_son.indmemdiff.png') }}'); return false;" class="badge badge-info">Bias</a></li>
+</ul></div></td>
+<td class="col">
+<a class="collapse-link" data-toggle="collapse" href="#pr_mean_ann" role="button" aria-expanded="false" aria-controls="pr_mean_ann"></a>
+<div class="collapse" id="pr_mean_ann">
+<ul class="list-inline my-0">
+<li class="list-inline-item"><a href="#" onclick="showImage('{{ img('pr_spatialmean_ann.indmem.png') }}'); return false;" class="badge badge-info">Indiv</a></li>
+<li class="list-inline-item"><a href="#" onclick="showImage('{{ img('pr_spatialmean_ann.indmemdiff.png') }}'); return false;" class="badge badge-info">Bias</a></li>
+</ul></div></td>
+</tr>
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+<tr class="d-flex">
+<td class="col"><b>SIC NH</b></td>
+<td class="col">
+<a class="collapse-link" data-toggle="collapse" href="#siconc_nh_mean_djf" role="button" aria-expanded="false" aria-controls="siconc_nh_mean_djf">DJF</a>
+<div class="collapse" id="siconc_nh_mean_djf">
+<ul class="list-inline my-0">
+<li class="list-inline-item"><a href="#" onclick="showImage('{{ img('siconc_nh_spatialmean_djf.indmem.png') }}'); return false;" class="badge badge-info">Indiv</a></li>
+<li class="list-inline-item"><a href="#" onclick="showImage('{{ img('siconc_nh_spatialmean_djf.indmemdiff.png') }}'); return false;" class="badge badge-info">Bias</a></li>
+</ul></div></td>
+<td class="col">
+<a class="collapse-link" data-toggle="collapse" href="#siconc_nh_mean_jfm" role="button" aria-expanded="false" aria-controls="siconc_nh_mean_jfm">JFM</a>
+<div class="collapse" id="siconc_nh_mean_jfm">
+<ul class="list-inline my-0">
+<li class="list-inline-item"><a href="#" onclick="showImage('{{ img('siconc_nh_spatialmean_jfm.indmem.png') }}'); return false;" class="badge badge-info">Indiv</a></li>
+<li class="list-inline-item"><a href="#" onclick="showImage('{{ img('siconc_nh_spatialmean_jfm.indmemdiff.png') }}'); return false;" class="badge badge-info">Bias</a></li>
+</ul></div></td>
+<td class="col">
+<a class="collapse-link" data-toggle="collapse" href="#siconc_nh_mean_mam" role="button" aria-expanded="false" aria-controls="siconc_nh_mean_mam">MAM</a>
+<div class="collapse" id="siconc_nh_mean_mam">
+<ul class="list-inline my-0">
+<li class="list-inline-item"><a href="#" onclick="showImage('{{ img('siconc_nh_spatialmean_mam.indmem.png') }}'); return false;" class="badge badge-info">Indiv</a></li>
+<li class="list-inline-item"><a href="#" onclick="showImage('{{ img('siconc_nh_spatialmean_mam.indmemdiff.png') }}'); return false;" class="badge badge-info">Bias</a></li>
+</ul></div></td>
+<td class="col">
+<a class="collapse-link" data-toggle="collapse" href="#siconc_nh_mean_jja" role="button" aria-expanded="false" aria-controls="siconc_nh_mean_jja">JJA</a>
+<div class="collapse" id="siconc_nh_mean_jja">
+<ul class="list-inline my-0">
+<li class="list-inline-item"><a href="#" onclick="showImage('{{ img('siconc_nh_spatialmean_jja.indmem.png') }}'); return false;" class="badge badge-info">Indiv</a></li>
+<li class="list-inline-item"><a href="#" onclick="showImage('{{ img('siconc_nh_spatialmean_jja.indmemdiff.png') }}'); return false;" class="badge badge-info">Bias</a></li>
+</ul></div></td>
+<td class="col">
+<a class="collapse-link" data-toggle="collapse" href="#siconc_nh_mean_jas" role="button" aria-expanded="false" aria-controls="siconc_nh_mean_jas">JAS</a>
+<div class="collapse" id="siconc_nh_mean_jas">
+<ul class="list-inline my-0">
+<li class="list-inline-item"><a href="#" onclick="showImage('{{ img('siconc_nh_spatialmean_jas.indmem.png') }}'); return false;" class="badge badge-info">Indiv</a></li>
+<li class="list-inline-item"><a href="#" onclick="showImage('{{ img('siconc_nh_spatialmean_jas.indmemdiff.png') }}'); return false;" class="badge badge-info">Bias</a></li>
+</ul></div></td>
+<td class="col">
+<a class="collapse-link" data-toggle="collapse" href="#siconc_nh_mean_son" role="button" aria-expanded="false" aria-controls="siconc_nh_mean_son">SON</a>
+<div class="collapse" id="siconc_nh_mean_son">
+<ul class="list-inline my-0">
+<li class="list-inline-item"><a href="#" onclick="showImage('{{ img('siconc_nh_spatialmean_son.indmem.png') }}'); return false;" class="badge badge-info">Indiv</a></li>
+<li class="list-inline-item"><a href="#" onclick="showImage('{{ img('siconc_nh_spatialmean_son.indmemdiff.png') }}'); return false;" class="badge badge-info">Bias</a></li>
+</ul></div></td>
+<td class="col">
+<a class="collapse-link" data-toggle="collapse" href="#siconc_nh_mean_ann" role="button" aria-expanded="false" aria-controls="siconc_nh_mean_ann">ANN</a>
+<div class="collapse" id="siconc_nh_mean_ann">
+<ul class="list-inline my-0">
+<li class="list-inline-item"><a href="#" onclick="showImage('{{ img('siconc_nh_spatialmean_ann.indmem.png') }}'); return false;" class="badge badge-info">Indiv</a></li>
+<li class="list-inline-item"><a href="#" onclick="showImage('{{ img('siconc_nh_spatialmean_ann.indmemdiff.png') }}'); return false;" class="badge badge-info">Bias</a></li>
+</ul></div></td>
+</tr>
+<tr class="d-flex">
+<td class="col"><b>SIC SH</b></td>
+<td class="col">
+<a class="collapse-link" data-toggle="collapse" href="#siconc_sh_mean_djf" role="button" aria-expanded="false" aria-controls="siconc_sh_mean_djf">DJF</a>
+<div class="collapse" id="siconc_sh_mean_djf">
+<ul class="list-inline my-0">
+<li class="list-inline-item"><a href="#" onclick="showImage('{{ img('siconc_sh_spatialmean_djf.indmem.png') }}'); return false;" class="badge badge-info">Indiv</a></li>
+<li class="list-inline-item"><a href="#" onclick="showImage('{{ img('siconc_sh_spatialmean_djf.indmemdiff.png') }}'); return false;" class="badge badge-info">Bias</a></li>
+</ul></div></td>
+<td class="col">
+<a class="collapse-link" data-toggle="collapse" href="#siconc_sh_mean_jfm" role="button" aria-expanded="false" aria-controls="siconc_sh_mean_jfm">JFM</a>
+<div class="collapse" id="siconc_sh_mean_jfm">
+<ul class="list-inline my-0">
+<li class="list-inline-item"><a href="#" onclick="showImage('{{ img('siconc_sh_spatialmean_jfm.indmem.png') }}'); return false;" class="badge badge-info">Indiv</a></li>
+<li class="list-inline-item"><a href="#" onclick="showImage('{{ img('siconc_sh_spatialmean_jfm.indmemdiff.png') }}'); return false;" class="badge badge-info">Bias</a></li>
+</ul></div></td>
+<td class="col">
+<a class="collapse-link" data-toggle="collapse" href="#siconc_sh_mean_mam" role="button" aria-expanded="false" aria-controls="siconc_sh_mean_mam">MAM</a>
+<div class="collapse" id="siconc_sh_mean_mam">
+<ul class="list-inline my-0">
+<li class="list-inline-item"><a href="#" onclick="showImage('{{ img('siconc_sh_spatialmean_mam.indmem.png') }}'); return false;" class="badge badge-info">Indiv</a></li>
+<li class="list-inline-item"><a href="#" onclick="showImage('{{ img('siconc_sh_spatialmean_mam.indmemdiff.png') }}'); return false;" class="badge badge-info">Bias</a></li>
+</ul></div></td>
+<td class="col">
+<a class="collapse-link" data-toggle="collapse" href="#siconc_sh_mean_jja" role="button" aria-expanded="false" aria-controls="siconc_sh_mean_jja">JJA</a>
+<div class="collapse" id="siconc_sh_mean_jja">
+<ul class="list-inline my-0">
+<li class="list-inline-item"><a href="#" onclick="showImage('{{ img('siconc_sh_spatialmean_jja.indmem.png') }}'); return false;" class="badge badge-info">Indiv</a></li>
+<li class="list-inline-item"><a href="#" onclick="showImage('{{ img('siconc_sh_spatialmean_jja.indmemdiff.png') }}'); return false;" class="badge badge-info">Bias</a></li>
+</ul></div></td>
+<td class="col">
+<a class="collapse-link" data-toggle="collapse" href="#siconc_sh_mean_jas" role="button" aria-expanded="false" aria-controls="siconc_sh_mean_jas">JAS</a>
+<div class="collapse" id="siconc_sh_mean_jas">
+<ul class="list-inline my-0">
+<li class="list-inline-item"><a href="#" onclick="showImage('{{ img('siconc_sh_spatialmean_jas.indmem.png') }}'); return false;" class="badge badge-info">Indiv</a></li>
+<li class="list-inline-item"><a href="#" onclick="showImage('{{ img('siconc_sh_spatialmean_jas.indmemdiff.png') }}'); return false;" class="badge badge-info">Bias</a></li>
+</ul></div></td>
+<td class="col">
+<a class="collapse-link" data-toggle="collapse" href="#siconc_sh_mean_son" role="button" aria-expanded="false" aria-controls="siconc_sh_mean_son">SON</a>
+<div class="collapse" id="siconc_sh_mean_son">
+<ul class="list-inline my-0">
+<li class="list-inline-item"><a href="#" onclick="showImage('{{ img('siconc_sh_spatialmean_son.indmem.png') }}'); return false;" class="badge badge-info">Indiv</a></li>
+<li class="list-inline-item"><a href="#" onclick="showImage('{{ img('siconc_sh_spatialmean_son.indmemdiff.png') }}'); return false;" class="badge badge-info">Bias</a></li>
+</ul></div></td>
+<td class="col">
+<a class="collapse-link" data-toggle="collapse" href="#siconc_sh_mean_ann" role="button" aria-expanded="false" aria-controls="siconc_sh_mean_ann">ANN</a>
+<div class="collapse" id="siconc_sh_mean_ann">
+<ul class="list-inline my-0">
+<li class="list-inline-item"><a href="#" onclick="showImage('{{ img('siconc_sh_spatialmean_ann.indmem.png') }}'); return false;" class="badge badge-info">Indiv</a></li>
+<li class="list-inline-item"><a href="#" onclick="showImage('{{ img('siconc_sh_spatialmean_ann.indmemdiff.png') }}'); return false;" class="badge badge-info">Bias</a></li>
+</ul></div></td>
+</tr>
+</table></div></div>
+<div class="row">
+<div class="col">
+<table class="table table-striped table-bordered">
+<h3 class="display-6">Standard Deviations</h3>
+<tr class="d-flex">
+<td class="col"><b>SST</b></td>
+<td class="col">
+<a class="collapse-link" data-toggle="collapse" href="#sst_stddev_djf" role="button" aria-expanded="false" aria-controls="sst_stddev_djf">DJF</a>
+<div class="collapse" id="sst_stddev_djf">
+<ul class="list-inline my-0">
+<li class="list-inline-item"><a href="#" onclick="showImage('{{ img('sst_spatialstddev_djf.indmem.png') }}'); return false;" class="badge badge-info">Indiv</a></li>
+<li class="list-inline-item"><a href="#" onclick="showImage('{{ img('sst_spatialstddev_djf.indmemdiff.png') }}'); return false;" class="badge badge-info">Bias</a></li>
+</ul></div></td>
+<td class="col">
+<a class="collapse-link" data-toggle="collapse" href="#sst_stddev_jfm" role="button" aria-expanded="false" aria-controls="sst_stddev_jfm">JFM</a>
+<div class="collapse" id="sst_stddev_jfm">
+<ul class="list-inline my-0">
+<li class="list-inline-item"><a href="#" onclick="showImage('{{ img('sst_spatialstddev_jfm.indmem.png') }}'); return false;" class="badge badge-info">Indiv</a></li>
+<li class="list-inline-item"><a href="#" onclick="showImage('{{ img('sst_spatialstddev_jfm.indmemdiff.png') }}'); return false;" class="badge badge-info">Bias</a></li>
+</ul></div></td>
+<td class="col">
+<a class="collapse-link" data-toggle="collapse" href="#sst_stddev_mam" role="button" aria-expanded="false" aria-controls="sst_stddev_mam">MAM</a>
+<div class="collapse" id="sst_stddev_mam">
+<ul class="list-inline my-0">
+<li class="list-inline-item"><a href="#" onclick="showImage('{{ img('sst_spatialstddev_mam.indmem.png') }}'); return false;" class="badge badge-info">Indiv</a></li>
+<li class="list-inline-item"><a href="#" onclick="showImage('{{ img('sst_spatialstddev_mam.indmemdiff.png') }}'); return false;" class="badge badge-info">Bias</a></li>
+</ul></div></td>
+<td class="col">
+<a class="collapse-link" data-toggle="collapse" href="#sst_stddev_jja" role="button" aria-expanded="false" aria-controls="sst_stddev_jja">JJA</a>
+<div class="collapse" id="sst_stddev_jja">
+<ul class="list-inline my-0">
+<li class="list-inline-item"><a href="#" onclick="showImage('{{ img('sst_spatialstddev_jja.indmem.png') }}'); return false;" class="badge badge-info">Indiv</a></li>
+<li class="list-inline-item"><a href="#" onclick="showImage('{{ img('sst_spatialstddev_jja.indmemdiff.png') }}'); return false;" class="badge badge-info">Bias</a></li>
+</ul></div></td>
+<td class="col">
+<a class="collapse-link" data-toggle="collapse" href="#sst_stddev_jas" role="button" aria-expanded="false" aria-controls="sst_stddev_jas">JAS</a>
+<div class="collapse" id="sst_stddev_jas">
+<ul class="list-inline my-0">
+<li class="list-inline-item"><a href="#" onclick="showImage('{{ img('sst_spatialstddev_jas.indmem.png') }}'); return false;" class="badge badge-info">Indiv</a></li>
+<li class="list-inline-item"><a href="#" onclick="showImage('{{ img('sst_spatialstddev_jas.indmemdiff.png') }}'); return false;" class="badge badge-info">Bias</a></li>
+</ul></div></td>
+<td class="col">
+<a class="collapse-link" data-toggle="collapse" href="#sst_stddev_son" role="button" aria-expanded="false" aria-controls="sst_stddev_son">SON</a>
+<div class="collapse" id="sst_stddev_son">
+<ul class="list-inline my-0">
+<li class="list-inline-item"><a href="#" onclick="showImage('{{ img('sst_spatialstddev_son.indmem.png') }}'); return false;" class="badge badge-info">Indiv</a></li>
+<li class="list-inline-item"><a href="#" onclick="showImage('{{ img('sst_spatialstddev_son.indmemdiff.png') }}'); return false;" class="badge badge-info">Bias</a></li>
+</ul></div></td>
+<td class="col">
+<a class="collapse-link" data-toggle="collapse" href="#sst_stddev_ann" role="button" aria-expanded="false" aria-controls="sst_stddev_ann">ANN</a>
+<div class="collapse" id="sst_stddev_ann">
+<ul class="list-inline my-0">
+<li class="list-inline-item"><a href="#" onclick="showImage('{{ img('sst_spatialstddev_ann.indmem.png') }}'); return false;" class="badge badge-info">Indiv</a></li>
+<li class="list-inline-item"><a href="#" onclick="showImage('{{ img('sst_spatialstddev_ann.indmemdiff.png') }}'); return false;" class="badge badge-info">Bias</a></li>
+</ul></div></td>
+</tr>
+<tr class="d-flex">
+<td class="col"><b>TAS</b></td>
+<td class="col">
+<a class="collapse-link" data-toggle="collapse" href="#tas_stddev_djf" role="button" aria-expanded="false" aria-controls="tas_stddev_djf">DJF</a>
+<div class="collapse" id="tas_stddev_djf">
+<ul class="list-inline my-0">
+<li class="list-inline-item"><a href="#" onclick="showImage('{{ img('tas_spatialstddev_djf.indmem.png') }}'); return false;" class="badge badge-info">Indiv</a></li>
+<li class="list-inline-item"><a href="#" onclick="showImage('{{ img('tas_spatialstddev_djf.indmemdiff.png') }}'); return false;" class="badge badge-info">Bias</a></li>
+</ul></div></td>
+<td class="col">
+<a class="collapse-link" data-toggle="collapse" href="#tas_stddev_jfm" role="button" aria-expanded="false" aria-controls="tas_stddev_jfm">JFM</a>
+<div class="collapse" id="tas_stddev_jfm">
+<ul class="list-inline my-0">
+<li class="list-inline-item"><a href="#" onclick="showImage('{{ img('tas_spatialstddev_jfm.indmem.png') }}'); return false;" class="badge badge-info">Indiv</a></li>
+<li class="list-inline-item"><a href="#" onclick="showImage('{{ img('tas_spatialstddev_jfm.indmemdiff.png') }}'); return false;" class="badge badge-info">Bias</a></li>
+</ul></div></td>
+<td class="col">
+<a class="collapse-link" data-toggle="collapse" href="#tas_stddev_mam" role="button" aria-expanded="false" aria-controls="tas_stddev_mam">MAM</a>
+<div class="collapse" id="tas_stddev_mam">
+<ul class="list-inline my-0">
+<li class="list-inline-item"><a href="#" onclick="showImage('{{ img('tas_spatialstddev_mam.indmem.png') }}'); return false;" class="badge badge-info">Indiv</a></li>
+<li class="list-inline-item"><a href="#" onclick="showImage('{{ img('tas_spatialstddev_mam.indmemdiff.png') }}'); return false;" class="badge badge-info">Bias</a></li>
+</ul></div></td>
+<td class="col">
+<a class="collapse-link" data-toggle="collapse" href="#tas_stddev_jja" role="button" aria-expanded="false" aria-controls="tas_stddev_jja">JJA</a>
+<div class="collapse" id="tas_stddev_jja">
+<ul class="list-inline my-0">
+<li class="list-inline-item"><a href="#" onclick="showImage('{{ img('tas_spatialstddev_jja.indmem.png') }}'); return false;" class="badge badge-info">Indiv</a></li>
+<li class="list-inline-item"><a href="#" onclick="showImage('{{ img('tas_spatialstddev_jja.indmemdiff.png') }}'); return false;" class="badge badge-info">Bias</a></li>
+</ul></div></td>
+<td class="col">
+<a class="collapse-link" data-toggle="collapse" href="#tas_stddev_jas" role="button" aria-expanded="false" aria-controls="tas_stddev_jas">JAS</a>
+<div class="collapse" id="tas_stddev_jas">
+<ul class="list-inline my-0">
+<li class="list-inline-item"><a href="#" onclick="showImage('{{ img('tas_spatialstddev_jas.indmem.png') }}'); return false;" class="badge badge-info">Indiv</a></li>
+<li class="list-inline-item"><a href="#" onclick="showImage('{{ img('tas_spatialstddev_jas.indmemdiff.png') }}'); return false;" class="badge badge-info">Bias</a></li>
+</ul></div></td>
+<td class="col">
+<a class="collapse-link" data-toggle="collapse" href="#tas_stddev_son" role="button" aria-expanded="false" aria-controls="tas_stddev_son">SON</a>
+<div class="collapse" id="tas_stddev_son">
+<ul class="list-inline my-0">
+<li class="list-inline-item"><a href="#" onclick="showImage('{{ img('tas_spatialstddev_son.indmem.png') }}'); return false;" class="badge badge-info">Indiv</a></li>
+<li class="list-inline-item"><a href="#" onclick="showImage('{{ img('tas_spatialstddev_son.indmemdiff.png') }}'); return false;" class="badge badge-info">Bias</a></li>
+</ul></div></td>
+<td class="col">
+<a class="collapse-link" data-toggle="collapse" href="#tas_stddev_ann" role="button" aria-expanded="false" aria-controls="tas_stddev_ann">ANN</a>
+<div class="collapse" id="tas_stddev_ann">
+<ul class="list-inline my-0">
+<li class="list-inline-item"><a href="#" onclick="showImage('{{ img('tas_spatialstddev_ann.indmem.png') }}'); return false;" class="badge badge-info">Indiv</a></li>
+<li class="list-inline-item"><a href="#" onclick="showImage('{{ img('tas_spatialstddev_ann.indmemdiff.png') }}'); return false;" class="badge badge-info">Bias</a></li>
+</ul></div></td>
+</tr>
+<tr class="d-flex">
+<td class="col"><b>PSL</b></td>
+<td class="col">
+<a class="collapse-link" data-toggle="collapse" href="#psl_stddev_djf" role="button" aria-expanded="false" aria-controls="psl_stddev_djf">DJF</a>
+<div class="collapse" id="psl_stddev_djf">
+<ul class="list-inline my-0">
+<li class="list-inline-item"><a href="#" onclick="showImage('{{ img('psl_spatialstddev_djf.indmem.png') }}'); return false;" class="badge badge-info">Indiv</a></li>
+<li class="list-inline-item"><a href="#" onclick="showImage('{{ img('psl_spatialstddev_djf.indmemdiff.png') }}'); return false;" class="badge badge-info">Bias</a></li>
+</ul></div></td>
+<td class="col">
+<a class="collapse-link" data-toggle="collapse" href="#psl_stddev_jfm" role="button" aria-expanded="false" aria-controls="psl_stddev_jfm">JFM</a>
+<div class="collapse" id="psl_stddev_jfm">
+<ul class="list-inline my-0">
+<li class="list-inline-item"><a href="#" onclick="showImage('{{ img('psl_spatialstddev_jfm.indmem.png') }}'); return false;" class="badge badge-info">Indiv</a></li>
+<li class="list-inline-item"><a href="#" onclick="showImage('{{ img('psl_spatialstddev_jfm.indmemdiff.png') }}'); return false;" class="badge badge-info">Bias</a></li>
+</ul></div></td>
+<td class="col">
+<a class="collapse-link" data-toggle="collapse" href="#psl_stddev_mam" role="button" aria-expanded="false" aria-controls="psl_stddev_mam">MAM</a>
+<div class="collapse" id="psl_stddev_mam">
+<ul class="list-inline my-0">
+<li class="list-inline-item"><a href="#" onclick="showImage('{{ img('psl_spatialstddev_mam.indmem.png') }}'); return false;" class="badge badge-info">Indiv</a></li>
+<li class="list-inline-item"><a href="#" onclick="showImage('{{ img('psl_spatialstddev_mam.indmemdiff.png') }}'); return false;" class="badge badge-info">Bias</a></li>
+</ul></div></td>
+<td class="col">
+<a class="collapse-link" data-toggle="collapse" href="#psl_stddev_jja" role="button" aria-expanded="false" aria-controls="psl_stddev_jja">JJA</a>
+<div class="collapse" id="psl_stddev_jja">
+<ul class="list-inline my-0">
+<li class="list-inline-item"><a href="#" onclick="showImage('{{ img('psl_spatialstddev_jja.indmem.png') }}'); return false;" class="badge badge-info">Indiv</a></li>
+<li class="list-inline-item"><a href="#" onclick="showImage('{{ img('psl_spatialstddev_jja.indmemdiff.png') }}'); return false;" class="badge badge-info">Bias</a></li>
+</ul></div></td>
+<td class="col">
+<a class="collapse-link" data-toggle="collapse" href="#psl_stddev_jas" role="button" aria-expanded="false" aria-controls="psl_stddev_jas">JAS</a>
+<div class="collapse" id="psl_stddev_jas">
+<ul class="list-inline my-0">
+<li class="list-inline-item"><a href="#" onclick="showImage('{{ img('psl_spatialstddev_jas.indmem.png') }}'); return false;" class="badge badge-info">Indiv</a></li>
+<li class="list-inline-item"><a href="#" onclick="showImage('{{ img('psl_spatialstddev_jas.indmemdiff.png') }}'); return false;" class="badge badge-info">Bias</a></li>
+</ul></div></td>
+<td class="col">
+<a class="collapse-link" data-toggle="collapse" href="#psl_stddev_son" role="button" aria-expanded="false" aria-controls="psl_stddev_son">SON</a>
+<div class="collapse" id="psl_stddev_son">
+<ul class="list-inline my-0">
+<li class="list-inline-item"><a href="#" onclick="showImage('{{ img('psl_spatialstddev_son.indmem.png') }}'); return false;" class="badge badge-info">Indiv</a></li>
+<li class="list-inline-item"><a href="#" onclick="showImage('{{ img('psl_spatialstddev_son.indmemdiff.png') }}'); return false;" class="badge badge-info">Bias</a></li>
+</ul></div></td>
+<td class="col">
+<a class="collapse-link" data-toggle="collapse" href="#psl_stddev_ann" role="button" aria-expanded="false" aria-controls="psl_stddev_ann">ANN</a>
+<div class="collapse" id="psl_stddev_ann">
+<ul class="list-inline my-0">
+<li class="list-inline-item"><a href="#" onclick="showImage('{{ img('psl_spatialstddev_ann.indmem.png') }}'); return false;" class="badge badge-info">Indiv</a></li>
+<li class="list-inline-item"><a href="#" onclick="showImage('{{ img('psl_spatialstddev_ann.indmemdiff.png') }}'); return false;" class="badge badge-info">Bias</a></li>
+</ul></div></td>
+</tr>
+<tr class="d-flex">
+<td class="col"><b>PR</b></td>
+<td class="col">
+<a class="collapse-link" data-toggle="collapse" href="#pr_stddev_djf" role="button" aria-expanded="false" aria-controls="pr_stddev_djf">DJF</a>
+<div class="collapse" id="pr_stddev_djf">
+<ul class="list-inline my-0">
+<li class="list-inline-item"><a href="#" onclick="showImage('{{ img('pr_spatialstddev_djf.indmem.png') }}'); return false;" class="badge badge-info">Indiv</a></li>
+<li class="list-inline-item"><a href="#" onclick="showImage('{{ img('pr_spatialstddev_djf.indmemdiff.png') }}'); return false;" class="badge badge-info">Bias</a></li>
+</ul></div></td>
+<td class="col">
+<a class="collapse-link" data-toggle="collapse" href="#pr_stddev_jfm" role="button" aria-expanded="false" aria-controls="pr_stddev_jfm">JFM</a>
+<div class="collapse" id="pr_stddev_jfm">
+<ul class="list-inline my-0">
+<li class="list-inline-item"><a href="#" onclick="showImage('{{ img('pr_spatialstddev_jfm.indmem.png') }}'); return false;" class="badge badge-info">Indiv</a></li>
+<li class="list-inline-item"><a href="#" onclick="showImage('{{ img('pr_spatialstddev_jfm.indmemdiff.png') }}'); return false;" class="badge badge-info">Bias</a></li>
+</ul></div></td>
+<td class="col">
+<a class="collapse-link" data-toggle="collapse" href="#pr_stddev_mam" role="button" aria-expanded="false" aria-controls="pr_stddev_mam">MAM</a>
+<div class="collapse" id="pr_stddev_mam">
+<ul class="list-inline my-0">
+<li class="list-inline-item"><a href="#" onclick="showImage('{{ img('pr_spatialstddev_mam.indmem.png') }}'); return false;" class="badge badge-info">Indiv</a></li>
+<li class="list-inline-item"><a href="#" onclick="showImage('{{ img('pr_spatialstddev_mam.indmemdiff.png') }}'); return false;" class="badge badge-info">Bias</a></li>
+</ul></div></td>
+<td class="col">
+<a class="collapse-link" data-toggle="collapse" href="#pr_stddev_jja" role="button" aria-expanded="false" aria-controls="pr_stddev_jja">JJA</a>
+<div class="collapse" id="pr_stddev_jja">
+<ul class="list-inline my-0">
+<li class="list-inline-item"><a href="#" onclick="showImage('{{ img('pr_spatialstddev_jja.indmem.png') }}'); return false;" class="badge badge-info">Indiv</a></li>
+<li class="list-inline-item"><a href="#" onclick="showImage('{{ img('pr_spatialstddev_jja.indmemdiff.png') }}'); return false;" class="badge badge-info">Bias</a></li>
+</ul></div></td>
+<td class="col">
+<a class="collapse-link" data-toggle="collapse" href="#pr_stddev_jas" role="button" aria-expanded="false" aria-controls="pr_stddev_jas">JAS</a>
+<div class="collapse" id="pr_stddev_jas">
+<ul class="list-inline my-0">
+<li class="list-inline-item"><a href="#" onclick="showImage('{{ img('pr_spatialstddev_jas.indmem.png') }}'); return false;" class="badge badge-info">Indiv</a></li>
+<li class="list-inline-item"><a href="#" onclick="showImage('{{ img('pr_spatialstddev_jas.indmemdiff.png') }}'); return false;" class="badge badge-info">Bias</a></li>
+</ul></div></td>
+<td class="col">
+<a class="collapse-link" data-toggle="collapse" href="#pr_stddev_son" role="button" aria-expanded="false" aria-controls="pr_stddev_son">SON</a>
+<div class="collapse" id="pr_stddev_son">
+<ul class="list-inline my-0">
+<li class="list-inline-item"><a href="#" onclick="showImage('{{ img('pr_spatialstddev_son.indmem.png') }}'); return false;" class="badge badge-info">Indiv</a></li>
+<li class="list-inline-item"><a href="#" onclick="showImage('{{ img('pr_spatialstddev_son.indmemdiff.png') }}'); return false;" class="badge badge-info">Bias</a></li>
+</ul></div></td>
+<td class="col">
+<a class="collapse-link" data-toggle="collapse" href="#pr_stddev_ann" role="button" aria-expanded="false" aria-controls="pr_stddev_ann">ANN</a>
+<div class="collapse" id="pr_stddev_ann">
+<ul class="list-inline my-0">
+<li class="list-inline-item"><a href="#" onclick="showImage('{{ img('pr_spatialstddev_ann.indmem.png') }}'); return false;" class="badge badge-info">Indiv</a></li>
+<li class="list-inline-item"><a href="#" onclick="showImage('{{ img('pr_spatialstddev_ann.indmemdiff.png') }}'); return false;" class="badge badge-info">Bias</a></li>
+</ul></div></td>
+</tr>
+<tr class="d-flex">
+<td class="col"><b>SIC NH</b></td>
+<td class="col">
+<a class="collapse-link" data-toggle="collapse" href="#siconc_nh_stddev_djf" role="button" aria-expanded="false" aria-controls="siconc_nh_stddev_djf">DJF</a>
+<div class="collapse" id="siconc_nh_stddev_djf">
+<ul class="list-inline my-0">
+<li class="list-inline-item"><a href="#" onclick="showImage('{{ img('siconc_nh_spatialstddev_djf.indmem.png') }}'); return false;" class="badge badge-info">Indiv</a></li>
+<li class="list-inline-item"><a href="#" onclick="showImage('{{ img('siconc_nh_spatialstddev_djf.indmemdiff.png') }}'); return false;" class="badge badge-info">Bias</a></li>
+</ul></div></td>
+<td class="col">
+<a class="collapse-link" data-toggle="collapse" href="#siconc_nh_stddev_jfm" role="button" aria-expanded="false" aria-controls="siconc_nh_stddev_jfm">JFM</a>
+<div class="collapse" id="siconc_nh_stddev_jfm">
+<ul class="list-inline my-0">
+<li class="list-inline-item"><a href="#" onclick="showImage('{{ img('siconc_nh_spatialstddev_jfm.indmem.png') }}'); return false;" class="badge badge-info">Indiv</a></li>
+<li class="list-inline-item"><a href="#" onclick="showImage('{{ img('siconc_nh_spatialstddev_jfm.indmemdiff.png') }}'); return false;" class="badge badge-info">Bias</a></li>
+</ul></div></td>
+<td class="col">
+<a class="collapse-link" data-toggle="collapse" href="#siconc_nh_stddev_mam" role="button" aria-expanded="false" aria-controls="siconc_nh_stddev_mam">MAM</a>
+<div class="collapse" id="siconc_nh_stddev_mam">
+<ul class="list-inline my-0">
+<li class="list-inline-item"><a href="#" onclick="showImage('{{ img('siconc_nh_spatialstddev_mam.indmem.png') }}'); return false;" class="badge badge-info">Indiv</a></li>
+<li class="list-inline-item"><a href="#" onclick="showImage('{{ img('siconc_nh_spatialstddev_mam.indmemdiff.png') }}'); return false;" class="badge badge-info">Bias</a></li>
+</ul></div></td>
+<td class="col">
+<a class="collapse-link" data-toggle="collapse" href="#siconc_nh_stddev_jja" role="button" aria-expanded="false" aria-controls="siconc_nh_stddev_jja">JJA</a>
+<div class="collapse" id="siconc_nh_stddev_jja">
+<ul class="list-inline my-0">
+<li class="list-inline-item"><a href="#" onclick="showImage('{{ img('siconc_nh_spatialstddev_jja.indmem.png') }}'); return false;" class="badge badge-info">Indiv</a></li>
+<li class="list-inline-item"><a href="#" onclick="showImage('{{ img('siconc_nh_spatialstddev_jja.indmemdiff.png') }}'); return false;" class="badge badge-info">Bias</a></li>
+</ul></div></td>
+<td class="col">
+<a class="collapse-link" data-toggle="collapse" href="#siconc_nh_stddev_jas" role="button" aria-expanded="false" aria-controls="siconc_nh_stddev_jas">JAS</a>
+<div class="collapse" id="siconc_nh_stddev_jas">
+<ul class="list-inline my-0">
+<li class="list-inline-item"><a href="#" onclick="showImage('{{ img('siconc_nh_spatialstddev_jas.indmem.png') }}'); return false;" class="badge badge-info">Indiv</a></li>
+<li class="list-inline-item"><a href="#" onclick="showImage('{{ img('siconc_nh_spatialstddev_jas.indmemdiff.png') }}'); return false;" class="badge badge-info">Bias</a></li>
+</ul></div></td>
+<td class="col">
+<a class="collapse-link" data-toggle="collapse" href="#siconc_nh_stddev_son" role="button" aria-expanded="false" aria-controls="siconc_nh_stddev_son">SON</a>
+<div class="collapse" id="siconc_nh_stddev_son">
+<ul class="list-inline my-0">
+<li class="list-inline-item"><a href="#" onclick="showImage('{{ img('siconc_nh_spatialstddev_son.indmem.png') }}'); return false;" class="badge badge-info">Indiv</a></li>
+<li class="list-inline-item"><a href="#" onclick="showImage('{{ img('siconc_nh_spatialstddev_son.indmemdiff.png') }}'); return false;" class="badge badge-info">Bias</a></li>
+</ul></div></td>
+<td class="col">
+<a class="collapse-link" data-toggle="collapse" href="#siconc_nh_stddev_ann" role="button" aria-expanded="false" aria-controls="siconc_nh_stddev_ann">ANN</a>
+<div class="collapse" id="siconc_nh_stddev_ann">
+<ul class="list-inline my-0">
+<li class="list-inline-item"><a href="#" onclick="showImage('{{ img('siconc_nh_spatialstddev_ann.indmem.png') }}'); return false;" class="badge badge-info">Indiv</a></li>
+<li class="list-inline-item"><a href="#" onclick="showImage('{{ img('siconc_nh_spatialstddev_ann.indmemdiff.png') }}'); return false;" class="badge badge-info">Bias</a></li>
+</ul></div></td>
+</tr>
+<tr class="d-flex">
+<td class="col"><b>SIC SH</b></td>
+<td class="col">
+<a class="collapse-link" data-toggle="collapse" href="#siconc_sh_stddev_djf" role="button" aria-expanded="false" aria-controls="siconc_sh_stddev_djf">DJF</a>
+<div class="collapse" id="siconc_sh_stddev_djf">
+<ul class="list-inline my-0">
+<li class="list-inline-item"><a href="#" onclick="showImage('{{ img('siconc_sh_spatialstddev_djf.indmem.png') }}'); return false;" class="badge badge-info">Indiv</a></li>
+<li class="list-inline-item"><a href="#" onclick="showImage('{{ img('siconc_sh_spatialstddev_djf.indmemdiff.png') }}'); return false;" class="badge badge-info">Bias</a></li>
+</ul></div></td>
+<td class="col">
+<a class="collapse-link" data-toggle="collapse" href="#siconc_sh_stddev_jfm" role="button" aria-expanded="false" aria-controls="siconc_sh_stddev_jfm">JFM</a>
+<div class="collapse" id="siconc_sh_stddev_jfm">
+<ul class="list-inline my-0">
+<li class="list-inline-item"><a href="#" onclick="showImage('{{ img('siconc_sh_spatialstddev_jfm.indmem.png') }}'); return false;" class="badge badge-info">Indiv</a></li>
+<li class="list-inline-item"><a href="#" onclick="showImage('{{ img('siconc_sh_spatialstddev_jfm.indmemdiff.png') }}'); return false;" class="badge badge-info">Bias</a></li>
+</ul></div></td>
+<td class="col">
+<a class="collapse-link" data-toggle="collapse" href="#siconc_sh_stddev_mam" role="button" aria-expanded="false" aria-controls="siconc_sh_stddev_mam">MAM</a>
+<div class="collapse" id="siconc_sh_stddev_mam">
+<ul class="list-inline my-0">
+<li class="list-inline-item"><a href="#" onclick="showImage('{{ img('siconc_sh_spatialstddev_mam.indmem.png') }}'); return false;" class="badge badge-info">Indiv</a></li>
+<li class="list-inline-item"><a href="#" onclick="showImage('{{ img('siconc_sh_spatialstddev_mam.indmemdiff.png') }}'); return false;" class="badge badge-info">Bias</a></li>
+</ul></div></td>
+<td class="col">
+<a class="collapse-link" data-toggle="collapse" href="#siconc_sh_stddev_jja" role="button" aria-expanded="false" aria-controls="siconc_sh_stddev_jja">JJA</a>
+<div class="collapse" id="siconc_sh_stddev_jja">
+<ul class="list-inline my-0">
+<li class="list-inline-item"><a href="#" onclick="showImage('{{ img('siconc_sh_spatialstddev_jja.indmem.png') }}'); return false;" class="badge badge-info">Indiv</a></li>
+<li class="list-inline-item"><a href="#" onclick="showImage('{{ img('siconc_sh_spatialstddev_jja.indmemdiff.png') }}'); return false;" class="badge badge-info">Bias</a></li>
+</ul></div></td>
+<td class="col">
+<a class="collapse-link" data-toggle="collapse" href="#siconc_sh_stddev_jas" role="button" aria-expanded="false" aria-controls="siconc_sh_stddev_jas">JAS</a>
+<div class="collapse" id="siconc_sh_stddev_jas">
+<ul class="list-inline my-0">
+<li class="list-inline-item"><a href="#" onclick="showImage('{{ img('siconc_sh_spatialstddev_jas.indmem.png') }}'); return false;" class="badge badge-info">Indiv</a></li>
+<li class="list-inline-item"><a href="#" onclick="showImage('{{ img('siconc_sh_spatialstddev_jas.indmemdiff.png') }}'); return false;" class="badge badge-info">Bias</a></li>
+</ul></div></td>
+<td class="col">
+<a class="collapse-link" data-toggle="collapse" href="#siconc_sh_stddev_son" role="button" aria-expanded="false" aria-controls="siconc_sh_stddev_son">SON</a>
+<div class="collapse" id="siconc_sh_stddev_son">
+<ul class="list-inline my-0">
+<li class="list-inline-item"><a href="#" onclick="showImage('{{ img('siconc_sh_spatialstddev_son.indmem.png') }}'); return false;" class="badge badge-info">Indiv</a></li>
+<li class="list-inline-item"><a href="#" onclick="showImage('{{ img('siconc_sh_spatialstddev_son.indmemdiff.png') }}'); return false;" class="badge badge-info">Bias</a></li>
+</ul></div></td>
+<td class="col">
+<a class="collapse-link" data-toggle="collapse" href="#siconc_sh_stddev_ann" role="button" aria-expanded="false" aria-controls="siconc_sh_stddev_ann">ANN</a>
+<div class="collapse" id="siconc_sh_stddev_ann">
+<ul class="list-inline my-0">
+<li class="list-inline-item"><a href="#" onclick="showImage('{{ img('siconc_sh_spatialstddev_ann.indmem.png') }}'); return false;" class="badge badge-info">Indiv</a></li>
+<li class="list-inline-item"><a href="#" onclick="showImage('{{ img('siconc_sh_spatialstddev_ann.indmemdiff.png') }}'); return false;" class="badge badge-info">Bias</a></li>
+</ul></div></td>
+</tr>
+</table></div></div>
+<div class="row">
+<div class="col">
+<table class="table table-striped table-bordered">
+<h3 class="display-6">Global Trend Maps</h3>
+<tr class="d-flex">
+<td class="col"><b>SST</b></td>
+<td class="col">
+<a class="collapse-link" data-toggle="collapse" href="#sst_trends_djf" role="button" aria-expanded="false" aria-controls="sst_trends_djf">DJF</a>
+<div class="collapse" id="sst_trends_djf">
+<ul class="list-inline my-0">
+<li class="list-inline-item"><a href="#" onclick="showImage('{{ img('sst_trends_djf.indmem.png') }}'); return false;" class="badge badge-info">Indiv</a></li>
+<li class="list-inline-item"><a href="#" onclick="showImage('{{ img('sst_trends_djf.indmemdiff.png') }}'); return false;" class="badge badge-info">Bias</a></li>
+</ul></div></td>
+<td class="col">
+<a class="collapse-link" data-toggle="collapse" href="#sst_trends_jfm" role="button" aria-expanded="false" aria-controls="sst_trends_jfm">JFM</a>
+<div class="collapse" id="sst_trends_jfm">
+<ul class="list-inline my-0">
+<li class="list-inline-item"><a href="#" onclick="showImage('{{ img('sst_trends_jfm.indmem.png') }}'); return false;" class="badge badge-info">Indiv</a></li>
+<li class="list-inline-item"><a href="#" onclick="showImage('{{ img('sst_trends_jfm.indmemdiff.png') }}'); return false;" class="badge badge-info">Bias</a></li>
+</ul></div></td>
+<td class="col">
+<a class="collapse-link" data-toggle="collapse" href="#sst_trends_mam" role="button" aria-expanded="false" aria-controls="sst_trends_mam">MAM</a>
+<div class="collapse" id="sst_trends_mam">
+<ul class="list-inline my-0">
+<li class="list-inline-item"><a href="#" onclick="showImage('{{ img('sst_trends_mam.indmem.png') }}'); return false;" class="badge badge-info">Indiv</a></li>
+<li class="list-inline-item"><a href="#" onclick="showImage('{{ img('sst_trends_mam.indmemdiff.png') }}'); return false;" class="badge badge-info">Bias</a></li>
+</ul></div></td>
+<td class="col">
+<a class="collapse-link" data-toggle="collapse" href="#sst_trends_jja" role="button" aria-expanded="false" aria-controls="sst_trends_jja">JJA</a>
+<div class="collapse" id="sst_trends_jja">
+<ul class="list-inline my-0">
+<li class="list-inline-item"><a href="#" onclick="showImage('{{ img('sst_trends_jja.indmem.png') }}'); return false;" class="badge badge-info">Indiv</a></li>
+<li class="list-inline-item"><a href="#" onclick="showImage('{{ img('sst_trends_jja.indmemdiff.png') }}'); return false;" class="badge badge-info">Bias</a></li>
+</ul></div></td>
+<td class="col">
+<a class="collapse-link" data-toggle="collapse" href="#sst_trends_jas" role="button" aria-expanded="false" aria-controls="sst_trends_jas">JAS</a>
+<div class="collapse" id="sst_trends_jas">
+<ul class="list-inline my-0">
+<li class="list-inline-item"><a href="#" onclick="showImage('{{ img('sst_trends_jas.indmem.png') }}'); return false;" class="badge badge-info">Indiv</a></li>
+<li class="list-inline-item"><a href="#" onclick="showImage('{{ img('sst_trends_jas.indmemdiff.png') }}'); return false;" class="badge badge-info">Bias</a></li>
+</ul></div></td>
+<td class="col">
+<a class="collapse-link" data-toggle="collapse" href="#sst_trends_son" role="button" aria-expanded="false" aria-controls="sst_trends_son">SON</a>
+<div class="collapse" id="sst_trends_son">
+<ul class="list-inline my-0">
+<li class="list-inline-item"><a href="#" onclick="showImage('{{ img('sst_trends_son.indmem.png') }}'); return false;" class="badge badge-info">Indiv</a></li>
+<li class="list-inline-item"><a href="#" onclick="showImage('{{ img('sst_trends_son.indmemdiff.png') }}'); return false;" class="badge badge-info">Bias</a></li>
+</ul></div></td>
+<td class="col">
+<a class="collapse-link" data-toggle="collapse" href="#sst_trends_ann" role="button" aria-expanded="false" aria-controls="sst_trends_ann">ANN</a>
+<div class="collapse" id="sst_trends_ann">
+<ul class="list-inline my-0">
+<li class="list-inline-item"><a href="#" onclick="showImage('{{ img('sst_trends_ann.indmem.png') }}'); return false;" class="badge badge-info">Indiv</a></li>
+<li class="list-inline-item"><a href="#" onclick="showImage('{{ img('sst_trends_ann.indmemdiff.png') }}'); return false;" class="badge badge-info">Bias</a></li>
+</ul></div></td>
+</tr>
+<tr class="d-flex">
+<td class="col"><b>TAS</b></td>
+<td class="col">
+<a class="collapse-link" data-toggle="collapse" href="#tas_trends_djf" role="button" aria-expanded="false" aria-controls="tas_trends_djf">DJF</a>
+<div class="collapse" id="tas_trends_djf">
+<ul class="list-inline my-0">
+<li class="list-inline-item"><a href="#" onclick="showImage('{{ img('tas_trends_djf.indmem.png') }}'); return false;" class="badge badge-info">Indiv</a></li>
+<li class="list-inline-item"><a href="#" onclick="showImage('{{ img('tas_trends_djf.indmemdiff.png') }}'); return false;" class="badge badge-info">Bias</a></li>
+</ul></div></td>
+<td class="col">
+<a class="collapse-link" data-toggle="collapse" href="#tas_trends_jfm" role="button" aria-expanded="false" aria-controls="tas_trends_jfm">JFM</a>
+<div class="collapse" id="tas_trends_jfm">
+<ul class="list-inline my-0">
+<li class="list-inline-item"><a href="#" onclick="showImage('{{ img('tas_trends_jfm.indmem.png') }}'); return false;" class="badge badge-info">Indiv</a></li>
+<li class="list-inline-item"><a href="#" onclick="showImage('{{ img('tas_trends_jfm.indmemdiff.png') }}'); return false;" class="badge badge-info">Bias</a></li>
+</ul></div></td>
+<td class="col">
+<a class="collapse-link" data-toggle="collapse" href="#tas_trends_mam" role="button" aria-expanded="false" aria-controls="tas_trends_mam">MAM</a>
+<div class="collapse" id="tas_trends_mam">
+<ul class="list-inline my-0">
+<li class="list-inline-item"><a href="#" onclick="showImage('{{ img('tas_trends_mam.indmem.png') }}'); return false;" class="badge badge-info">Indiv</a></li>
+<li class="list-inline-item"><a href="#" onclick="showImage('{{ img('tas_trends_mam.indmemdiff.png') }}'); return false;" class="badge badge-info">Bias</a></li>
+</ul></div></td>
+<td class="col">
+<a class="collapse-link" data-toggle="collapse" href="#tas_trends_jja" role="button" aria-expanded="false" aria-controls="tas_trends_jja">JJA</a>
+<div class="collapse" id="tas_trends_jja">
+<ul class="list-inline my-0">
+<li class="list-inline-item"><a href="#" onclick="showImage('{{ img('tas_trends_jja.indmem.png') }}'); return false;" class="badge badge-info">Indiv</a></li>
+<li class="list-inline-item"><a href="#" onclick="showImage('{{ img('tas_trends_jja.indmemdiff.png') }}'); return false;" class="badge badge-info">Bias</a></li>
+</ul></div></td>
+<td class="col">
+<a class="collapse-link" data-toggle="collapse" href="#tas_trends_jas" role="button" aria-expanded="false" aria-controls="tas_trends_jas">JAS</a>
+<div class="collapse" id="tas_trends_jas">
+<ul class="list-inline my-0">
+<li class="list-inline-item"><a href="#" onclick="showImage('{{ img('tas_trends_jas.indmem.png') }}'); return false;" class="badge badge-info">Indiv</a></li>
+<li class="list-inline-item"><a href="#" onclick="showImage('{{ img('tas_trends_jas.indmemdiff.png') }}'); return false;" class="badge badge-info">Bias</a></li>
+</ul></div></td>
+<td class="col">
+<a class="collapse-link" data-toggle="collapse" href="#tas_trends_son" role="button" aria-expanded="false" aria-controls="tas_trends_son">SON</a>
+<div class="collapse" id="tas_trends_son">
+<ul class="list-inline my-0">
+<li class="list-inline-item"><a href="#" onclick="showImage('{{ img('tas_trends_son.indmem.png') }}'); return false;" class="badge badge-info">Indiv</a></li>
+<li class="list-inline-item"><a href="#" onclick="showImage('{{ img('tas_trends_son.indmemdiff.png') }}'); return false;" class="badge badge-info">Bias</a></li>
+</ul></div></td>
+<td class="col">
+<a class="collapse-link" data-toggle="collapse" href="#tas_trends_ann" role="button" aria-expanded="false" aria-controls="tas_trends_ann">ANN</a>
+<div class="collapse" id="tas_trends_ann">
+<ul class="list-inline my-0">
+<li class="list-inline-item"><a href="#" onclick="showImage('{{ img('tas_trends_ann.indmem.png') }}'); return false;" class="badge badge-info">Indiv</a></li>
+<li class="list-inline-item"><a href="#" onclick="showImage('{{ img('tas_trends_ann.indmemdiff.png') }}'); return false;" class="badge badge-info">Bias</a></li>
+</ul></div></td>
+</tr>
+<tr class="d-flex">
+<td class="col"><b>PSL</b></td>
+<td class="col">
+<a class="collapse-link" data-toggle="collapse" href="#psl_trends_djf" role="button" aria-expanded="false" aria-controls="psl_trends_djf">DJF</a>
+<div class="collapse" id="psl_trends_djf">
+<ul class="list-inline my-0">
+<li class="list-inline-item"><a href="#" onclick="showImage('{{ img('psl_trends_djf.indmem.png') }}'); return false;" class="badge badge-info">Indiv</a></li>
+<li class="list-inline-item"><a href="#" onclick="showImage('{{ img('psl_trends_djf.indmemdiff.png') }}'); return false;" class="badge badge-info">Bias</a></li>
+</ul></div></td>
+<td class="col">
+<a class="collapse-link" data-toggle="collapse" href="#psl_trends_jfm" role="button" aria-expanded="false" aria-controls="psl_trends_jfm">JFM</a>
+<div class="collapse" id="psl_trends_jfm">
+<ul class="list-inline my-0">
+<li class="list-inline-item"><a href="#" onclick="showImage('{{ img('psl_trends_jfm.indmem.png') }}'); return false;" class="badge badge-info">Indiv</a></li>
+<li class="list-inline-item"><a href="#" onclick="showImage('{{ img('psl_trends_jfm.indmemdiff.png') }}'); return false;" class="badge badge-info">Bias</a></li>
+</ul></div></td>
+<td class="col">
+<a class="collapse-link" data-toggle="collapse" href="#psl_trends_mam" role="button" aria-expanded="false" aria-controls="psl_trends_mam">MAM</a>
+<div class="collapse" id="psl_trends_mam">
+<ul class="list-inline my-0">
+<li class="list-inline-item"><a href="#" onclick="showImage('{{ img('psl_trends_mam.indmem.png') }}'); return false;" class="badge badge-info">Indiv</a></li>
+<li class="list-inline-item"><a href="#" onclick="showImage('{{ img('psl_trends_mam.indmemdiff.png') }}'); return false;" class="badge badge-info">Bias</a></li>
+</ul></div></td>
+<td class="col">
+<a class="collapse-link" data-toggle="collapse" href="#psl_trends_jja" role="button" aria-expanded="false" aria-controls="psl_trends_jja">JJA</a>
+<div class="collapse" id="psl_trends_jja">
+<ul class="list-inline my-0">
+<li class="list-inline-item"><a href="#" onclick="showImage('{{ img('psl_trends_jja.indmem.png') }}'); return false;" class="badge badge-info">Indiv</a></li>
+<li class="list-inline-item"><a href="#" onclick="showImage('{{ img('psl_trends_jja.indmemdiff.png') }}'); return false;" class="badge badge-info">Bias</a></li>
+</ul></div></td>
+<td class="col">
+<a class="collapse-link" data-toggle="collapse" href="#psl_trends_jas" role="button" aria-expanded="false" aria-controls="psl_trends_jas">JAS</a>
+<div class="collapse" id="psl_trends_jas">
+<ul class="list-inline my-0">
+<li class="list-inline-item"><a href="#" onclick="showImage('{{ img('psl_trends_jas.indmem.png') }}'); return false;" class="badge badge-info">Indiv</a></li>
+<li class="list-inline-item"><a href="#" onclick="showImage('{{ img('psl_trends_jas.indmemdiff.png') }}'); return false;" class="badge badge-info">Bias</a></li>
+</ul></div></td>
+<td class="col">
+<a class="collapse-link" data-toggle="collapse" href="#psl_trends_son" role="button" aria-expanded="false" aria-controls="psl_trends_son">SON</a>
+<div class="collapse" id="psl_trends_son">
+<ul class="list-inline my-0">
+<li class="list-inline-item"><a href="#" onclick="showImage('{{ img('psl_trends_son.indmem.png') }}'); return false;" class="badge badge-info">Indiv</a></li>
+<li class="list-inline-item"><a href="#" onclick="showImage('{{ img('psl_trends_son.indmemdiff.png') }}'); return false;" class="badge badge-info">Bias</a></li>
+</ul></div></td>
+<td class="col">
+<a class="collapse-link" data-toggle="collapse" href="#psl_trends_ann" role="button" aria-expanded="false" aria-controls="psl_trends_ann">ANN</a>
+<div class="collapse" id="psl_trends_ann">
+<ul class="list-inline my-0">
+<li class="list-inline-item"><a href="#" onclick="showImage('{{ img('psl_trends_ann.indmem.png') }}'); return false;" class="badge badge-info">Indiv</a></li>
+<li class="list-inline-item"><a href="#" onclick="showImage('{{ img('psl_trends_ann.indmemdiff.png') }}'); return false;" class="badge badge-info">Bias</a></li>
+</ul></div></td>
+</tr>
+<tr class="d-flex">
+<td class="col"><b>PR</b></td>
+<td class="col">
+<a class="collapse-link" data-toggle="collapse" href="#pr_trends_djf" role="button" aria-expanded="false" aria-controls="pr_trends_djf">DJF</a>
+<div class="collapse" id="pr_trends_djf">
+<ul class="list-inline my-0">
+<li class="list-inline-item"><a href="#" onclick="showImage('{{ img('pr_trends_djf.indmem.png') }}'); return false;" class="badge badge-info">Indiv</a></li>
+<li class="list-inline-item"><a href="#" onclick="showImage('{{ img('pr_trends_djf.indmemdiff.png') }}'); return false;" class="badge badge-info">Bias</a></li>
+</ul></div></td>
+<td class="col">
+<a class="collapse-link" data-toggle="collapse" href="#pr_trends_jfm" role="button" aria-expanded="false" aria-controls="pr_trends_jfm">JFM</a>
+<div class="collapse" id="pr_trends_jfm">
+<ul class="list-inline my-0">
+<li class="list-inline-item"><a href="#" onclick="showImage('{{ img('pr_trends_jfm.indmem.png') }}'); return false;" class="badge badge-info">Indiv</a></li>
+<li class="list-inline-item"><a href="#" onclick="showImage('{{ img('pr_trends_jfm.indmemdiff.png') }}'); return false;" class="badge badge-info">Bias</a></li>
+</ul></div></td>
+<td class="col">
+<a class="collapse-link" data-toggle="collapse" href="#pr_trends_mam" role="button" aria-expanded="false" aria-controls="pr_trends_mam">MAM</a>
+<div class="collapse" id="pr_trends_mam">
+<ul class="list-inline my-0">
+<li class="list-inline-item"><a href="#" onclick="showImage('{{ img('pr_trends_mam.indmem.png') }}'); return false;" class="badge badge-info">Indiv</a></li>
+<li class="list-inline-item"><a href="#" onclick="showImage('{{ img('pr_trends_mam.indmemdiff.png') }}'); return false;" class="badge badge-info">Bias</a></li>
+</ul></div></td>
+<td class="col">
+<a class="collapse-link" data-toggle="collapse" href="#pr_trends_jja" role="button" aria-expanded="false" aria-controls="pr_trends_jja">JJA</a>
+<div class="collapse" id="pr_trends_jja">
+<ul class="list-inline my-0">
+<li class="list-inline-item"><a href="#" onclick="showImage('{{ img('pr_trends_jja.indmem.png') }}'); return false;" class="badge badge-info">Indiv</a></li>
+<li class="list-inline-item"><a href="#" onclick="showImage('{{ img('pr_trends_jja.indmemdiff.png') }}'); return false;" class="badge badge-info">Bias</a></li>
+</ul></div></td>
+<td class="col">
+<a class="collapse-link" data-toggle="collapse" href="#pr_trends_jas" role="button" aria-expanded="false" aria-controls="pr_trends_jas">JAS</a>
+<div class="collapse" id="pr_trends_jas">
+<ul class="list-inline my-0">
+<li class="list-inline-item"><a href="#" onclick="showImage('{{ img('pr_trends_jas.indmem.png') }}'); return false;" class="badge badge-info">Indiv</a></li>
+<li class="list-inline-item"><a href="#" onclick="showImage('{{ img('pr_trends_jas.indmemdiff.png') }}'); return false;" class="badge badge-info">Bias</a></li>
+</ul></div></td>
+<td class="col">
+<a class="collapse-link" data-toggle="collapse" href="#pr_trends_son" role="button" aria-expanded="false" aria-controls="pr_trends_son">SON</a>
+<div class="collapse" id="pr_trends_son">
+<ul class="list-inline my-0">
+<li class="list-inline-item"><a href="#" onclick="showImage('{{ img('pr_trends_son.indmem.png') }}'); return false;" class="badge badge-info">Indiv</a></li>
+<li class="list-inline-item"><a href="#" onclick="showImage('{{ img('pr_trends_son.indmemdiff.png') }}'); return false;" class="badge badge-info">Bias</a></li>
+</ul></div></td>
+<td class="col">
+<a class="collapse-link" data-toggle="collapse" href="#pr_trends_ann" role="button" aria-expanded="false" aria-controls="pr_trends_ann">ANN</a>
+<div class="collapse" id="pr_trends_ann">
+<ul class="list-inline my-0">
+<li class="list-inline-item"><a href="#" onclick="showImage('{{ img('pr_trends_ann.indmem.png') }}'); return false;" class="badge badge-info">Indiv</a></li>
+<li class="list-inline-item"><a href="#" onclick="showImage('{{ img('pr_trends_ann.indmemdiff.png') }}'); return false;" class="badge badge-info">Bias</a></li>
+</ul></div></td>
+</tr>
+<tr class="d-flex">
+<td class="col"><b>SIC NH</b></td>
+<td class="col">
+<a class="collapse-link" data-toggle="collapse" href="#siconc_nh_trends_djf" role="button" aria-expanded="false" aria-controls="siconc_nh_trends_djf">DJF</a>
+<div class="collapse" id="siconc_nh_trends_djf">
+<ul class="list-inline my-0">
+<li class="list-inline-item"><a href="#" onclick="showImage('{{ img('siconc_nh_trends_djf.indmem.png') }}'); return false;" class="badge badge-info">Indiv</a></li>
+<li class="list-inline-item"><a href="#" onclick="showImage('{{ img('siconc_nh_trends_djf.indmemdiff.png') }}'); return false;" class="badge badge-info">Bias</a></li>
+</ul></div></td>
+<td class="col">
+<a class="collapse-link" data-toggle="collapse" href="#siconc_nh_trends_jfm" role="button" aria-expanded="false" aria-controls="siconc_nh_trends_jfm">JFM</a>
+<div class="collapse" id="siconc_nh_trends_jfm">
+<ul class="list-inline my-0">
+<li class="list-inline-item"><a href="#" onclick="showImage('{{ img('siconc_nh_trends_jfm.indmem.png') }}'); return false;" class="badge badge-info">Indiv</a></li>
+<li class="list-inline-item"><a href="#" onclick="showImage('{{ img('siconc_nh_trends_jfm.indmemdiff.png') }}'); return false;" class="badge badge-info">Bias</a></li>
+</ul></div></td>
+<td class="col">
+<a class="collapse-link" data-toggle="collapse" href="#siconc_nh_trends_mam" role="button" aria-expanded="false" aria-controls="siconc_nh_trends_mam">MAM</a>
+<div class="collapse" id="siconc_nh_trends_mam">
+<ul class="list-inline my-0">
+<li class="list-inline-item"><a href="#" onclick="showImage('{{ img('siconc_nh_trends_mam.indmem.png') }}'); return false;" class="badge badge-info">Indiv</a></li>
+<li class="list-inline-item"><a href="#" onclick="showImage('{{ img('siconc_nh_trends_mam.indmemdiff.png') }}'); return false;" class="badge badge-info">Bias</a></li>
+</ul></div></td>
+<td class="col">
+<a class="collapse-link" data-toggle="collapse" href="#siconc_nh_trends_jja" role="button" aria-expanded="false" aria-controls="siconc_nh_trends_jja">JJA</a>
+<div class="collapse" id="siconc_nh_trends_jja">
+<ul class="list-inline my-0">
+<li class="list-inline-item"><a href="#" onclick="showImage('{{ img('siconc_nh_trends_jja.indmem.png') }}'); return false;" class="badge badge-info">Indiv</a></li>
+<li class="list-inline-item"><a href="#" onclick="showImage('{{ img('siconc_nh_trends_jja.indmemdiff.png') }}'); return false;" class="badge badge-info">Bias</a></li>
+</ul></div></td>
+<td class="col">
+<a class="collapse-link" data-toggle="collapse" href="#siconc_nh_trends_jas" role="button" aria-expanded="false" aria-controls="siconc_nh_trends_jas">JAS</a>
+<div class="collapse" id="siconc_nh_trends_jas">
+<ul class="list-inline my-0">
+<li class="list-inline-item"><a href="#" onclick="showImage('{{ img('siconc_nh_trends_jas.indmem.png') }}'); return false;" class="badge badge-info">Indiv</a></li>
+<li class="list-inline-item"><a href="#" onclick="showImage('{{ img('siconc_nh_trends_jas.indmemdiff.png') }}'); return false;" class="badge badge-info">Bias</a></li>
+</ul></div></td>
+<td class="col">
+<a class="collapse-link" data-toggle="collapse" href="#siconc_nh_trends_son" role="button" aria-expanded="false" aria-controls="siconc_nh_trends_son">SON</a>
+<div class="collapse" id="siconc_nh_trends_son">
+<ul class="list-inline my-0">
+<li class="list-inline-item"><a href="#" onclick="showImage('{{ img('siconc_nh_trends_son.indmem.png') }}'); return false;" class="badge badge-info">Indiv</a></li>
+<li class="list-inline-item"><a href="#" onclick="showImage('{{ img('siconc_nh_trends_son.indmemdiff.png') }}'); return false;" class="badge badge-info">Bias</a></li>
+</ul></div></td>
+<td class="col">
+<a class="collapse-link" data-toggle="collapse" href="#siconc_nh_trends_ann" role="button" aria-expanded="false" aria-controls="siconc_nh_trends_ann">ANN</a>
+<div class="collapse" id="siconc_nh_trends_ann">
+<ul class="list-inline my-0">
+<li class="list-inline-item"><a href="#" onclick="showImage('{{ img('siconc_nh_trends_ann.indmem.png') }}'); return false;" class="badge badge-info">Indiv</a></li>
+<li class="list-inline-item"><a href="#" onclick="showImage('{{ img('siconc_nh_trends_ann.indmemdiff.png') }}'); return false;" class="badge badge-info">Bias</a></li>
+</ul></div></td>
+</tr>
+<tr class="d-flex">
+<td class="col"><b>SIC SH</b></td>
+<td class="col">
+<a class="collapse-link" data-toggle="collapse" href="#siconc_sh_trends_djf" role="button" aria-expanded="false" aria-controls="siconc_sh_trends_djf">DJF</a>
+<div class="collapse" id="siconc_sh_trends_djf">
+<ul class="list-inline my-0">
+<li class="list-inline-item"><a href="#" onclick="showImage('{{ img('siconc_sh_trends_djf.indmem.png') }}'); return false;" class="badge badge-info">Indiv</a></li>
+<li class="list-inline-item"><a href="#" onclick="showImage('{{ img('siconc_sh_trends_djf.indmemdiff.png') }}'); return false;" class="badge badge-info">Bias</a></li>
+</ul></div></td>
+<td class="col">
+<a class="collapse-link" data-toggle="collapse" href="#siconc_sh_trends_jfm" role="button" aria-expanded="false" aria-controls="siconc_sh_trends_jfm">JFM</a>
+<div class="collapse" id="siconc_sh_trends_jfm">
+<ul class="list-inline my-0">
+<li class="list-inline-item"><a href="#" onclick="showImage('{{ img('siconc_sh_trends_jfm.indmem.png') }}'); return false;" class="badge badge-info">Indiv</a></li>
+<li class="list-inline-item"><a href="#" onclick="showImage('{{ img('siconc_sh_trends_jfm.indmemdiff.png') }}'); return false;" class="badge badge-info">Bias</a></li>
+</ul></div></td>
+<td class="col">
+<a class="collapse-link" data-toggle="collapse" href="#siconc_sh_trends_mam" role="button" aria-expanded="false" aria-controls="siconc_sh_trends_mam">MAM</a>
+<div class="collapse" id="siconc_sh_trends_mam">
+<ul class="list-inline my-0">
+<li class="list-inline-item"><a href="#" onclick="showImage('{{ img('siconc_sh_trends_mam.indmem.png') }}'); return false;" class="badge badge-info">Indiv</a></li>
+<li class="list-inline-item"><a href="#" onclick="showImage('{{ img('siconc_sh_trends_mam.indmemdiff.png') }}'); return false;" class="badge badge-info">Bias</a></li>
+</ul></div></td>
+<td class="col">
+<a class="collapse-link" data-toggle="collapse" href="#siconc_sh_trends_jja" role="button" aria-expanded="false" aria-controls="siconc_sh_trends_jja">JJA</a>
+<div class="collapse" id="siconc_sh_trends_jja">
+<ul class="list-inline my-0">
+<li class="list-inline-item"><a href="#" onclick="showImage('{{ img('siconc_sh_trends_jja.indmem.png') }}'); return false;" class="badge badge-info">Indiv</a></li>
+<li class="list-inline-item"><a href="#" onclick="showImage('{{ img('siconc_sh_trends_jja.indmemdiff.png') }}'); return false;" class="badge badge-info">Bias</a></li>
+</ul></div></td>
+<td class="col">
+<a class="collapse-link" data-toggle="collapse" href="#siconc_sh_trends_jas" role="button" aria-expanded="false" aria-controls="siconc_sh_trends_jas">JAS</a>
+<div class="collapse" id="siconc_sh_trends_jas">
+<ul class="list-inline my-0">
+<li class="list-inline-item"><a href="#" onclick="showImage('{{ img('siconc_sh_trends_jas.indmem.png') }}'); return false;" class="badge badge-info">Indiv</a></li>
+<li class="list-inline-item"><a href="#" onclick="showImage('{{ img('siconc_sh_trends_jas.indmemdiff.png') }}'); return false;" class="badge badge-info">Bias</a></li>
+</ul></div></td>
+<td class="col">
+<a class="collapse-link" data-toggle="collapse" href="#siconc_sh_trends_son" role="button" aria-expanded="false" aria-controls="siconc_sh_trends_son">SON</a>
+<div class="collapse" id="siconc_sh_trends_son">
+<ul class="list-inline my-0">
+<li class="list-inline-item"><a href="#" onclick="showImage('{{ img('siconc_sh_trends_son.indmem.png') }}'); return false;" class="badge badge-info">Indiv</a></li>
+<li class="list-inline-item"><a href="#" onclick="showImage('{{ img('siconc_sh_trends_son.indmemdiff.png') }}'); return false;" class="badge badge-info">Bias</a></li>
+</ul></div></td>
+<td class="col">
+<a class="collapse-link" data-toggle="collapse" href="#siconc_sh_trends_ann" role="button" aria-expanded="false" aria-controls="siconc_sh_trends_ann">ANN</a>
+<div class="collapse" id="siconc_sh_trends_ann">
+<ul class="list-inline my-0">
+<li class="list-inline-item"><a href="#" onclick="showImage('{{ img('siconc_sh_trends_ann.indmem.png') }}'); return false;" class="badge badge-info">Indiv</a></li>
+<li class="list-inline-item"><a href="#" onclick="showImage('{{ img('siconc_sh_trends_ann.indmemdiff.png') }}'); return false;" class="badge badge-info">Bias</a></li>
+</ul></div></td>
+</tr>
+</table></div></div>
+<div class="row">
+<div class="col">
+<table class="table table-bordered">
+<h3 class="display-6">Coupled Modes of Variability</h3>
+<tr>
+<td rowspan=7><b>ENSO</b></td>
+<td rowspan=4>Spatial Composites</td>
+<td>El Ni&ntilde;o - La Ni&ntilde;a<br>SST/TAS/PSL<br>
+<a class="collapse-link" data-toggle="collapse" href="#nino34_spatialcomp_jja0" role="button" aria-expanded="false" aria-controls="nino34_spatialcomp_jja0">JJA<sup>0</sup></a> 
+<div class="collapse" id="nino34_spatialcomp_jja0">
+<ul class="list-inline my-0">
+<li class="list-inline-item"><a href="#" onclick="showImage('{{ img('nino34.spatialcomp.indmem.jja0.png') }}'); return false;" class="badge badge-info">Indiv</a></li>
+<li class="list-inline-item"><a href="#" onclick="showImage('{{ img('nino34.spatialcomp.indmemdiff.jja0.png') }}'); return false;" class="badge badge-info">Bias</a></li>
+</ul></div>
+ <a class="collapse-link" data-toggle="collapse" href="#nino34_spatialcomp_son0" role="button" aria-expanded="false" aria-controls="nino34_spatialcomp_son0">SON<sup>0</sup></a> 
+<div class="collapse" id="nino34_spatialcomp_son0">
+<ul class="list-inline my-0">
+<li class="list-inline-item"><a href="#" onclick="showImage('{{ img('nino34.spatialcomp.indmem.son0.png') }}'); return false;" class="badge badge-info">Indiv</a></li>
+<li class="list-inline-item"><a href="#" onclick="showImage('{{ img('nino34.spatialcomp.indmemdiff.son0.png') }}'); return false;" class="badge badge-info">Bias</a></li>
+</ul></div>
+ <a class="collapse-link" data-toggle="collapse" href="#nino34_spatialcomp_djf1" role="button" aria-expanded="false" aria-controls="nino34_spatialcomp_djf1">DJF<sup>1</sup></a> 
+<div class="collapse" id="nino34_spatialcomp_djf1">
+<ul class="list-inline my-0">
+<li class="list-inline-item"><a href="#" onclick="showImage('{{ img('nino34.spatialcomp.indmem.djf1.png') }}'); return false;" class="badge badge-info">Indiv</a></li>
+<li class="list-inline-item"><a href="#" onclick="showImage('{{ img('nino34.spatialcomp.indmemdiff.djf1.png') }}'); return false;" class="badge badge-info">Bias</a></li>
+</ul></div>
+ <a class="collapse-link" data-toggle="collapse" href="#nnino34_spatialcomp_mam1" role="button" aria-expanded="false" aria-controls="nino34_spatialcomp_mam1">MAM<sup>1</sup></a> 
+<div class="collapse" id="nino34_spatialcomp_mam1">
+<ul class="list-inline my-0">
+<li class="list-inline-item"><a href="#" onclick="showImage('{{ img('nino34.spatialcomp.indmem.mam1.png') }}'); return false;" class="badge badge-info">Indiv</a></li>
+<li class="list-inline-item"><a href="#" onclick="showImage('{{ img('nino34.spatialcomp.indmemdiff.mam1.png') }}'); return false;" class="badge badge-info">Bias</a></li>
+</ul></div></td>
+<td>El Ni&ntilde;o - La Ni&ntilde;a<br>PR<br>
+<a class="collapse-link" data-toggle="collapse" href="#nino34_spatialcomp_pr_jja0" role="button" aria-expanded="false" aria-controls="nino34_spatialcomp_pr_jja0">JJA<sup>0</sup></a> 
+<div class="collapse" id="nino34_spatialcomp_pr_jja0">
+<ul class="list-inline my-0">
+<li class="list-inline-item"><a href="#" onclick="showImage('{{ img('nino34.spatialcomp.pr.indmem.jja0.png') }}'); return false;" class="badge badge-info">Indiv</a></li>
+<li class="list-inline-item"><a href="#" onclick="showImage('{{ img('nino34.spatialcomp.pr.indmemdiff.jja0.png') }}'); return false;" class="badge badge-info">Bias</a></li>
+</ul></div>
+ <a class="collapse-link" data-toggle="collapse" href="#nino34_spatialcomp_pr_son0" role="button" aria-expanded="false" aria-controls="nino34_spatialcomp_pr_son0">SON<sup>0</sup></a> 
+<div class="collapse" id="nino34_spatialcomp_pr_son0">
+<ul class="list-inline my-0">
+<li class="list-inline-item"><a href="#" onclick="showImage('{{ img('nino34.spatialcomp.pr.indmem.son0.png') }}'); return false;" class="badge badge-info">Indiv</a></li>
+<li class="list-inline-item"><a href="#" onclick="showImage('{{ img('nino34.spatialcomp.pr.indmemdiff.son0.png') }}'); return false;" class="badge badge-info">Bias</a></li>
+</ul></div>
+ <a class="collapse-link" data-toggle="collapse" href="#nino34_spatialcomp_pr_djf1" role="button" aria-expanded="false" aria-controls="nino34_spatialcomp_pr_djf1">DJF<sup>1</sup></a> 
+<div class="collapse" id="nino34_spatialcomp_pr_djf1">
+<ul class="list-inline my-0">
+<li class="list-inline-item"><a href="#" onclick="showImage('{{ img('nino34.spatialcomp.pr.indmem.djf1.png') }}'); return false;" class="badge badge-info">Indiv</a></li>
+<li class="list-inline-item"><a href="#" onclick="showImage('{{ img('nino34.spatialcomp.pr.indmemdiff.djf1.png') }}'); return false;" class="badge badge-info">Bias</a></li>
+</ul></div>
+ <a class="collapse-link" data-toggle="collapse" href="#nino34_spatialcomp_pr_mam1" role="button" aria-expanded="false" aria-controls="nino34_spatialcomp_pr_mam1">MAM<sup>1</sup></a> 
+<div class="collapse" id="nino34_spatialcomp_pr_mam1">
+<ul class="list-inline my-0">
+<li class="list-inline-item"><a href="#" onclick="showImage('{{ img('nino34.spatialcomp.pr.indmem.mam1.png') }}'); return false;" class="badge badge-info">Indiv</a></li>
+<li class="list-inline-item"><a href="#" onclick="showImage('{{ img('nino34.spatialcomp.pr.indmemdiff.mam1.png') }}'); return false;" class="badge badge-info">Bias</a></li>
+</ul></div></td></tr>
+<tr><td>El Ni&ntilde;o SST/TAS/PSL<br>
+<a class="collapse-link" data-toggle="collapse" href="#nino34_spatialcomp_elnino_jja0" role="button" aria-expanded="false" aria-controls="nino34_spatialcomp_elnino_jja0">JJA<sup>0</sup></a> 
+<div class="collapse" id="nino34_spatialcomp_elnino_jja0">
+<ul class="list-inline my-0">
+<li class="list-inline-item"><a href="#" onclick="showImage('{{ img('nino34.spatialcomp.elnino.indmem.jja0.png') }}'); return false;" class="badge badge-info">Indiv</a></li>
+<li class="list-inline-item"><a href="#" onclick="showImage('{{ img('nino34.spatialcomp.elnino.indmemdiff.jja0.png') }}'); return false;" class="badge badge-info">Bias</a></li>
+</ul></div>
+ <a class="collapse-link" data-toggle="collapse" href="#nino34_spatialcomp_elnino_son0" role="button" aria-expanded="false" aria-controls="nino34_spatialcomp_elnino_son0">SON<sup>0</sup></a> 
+<div class="collapse" id="nino34_spatialcomp_elnino_son0">
+<ul class="list-inline my-0">
+<li class="list-inline-item"><a href="#" onclick="showImage('{{ img('nino34.spatialcomp.elnino.indmem.son0.png') }}'); return false;" class="badge badge-info">Indiv</a></li>
+<li class="list-inline-item"><a href="#" onclick="showImage('{{ img('nino34.spatialcomp.elnino.indmemdiff.son0.png') }}'); return false;" class="badge badge-info">Bias</a></li>
+</ul></div>
+ <a class="collapse-link" data-toggle="collapse" href="#nino34_spatialcomp_elnino_djf1" role="button" aria-expanded="false" aria-controls="nino34_spatialcomp_elnino_djf1">DJF<sup>1</sup></a> 
+<div class="collapse" id="nino34_spatialcomp_elnino_djf1">
+<ul class="list-inline my-0">
+<li class="list-inline-item"><a href="#" onclick="showImage('{{ img('nino34.spatialcomp.elnino.indmem.djf1.png') }}'); return false;" class="badge badge-info">Indiv</a></li>
+<li class="list-inline-item"><a href="#" onclick="showImage('{{ img('nino34.spatialcomp.elnino.indmemdiff.djf1.png') }}'); return false;" class="badge badge-info">Bias</a></li>
+</ul></div>
+ <a class="collapse-link" data-toggle="collapse" href="#nino34_spatialcomp_elnino_mam1" role="button" aria-expanded="false" aria-controls="nino34_spatialcomp_elnino_mam1">MAM<sup>1</sup></a> 
+<div class="collapse" id="nino34_spatialcomp_elnino_mam1">
+<ul class="list-inline my-0">
+<li class="list-inline-item"><a href="#" onclick="showImage('{{ img('nino34.spatialcomp.elnino.indmem.mam1.png') }}'); return false;" class="badge badge-info">Indiv</a></li>
+<li class="list-inline-item"><a href="#" onclick="showImage('{{ img('nino34.spatialcomp.elnino.indmemdiff.mam1.png') }}'); return false;" class="badge badge-info">Bias</a></li>
+</ul></div></td>
+<td>El Ni&ntilde;o PR<br>
+<a class="collapse-link" data-toggle="collapse" href="#nino34_spatialcomp_elnino_pr_jja0" role="button" aria-expanded="false" aria-controls="nino34_spatialcomp_elnino_pr_jja0">JJA<sup>0</sup></a> 
+<div class="collapse" id="nino34_spatialcomp_elnino_pr_jja0">
+<ul class="list-inline my-0">
+<li class="list-inline-item"><a href="#" onclick="showImage('{{ img('nino34.spatialcomp.elnino.pr.indmem.jja0.png') }}'); return false;" class="badge badge-info">Indiv</a></li>
+<li class="list-inline-item"><a href="#" onclick="showImage('{{ img('nino34.spatialcomp.elnino.pr.indmemdiff.jja0.png') }}'); return false;" class="badge badge-info">Bias</a></li>
+</ul></div>
+ <a class="collapse-link" data-toggle="collapse" href="#nino34_spatialcomp_elnino_pr_son0" role="button" aria-expanded="false" aria-controls="nino34_spatialcomp_elnino_pr_son0">SON<sup>0</sup></a> 
+<div class="collapse" id="nino34_spatialcomp_elnino_pr_son0">
+<ul class="list-inline my-0">
+<li class="list-inline-item"><a href="#" onclick="showImage('{{ img('nino34.spatialcomp.elnino.pr.indmem.son0.png') }}'); return false;" class="badge badge-info">Indiv</a></li>
+<li class="list-inline-item"><a href="#" onclick="showImage('{{ img('nino34.spatialcomp.elnino.pr.indmemdiff.son0.png') }}'); return false;" class="badge badge-info">Bias</a></li>
+</ul></div>
+ <a class="collapse-link" data-toggle="collapse" href="#nino34_spatialcomp_elnino_pr_djf1" role="button" aria-expanded="false" aria-controls="nino34_spatialcomp_elnino_pr_djf1">DJF<sup>1</sup></a> 
+<div class="collapse" id="nino34_spatialcomp_elnino_pr_djf1">
+<ul class="list-inline my-0">
+<li class="list-inline-item"><a href="#" onclick="showImage('{{ img('nino34.spatialcomp.elnino.pr.indmem.djf1.png') }}'); return false;" class="badge badge-info">Indiv</a></li>
+<li class="list-inline-item"><a href="#" onclick="showImage('{{ img('nino34.spatialcomp.elnino.pr.indmemdiff.djf1.png') }}'); return false;" class="badge badge-info">Bias</a></li>
+</ul></div>
+ <a class="collapse-link" data-toggle="collapse" href="#nino34_spatialcomp_elnino_pr_mam1" role="button" aria-expanded="false" aria-controls="nino34_spatialcomp_elnino_pr_mam1">MAM<sup>1</sup></a> 
+<div class="collapse" id="nino34_spatialcomp_elnino_pr_mam1">
+<ul class="list-inline my-0">
+<li class="list-inline-item"><a href="#" onclick="showImage('{{ img('nino34.spatialcomp.elnino.pr.indmem.mam1.png') }}'); return false;" class="badge badge-info">Indiv</a></li>
+<li class="list-inline-item"><a href="#" onclick="showImage('{{ img('nino34.spatialcomp.elnino.pr.indmemdiff.mam1.png') }}'); return false;" class="badge badge-info">Bias</a></li>
+</ul></div></td></tr>
+<tr><td>La Ni&ntilde;a SST/TAS/PSL<br>
+<a class="collapse-link" data-toggle="collapse" href="#nino34_spatialcomp_lanina_jja0" role="button" aria-expanded="false" aria-controls="nino34_spatialcomp_lanina_jja0">JJA<sup>0</sup></a> 
+<div class="collapse" id="nino34_spatialcomp_lanina_jja0">
+<ul class="list-inline my-0">
+<li class="list-inline-item"><a href="#" onclick="showImage('{{ img('nino34.spatialcomp.lanina.indmem.jja0.png') }}'); return false;" class="badge badge-info">Indiv</a></li>
+<li class="list-inline-item"><a href="#" onclick="showImage('{{ img('nino34.spatialcomp.lanina.indmemdiff.jja0.png') }}'); return false;" class="badge badge-info">Bias</a></li>
+</ul></div>
+ <a class="collapse-link" data-toggle="collapse" href="#nino34_spatialcomp_lanina_son0" role="button" aria-expanded="false" aria-controls="nino34_spatialcomp_lanina_son0">SON<sup>0</sup></a> 
+<div class="collapse" id="nino34_spatialcomp_lanina_son0">
+<ul class="list-inline my-0">
+<li class="list-inline-item"><a href="#" onclick="showImage('{{ img('nino34.spatialcomp.lanina.indmem.son0.png') }}'); return false;" class="badge badge-info">Indiv</a></li>
+<li class="list-inline-item"><a href="#" onclick="showImage('{{ img('nino34.spatialcomp.lanina.indmemdiff.son0.png') }}'); return false;" class="badge badge-info">Bias</a></li>
+</ul></div>
+ <a class="collapse-link" data-toggle="collapse" href="#nino34_spatialcomp_lanina_djf1" role="button" aria-expanded="false" aria-controls="nino34_spatialcomp_lanina_djf1">DJF<sup>1</sup></a> 
+<div class="collapse" id="nino34_spatialcomp_lanina_djf1">
+<ul class="list-inline my-0">
+<li class="list-inline-item"><a href="#" onclick="showImage('{{ img('nino34.spatialcomp.lanina.indmem.djf1.png') }}'); return false;" class="badge badge-info">Indiv</a></li>
+<li class="list-inline-item"><a href="#" onclick="showImage('{{ img('nino34.spatialcomp.lanina.indmemdiff.djf1.png') }}'); return false;" class="badge badge-info">Bias</a></li>
+</ul></div>
+ <a class="collapse-link" data-toggle="collapse" href="#nino34_spatialcomp_lanina_mam1" role="button" aria-expanded="false" aria-controls="nino34_spatialcomp_lanina_mam1">MAM<sup>1</sup></a> 
+<div class="collapse" id="nino34_spatialcomp_lanina_mam1">
+<ul class="list-inline my-0">
+<li class="list-inline-item"><a href="#" onclick="showImage('{{ img('nino34.spatialcomp.lanina.indmem.mam1.png') }}'); return false;" class="badge badge-info">Indiv</a></li>
+<li class="list-inline-item"><a href="#" onclick="showImage('{{ img('nino34.spatialcomp.lanina.indmemdiff.mam1.png') }}'); return false;" class="badge badge-info">Bias</a></li>
+</ul></div></td>
+<td>La Ni&ntilde;a PR<br>
+<a class="collapse-link" data-toggle="collapse" href="#nino34_spatialcomp_lanina_pr_jja0" role="button" aria-expanded="false" aria-controls="nino34_spatialcomp_lanina_pr_jja0">JJA<sup>0</sup></a> 
+<div class="collapse" id="nino34_spatialcomp_lanina_pr_jja0">
+<ul class="list-inline my-0">
+<li class="list-inline-item"><a href="#" onclick="showImage('{{ img('nino34.spatialcomp.lanina.pr.indmem.jja0.png') }}'); return false;" class="badge badge-info">Indiv</a></li>
+<li class="list-inline-item"><a href="#" onclick="showImage('{{ img('nino34.spatialcomp.lanina.pr.indmemdiff.jja0.png') }}'); return false;" class="badge badge-info">Bias</a></li>
+</ul></div>
+ <a class="collapse-link" data-toggle="collapse" href="#nino34_spatialcomp_lanina_pr_son0" role="button" aria-expanded="false" aria-controls="nino34_spatialcomp_lanina_pr_son0">SON<sup>0</sup></a> 
+<div class="collapse" id="nino34_spatialcomp_lanina_pr_son0">
+<ul class="list-inline my-0">
+<li class="list-inline-item"><a href="#" onclick="showImage('{{ img('nino34.spatialcomp.lanina.pr.indmem.son0.png') }}'); return false;" class="badge badge-info">Indiv</a></li>
+<li class="list-inline-item"><a href="#" onclick="showImage('{{ img('nino34.spatialcomp.lanina.pr.indmemdiff.son0.png') }}'); return false;" class="badge badge-info">Bias</a></li>
+</ul></div>
+ <a class="collapse-link" data-toggle="collapse" href="#nino34_spatialcomp_lanina_pr_djf1" role="button" aria-expanded="false" aria-controls="nino34_spatialcomp_lanina_pr_djf1">DJF<sup>1</sup></a> 
+<div class="collapse" id="nino34_spatialcomp_lanina_pr_djf1">
+<ul class="list-inline my-0">
+<li class="list-inline-item"><a href="#" onclick="showImage('{{ img('nino34.spatialcomp.lanina.pr.indmem.djf1.png') }}'); return false;" class="badge badge-info">Indiv</a></li>
+<li class="list-inline-item"><a href="#" onclick="showImage('{{ img('nino34.spatialcomp.lanina.pr.indmemdiff.djf1.png') }}'); return false;" class="badge badge-info">Bias</a></li>
+</ul></div>
+ <a class="collapse-link" data-toggle="collapse" href="#nino34_spatialcomp_lanina_pr_mam1" role="button" aria-expanded="false" aria-controls="nino34_spatialcomp_lanina_pr_mam1">MAM<sup>1</sup></a> 
+<div class="collapse" id="nino34_spatialcomp_lanina_pr_mam1">
+<ul class="list-inline my-0">
+<li class="list-inline-item"><a href="#" onclick="showImage('{{ img('nino34.spatialcomp.lanina.pr.indmem.mam1.png') }}'); return false;" class="badge badge-info">Indiv</a></li>
+<li class="list-inline-item"><a href="#" onclick="showImage('{{ img('nino34.spatialcomp.lanina.pr.indmemdiff.mam1.png') }}'); return false;" class="badge badge-info">Bias</a></li>
+</ul></div></td></tr>
+<tr>
+<td>
+<a class="collapse-link" data-toggle="collapse" href="#nino34_hov_elnino" role="button" aria-expanded="false" aria-controls="nino34_hov_elnino">El Ni&ntilde;o Hovm&ouml;ller</a> 
+<div class="collapse" id="nino34_hov_elnino">
+<ul class="list-inline my-0">
+<li class="list-inline-item"><a href="#" onclick="showImage('{{ img('nino34.hov.elnino.indmem.png') }}'); return false;" class="badge badge-info">Indiv</a></li>
+<li class="list-inline-item"><a href="#" onclick="showImage('{{ img('nino34.hov.elnino.indmemdiff.png') }}'); return false;" class="badge badge-info">Bias</a></li>
+</ul></div></td>
+<td>
+<a class="collapse-link" data-toggle="collapse" href="#nino34_hov_lanina" role="button" aria-expanded="false" aria-controls="nino34_hov_lanina">La Ni&ntilde;a Hovm&ouml;ller</a> 
+<div class="collapse" id="nino34_hov_lanina">
+<ul class="list-inline my-0">
+<li class="list-inline-item"><a href="#" onclick="showImage('{{ img('nino34.hov.lanina.indmem.png') }}'); return false;" class="badge badge-info">Indiv</a></li>
+<li class="list-inline-item"><a href="#" onclick="showImage('{{ img('nino34.hov.lanina.indmemdiff.png') }}'); return false;" class="badge badge-info">Bias</a></li>
+</ul></div></td></tr>
+<tr>
+<td rowspan=3>Ni&ntilde;o3.4</td>
+<td><a href="#" onclick="showImage('{{ img('nino34.timeseries.indmem.png') }}'); return false;">Timeseries</a></td>
+<td><a href="#" onclick="showImage('{{ img('nino34.monstddev.indmem.png') }}'); return false;">Monthly Std. Dev.</a></td></tr>
+<tr><td><a href="#" onclick="showImage('{{ img('nino34.powspec.indmem.png') }}'); return false;">Power Spectra</a></td>
+<td>
+<a class="collapse-link" data-toggle="collapse" href="#nino34_wavelet" role="button" aria-expanded="false" aria-controls="nino34_wavelet">Wavelet</a> 
+<div class="collapse" id="nino34_wavelet">
+<ul class="list-inline my-0">
+<li class="list-inline-item"><a href="#" onclick="showImage('{{ img('nino34.wavelet.indmem.png') }}'); return false;" class="badge badge-info">Indiv</a></li>
+<li class="list-inline-item"><a href="#" onclick="showImage('{{ img('nino34.wavelet.indmemdiff.png') }}'); return false;" class="badge badge-info">Bias</a></li>
+</ul></div>
+</td></tr>
+<tr><td><a href="#" onclick="showImage('{{ img('nino34.autocor.indmem.png') }}'); return false;">Autocorrelation</a></td>
+<td><a href="#" onclick="showImage('{{ img('nino34_runstddev.timeseries.indmem.png') }}'); return false;">Running Standard Deviation</a></td></tr>
+<tr>
+<td rowspan=2><b>AMV</b></td>
+<td>Regr: 
+<a class="collapse-link" data-toggle="collapse" href="#amo" role="button" aria-expanded="false" aria-controls="amo">SST</a> 
+<div class="collapse" id="amo">
+<ul class="list-inline my-0">
+<li class="list-inline-item"><a href="#" onclick="showImage('{{ img('amv.indmem.png') }}'); return false;" class="badge badge-info">Indiv</a></li>
+<li class="list-inline-item"><a href="#" onclick="showImage('{{ img('amv.indmemdiff.png') }}'); return false;" class="badge badge-info">Bias</a></li>
+</ul></div>
+<a class="collapse-link" data-toggle="collapse" href="#amv_tassstreg" role="button" aria-expanded="false" aria-controls="amv_tassstreg">TAS</a> 
+<div class="collapse" id="amv_tassstreg">
+<ul class="list-inline my-0">
+<li class="list-inline-item"><a href="#" onclick="showImage('{{ img('amv.tassstreg.indmem.png') }}'); return false;" class="badge badge-info">Indiv</a></li>
+<li class="list-inline-item"><a href="#" onclick="showImage('{{ img('amv.tassstreg.indmemdiff.png') }}'); return false;" class="badge badge-info">Bias</a></li>
+</ul></div>
+<a class="collapse-link" data-toggle="collapse" href="#amv_prreg" role="button" aria-expanded="false" aria-controls="amv_prreg">PR</a> 
+<div class="collapse" id="amv_prreg">
+<ul class="list-inline my-0">
+<li class="list-inline-item"><a href="#" onclick="showImage('{{ img('amv.prreg.indmem.png') }}'); return false;" class="badge badge-info">Indiv</a></li>
+<li class="list-inline-item"><a href="#" onclick="showImage('{{ img('amv.prreg.indmemdiff.png') }}'); return false;" class="badge badge-info">Bias</a></li>
+</ul></div></td>
+<td><a href="#" onclick="showImage('{{ img('amv_timeseries_mon.indmem.png') }}'); return false;">Timeseries</a></td>
+<td rowspan=2><a href="#" onclick="showImage('{{ img('amv.powspec.indmem.png') }}'); return false;">Power Spectra</a></td></tr>
+<tr><td>Regr LP: 
+<a class="collapse-link" data-toggle="collapse" href="#amv_lp" role="button" aria-expanded="false" aria-controls="amv_lp">SST</a> 
+<div class="collapse" id="amv_lp">
+<ul class="list-inline my-0">
+<li class="list-inline-item"><a href="#" onclick="showImage('{{ img('amv.lp.indmem.png') }}'); return false;" class="badge badge-info">Indiv</a></li>
+<li class="list-inline-item"><a href="#" onclick="showImage('{{ img('amv.lp.indmemdiff.png') }}'); return false;" class="badge badge-info">Bias</a></li>
+</ul></div>
+<a class="collapse-link" data-toggle="collapse" href="#amv_lp_tassstreg" role="button" aria-expanded="false" aria-controls="amv_lp_tassstreg">TAS</a> 
+<div class="collapse" id="amv_lp_tassstreg">
+<ul class="list-inline my-0">
+<li class="list-inline-item"><a href="#" onclick="showImage('{{ img('amv.lp.tassstreg.indmem.png') }}'); return false;" class="badge badge-info">Indiv</a></li>
+<li class="list-inline-item"><a href="#" onclick="showImage('{{ img('amv.lp.tassstreg.indmemdiff.png') }}'); return false;" class="badge badge-info">Bias</a></li>
+</ul></div>
+<a class="collapse-link" data-toggle="collapse" href="#amv_lp_prreg" role="button" aria-expanded="false" aria-controls="amv_lp_prreg">PR</a> 
+<div class="collapse" id="amv_lp_prreg">
+<ul class="list-inline my-0">
+<li class="list-inline-item"><a href="#" onclick="showImage('{{ img('amv.lp.prreg.indmem.png') }}'); return false;" class="badge badge-info">Indiv</a></li>
+<li class="list-inline-item"><a href="#" onclick="showImage('{{ img('amv.lp.prreg.indmemdiff.png') }}'); return false;" class="badge badge-info">Bias</a></li>
+<td><a href="#" onclick="showImage('{{ img('amv_timeseries_lowpass_mon.indmem.png') }}'); return false;">Timeseries</a></td></tr>
+<tr><td rowspan=2><b>AMV'</b></td>
+<td>Regr: 
+<a class="collapse-link" data-toggle="collapse" href="#amv_prime" role="button" aria-expanded="false" aria-controls="amv_prime">SST</a> 
+<div class="collapse" id="amv_prime">
+<ul class="list-inline my-0">
+<li class="list-inline-item"><a href="#" onclick="showImage('{{ img('amv.prime.indmem.png') }}'); return false;" class="badge badge-info">Indiv</a></li>
+<li class="list-inline-item"><a href="#" onclick="showImage('{{ img('amv.prime.indmemdiff.png') }}'); return false;" class="badge badge-info">Bias</a></li>
+</ul></div>
+<a class="collapse-link" data-toggle="collapse" href="#amv_prime_tassstreg" role="button" aria-expanded="false" aria-controls="amv_prime_tassstreg">TAS</a> 
+<div class="collapse" id="amv_prime_tassstreg">
+<ul class="list-inline my-0">
+<li class="list-inline-item"><a href="#" onclick="showImage('{{ img('amv.prime.tassstreg.indmem.png') }}'); return false;" class="badge badge-info">Indiv</a></li>
+<li class="list-inline-item"><a href="#" onclick="showImage('{{ img('amv.prime.tassstreg.indmemdiff.png') }}'); return false;" class="badge badge-info">Bias</a></li>
+</ul></div>
+<a class="collapse-link" data-toggle="collapse" href="#amv_prime_prreg" role="button" aria-expanded="false" aria-controls="amv_prime_prreg">PR</a> 
+<div class="collapse" id="amv_prime_prreg">
+<ul class="list-inline my-0">
+<li class="list-inline-item"><a href="#" onclick="showImage('{{ img('amv.prime.prreg.indmem.png') }}'); return false;" class="badge badge-info">Indiv</a></li>
+<li class="list-inline-item"><a href="#" onclick="showImage('{{ img('amv.prime.prreg.indmemdiff.png') }}'); return false;" class="badge badge-info">Bias</a></li>
+</ul></div></td>
+<td><a href="#" onclick="showImage('{{ img('amv_prime_timeseries_mon.indmem.png') }}'); return false;">Timeseries</a></td>
+<td rowspan=2><a href="#" onclick="showImage('{{ img('amv.prime.powspec.indmem.png') }}'); return false;">Power Spectra</a></td></tr>
+<tr><td>Regr LP: 
+<a class="collapse-link" data-toggle="collapse" href="#amv_lp_prime" role="button" aria-expanded="false" aria-controls="amv_lp_prime">SST</a> 
+<div class="collapse" id="amv_lp_prime">
+<ul class="list-inline my-0">
+<li class="list-inline-item"><a href="#" onclick="showImage('{{ img('amv.lp.prime.indmem.png') }}'); return false;" class="badge badge-info">Indiv</a></li>
+<li class="list-inline-item"><a href="#" onclick="showImage('{{ img('amv.lp.prime.indmemdiff.png') }}'); return false;" class="badge badge-info">Bias</a></li>
+</ul></div>
+<a class="collapse-link" data-toggle="collapse" href="#amv_lp_prime_tassstreg" role="button" aria-expanded="false" aria-controls="amv_lp_prime_tassstreg">TAS</a> 
+<div class="collapse" id="amv_lp_prime_tassstreg">
+<ul class="list-inline my-0">
+<li class="list-inline-item"><a href="#" onclick="showImage('{{ img('amv.lp.prime.tassstreg.indmem.png') }}'); return false;" class="badge badge-info">Indiv</a></li>
+<li class="list-inline-item"><a href="#" onclick="showImage('{{ img('amv.lp.prime.tassstreg.indmemdiff.png') }}'); return false;" class="badge badge-info">Bias</a></li>
+</ul></div>
+<a class="collapse-link" data-toggle="collapse" href="#amv_lp_prime_prreg" role="button" aria-expanded="false" aria-controls="amv_lp_prime_prreg">PR</a> 
+<div class="collapse" id="amv_lp_prime_prreg">
+<ul class="list-inline my-0">
+<li class="list-inline-item"><a href="#" onclick="showImage('{{ img('amv.lp.prime.prreg.indmem.png') }}'); return false;" class="badge badge-info">Indiv</a></li>
+<li class="list-inline-item"><a href="#" onclick="showImage('{{ img('amv.lp.prime.prreg.indmemdiff.png') }}'); return false;" class="badge badge-info">Bias</a></li>
+</ul></div></td>
+<td><a href="#" onclick="showImage('{{ img('amv_prime_timeseries_lowpass_mon.indmem.png') }}'); return false;">Timeseries</a></td></tr>
+<tr>
+<td><b>PDV</b></td>
+<td>Regr: 
+<a class="collapse-link" data-toggle="collapse" href="#pdo" role="button" aria-expanded="false" aria-controls="pdo">SST</a> 
+<div class="collapse" id="pdo">
+<ul class="list-inline my-0">
+<li class="list-inline-item"><a href="#" onclick="showImage('{{ img('pdv.indmem.png') }}'); return false;" class="badge badge-info">Indiv</a></li>
+<li class="list-inline-item"><a href="#" onclick="showImage('{{ img('pdv.indmemdiff.png') }}'); return false;" class="badge badge-info">Bias</a></li>
+</ul></div>
+<a class="collapse-link" data-toggle="collapse" href="#pdv_tassstreg" role="button" aria-expanded="false" aria-controls="pdv_tassstreg">TAS</a> 
+<div class="collapse" id="pdv_tassstreg">
+<ul class="list-inline my-0">
+<li class="list-inline-item"><a href="#" onclick="showImage('{{ img('pdv.tassstreg.indmem.png') }}'); return false;" class="badge badge-info">Indiv</a></li>
+<li class="list-inline-item"><a href="#" onclick="showImage('{{ img('pdv.tassstreg.indmemdiff.png') }}'); return false;" class="badge badge-info">Bias</a></li>
+</ul></div>
+<a class="collapse-link" data-toggle="collapse" href="#pdv_prreg" role="button" aria-expanded="false" aria-controls="pdv_prreg">PR</a> 
+<div class="collapse" id="pdv_prreg">
+<ul class="list-inline my-0">
+<li class="list-inline-item"><a href="#" onclick="showImage('{{ img('pdv.prreg.indmem.png') }}'); return false;" class="badge badge-info">Indiv</a></li>
+<li class="list-inline-item"><a href="#" onclick="showImage('{{ img('pdv.prreg.indmemdiff.png') }}'); return false;" class="badge badge-info">Bias</a></li>
+</ul></div></td>
+<td><a href="#" onclick="showImage('{{ img('pdv_timeseries_mon.indmem.png') }}'); return false;">Timeseries</a></td>
+<td><a href="#" onclick="showImage('{{ img('pdv.powspec.indmem.png') }}'); return false;">Power Spectra</a></td></tr>
+<tr>
+<td><b>PDV'</b></td>
+<td>Regr: 
+<a class="collapse-link" data-toggle="collapse" href="#pdv_prime" role="button" aria-expanded="false" aria-controls="pdv_prime">SST</a> 
+<div class="collapse" id="pdv_prime">
+<ul class="list-inline my-0">
+<li class="list-inline-item"><a href="#" onclick="showImage('{{ img('pdv.prime.indmem.png') }}'); return false;" class="badge badge-info">Indiv</a></li>
+<li class="list-inline-item"><a href="#" onclick="showImage('{{ img('pdv.prime.indmemdiff.png') }}'); return false;" class="badge badge-info">Bias</a></li>
+</ul></div>
+<a class="collapse-link" data-toggle="collapse" href="#pdv_prime_tassstreg" role="button" aria-expanded="false" aria-controls="pdv_prime_tassstreg">TAS</a> 
+<div class="collapse" id="pdv_prime_tassstreg">
+<ul class="list-inline my-0">
+<li class="list-inline-item"><a href="#" onclick="showImage('{{ img('pdv.prime.tassstreg.indmem.png') }}'); return false;" class="badge badge-info">Indiv</a></li>
+<li class="list-inline-item"><a href="#" onclick="showImage('{{ img('pdv.prime.tassstreg.indmemdiff.png') }}'); return false;" class="badge badge-info">Bias</a></li>
+</ul></div>
+<a class="collapse-link" data-toggle="collapse" href="#pdv_prime_prreg" role="button" aria-expanded="false" aria-controls="pdv_prime_prreg">PR</a> 
+<div class="collapse" id="pdv_prime_prreg">
+<ul class="list-inline my-0">
+<li class="list-inline-item"><a href="#" onclick="showImage('{{ img('pdv.prime.prreg.indmem.png') }}'); return false;" class="badge badge-info">Indiv</a></li>
+<li class="list-inline-item"><a href="#" onclick="showImage('{{ img('pdv.prime.prreg.indmemdiff.png') }}'); return false;" class="badge badge-info">Bias</a></li>
+</ul></div></td>
+<td><a href="#" onclick="showImage('{{ img('pdv_prime_timeseries_mon.indmem.png') }}'); return false;">Timeseries</a></td>
+<td><a href="#" onclick="showImage('{{ img('pdv.prime.powspec.indmem.png') }}'); return false;">Power Spectra</a></td></tr>
+<tr><td rowspan=3><b>AMOC</b></td><td>
+Means</td>
+<td>
+Standard Deviations</td>
+<td>
+Patterns</td></tr>
+<tr><td><a href="#" onclick="showImage('{{ img('amoc.timeseries.ann.indmem.png') }}'); return false;">Timeseries</a></td><td colspan=2>
+SST/TAS Regressions</td></tr>
+<tr><td><a href="#" onclick="showImage('{{ img('amoc.powspec.indmem.png') }}'); return false;">Spectra</a></td>
+<td colspan=2>AMV/AMOC Lag Correlations</td></tr>
+</table></div></div>
+<div class="row">
+<div class="col">
+<table class="table table-striped table-bordered">
+<h3 class="display-6">Atmospheric Modes of Variability</h3>
+<tr><td rowspan=2><b>SO</b></td>
+<td>Patterns</td><td>
+<a class="collapse-link" data-toggle="collapse" href="#so_pattern_djf" role="button" aria-expanded="false" aria-controls="so_pattern_djf">DJF</a>
+<div class="collapse" id="so_pattern_djf">
+<ul class="list-inline my-0">
+<li class="list-inline-item"><a href="#" onclick="showImage('{{ img('so_pattern_djf.indmem.png') }}'); return false;" class="badge badge-info">Indiv</a></li>
+<li class="list-inline-item"><a href="#" onclick="showImage('{{ img('so_pattern_djf.indmemdiff.png') }}'); return false;" class="badge badge-info">Bias</a></li>
+</ul></div></td>
+<td>
+<a class="collapse-link" data-toggle="collapse" href="#so_pattern_jfm" role="button" aria-expanded="false" aria-controls="so_pattern_jfm">JFM</a>
+<div class="collapse" id="so_pattern_jfm">
+<ul class="list-inline my-0">
+<li class="list-inline-item"><a href="#" onclick="showImage('{{ img('so_pattern_jfm.indmem.png') }}'); return false;" class="badge badge-info">Indiv</a></li>
+<li class="list-inline-item"><a href="#" onclick="showImage('{{ img('so_pattern_jfm.indmemdiff.png') }}'); return false;" class="badge badge-info">Bias</a></li>
+</ul></div></td>
+<td>
+<a class="collapse-link" data-toggle="collapse" href="#so_pattern_mam" role="button" aria-expanded="false" aria-controls="so_pattern_mam">MAM</a>
+<div class="collapse" id="so_pattern_mam">
+<ul class="list-inline my-0">
+<li class="list-inline-item"><a href="#" onclick="showImage('{{ img('so_pattern_mam.indmem.png') }}'); return false;" class="badge badge-info">Indiv</a></li>
+<li class="list-inline-item"><a href="#" onclick="showImage('{{ img('so_pattern_mam.indmemdiff.png') }}'); return false;" class="badge badge-info">Bias</a></li>
+</ul></div></td>
+<td>
+<a class="collapse-link" data-toggle="collapse" href="#so_pattern_jja" role="button" aria-expanded="false" aria-controls="so_pattern_jja">JJA</a>
+<div class="collapse" id="so_pattern_jja">
+<ul class="list-inline my-0">
+<li class="list-inline-item"><a href="#" onclick="showImage('{{ img('so_pattern_jja.indmem.png') }}'); return false;" class="badge badge-info">Indiv</a></li>
+<li class="list-inline-item"><a href="#" onclick="showImage('{{ img('so_pattern_jja.indmemdiff.png') }}'); return false;" class="badge badge-info">Bias</a></li>
+</ul></div></td>
+<td>
+<a class="collapse-link" data-toggle="collapse" href="#so_pattern_jas" role="button" aria-expanded="false" aria-controls="so_pattern_jas">JAS</a>
+<div class="collapse" id="so_pattern_jas">
+<ul class="list-inline my-0">
+<li class="list-inline-item"><a href="#" onclick="showImage('{{ img('so_pattern_jas.indmem.png') }}'); return false;" class="badge badge-info">Indiv</a></li>
+<li class="list-inline-item"><a href="#" onclick="showImage('{{ img('so_pattern_jas.indmemdiff.png') }}'); return false;" class="badge badge-info">Bias</a></li>
+</ul></div></td>
+<td>
+<a class="collapse-link" data-toggle="collapse" href="#so_pattern_son" role="button" aria-expanded="false" aria-controls="so_pattern_son">SON</a>
+<div class="collapse" id="so_pattern_son">
+<ul class="list-inline my-0">
+<li class="list-inline-item"><a href="#" onclick="showImage('{{ img('so_pattern_son.indmem.png') }}'); return false;" class="badge badge-info">Indiv</a></li>
+<li class="list-inline-item"><a href="#" onclick="showImage('{{ img('so_pattern_son.indmemdiff.png') }}'); return false;" class="badge badge-info">Bias</a></li>
+</ul></div></td>
+<td>
+<a class="collapse-link" data-toggle="collapse" href="#so_pattern_ann" role="button" aria-expanded="false" aria-controls="so_pattern_ann">ANN</a>
+<div class="collapse" id="so_pattern_ann">
+<ul class="list-inline my-0">
+<li class="list-inline-item"><a href="#" onclick="showImage('{{ img('so_pattern_ann.indmem.png') }}'); return false;" class="badge badge-info">Indiv</a></li>
+<li class="list-inline-item"><a href="#" onclick="showImage('{{ img('so_pattern_ann.indmemdiff.png') }}'); return false;" class="badge badge-info">Bias</a></li>
+</ul></div></td></tr>
+<tr><td>Timeseries</td>
+<td><a href="#" onclick="showImage('{{ img('so_timeseries_djf.indmem.png') }}'); return false;">DJF</a></td>
+<td><a href="#" onclick="showImage('{{ img('so_timeseries_jfm.indmem.png') }}'); return false;">JFM</a></td>
+<td><a href="#" onclick="showImage('{{ img('so_timeseries_mam.indmem.png') }}'); return false;">MAM</a></td>
+<td><a href="#" onclick="showImage('{{ img('so_timeseries_jja.indmem.png') }}'); return false;">JJA</a></td>
+<td><a href="#" onclick="showImage('{{ img('so_timeseries_jas.indmem.png') }}'); return false;">JAS</a></td>
+<td><a href="#" onclick="showImage('{{ img('so_timeseries_son.indmem.png') }}'); return false;">SON</a></td>
+<td><a href="#" onclick="showImage('{{ img('so_timeseries_ann.indmem.png') }}'); return false;">ANN</a></td></tr>
+<tr><td rowspan=2><b>NAM</b></td>
+<td>Patterns</td><td>
+<a class="collapse-link" data-toggle="collapse" href="#nam_pattern_djf" role="button" aria-expanded="false" aria-controls="nam_pattern_djf">DJF</a>
+<div class="collapse" id="nam_pattern_djf">
+<ul class="list-inline my-0">
+<li class="list-inline-item"><a href="#" onclick="showImage('{{ img('nam_pattern_djf.indmem.png') }}'); return false;" class="badge badge-info">Indiv</a></li>
+<li class="list-inline-item"><a href="#" onclick="showImage('{{ img('nam_pattern_djf.indmemdiff.png') }}'); return false;" class="badge badge-info">Bias</a></li>
+</ul></div></td>
+<td>
+<a class="collapse-link" data-toggle="collapse" href="#nam_pattern_jfm" role="button" aria-expanded="false" aria-controls="nam_pattern_jfm">JFM</a>
+<div class="collapse" id="nam_pattern_jfm">
+<ul class="list-inline my-0">
+<li class="list-inline-item"><a href="#" onclick="showImage('{{ img('nam_pattern_jfm.indmem.png') }}'); return false;" class="badge badge-info">Indiv</a></li>
+<li class="list-inline-item"><a href="#" onclick="showImage('{{ img('nam_pattern_jfm.indmemdiff.png') }}'); return false;" class="badge badge-info">Bias</a></li>
+</ul></div></td>
+<td>
+<a class="collapse-link" data-toggle="collapse" href="#nam_pattern_mam" role="button" aria-expanded="false" aria-controls="nam_pattern_mam">MAM</a>
+<div class="collapse" id="nam_pattern_mam">
+<ul class="list-inline my-0">
+<li class="list-inline-item"><a href="#" onclick="showImage('{{ img('nam_pattern_mam.indmem.png') }}'); return false;" class="badge badge-info">Indiv</a></li>
+<li class="list-inline-item"><a href="#" onclick="showImage('{{ img('nam_pattern_mam.indmemdiff.png') }}'); return false;" class="badge badge-info">Bias</a></li>
+</ul></div></td>
+<td>
+<a class="collapse-link" data-toggle="collapse" href="#nam_pattern_jja" role="button" aria-expanded="false" aria-controls="nam_pattern_jja">JJA</a>
+<div class="collapse" id="nam_pattern_jja">
+<ul class="list-inline my-0">
+<li class="list-inline-item"><a href="#" onclick="showImage('{{ img('nam_pattern_jja.indmem.png') }}'); return false;" class="badge badge-info">Indiv</a></li>
+<li class="list-inline-item"><a href="#" onclick="showImage('{{ img('nam_pattern_jja.indmemdiff.png') }}'); return false;" class="badge badge-info">Bias</a></li>
+</ul></div></td>
+<td>
+<a class="collapse-link" data-toggle="collapse" href="#nam_pattern_jas" role="button" aria-expanded="false" aria-controls="nam_pattern_jas">JAS</a>
+<div class="collapse" id="nam_pattern_jas">
+<ul class="list-inline my-0">
+<li class="list-inline-item"><a href="#" onclick="showImage('{{ img('nam_pattern_jas.indmem.png') }}'); return false;" class="badge badge-info">Indiv</a></li>
+<li class="list-inline-item"><a href="#" onclick="showImage('{{ img('nam_pattern_jas.indmemdiff.png') }}'); return false;" class="badge badge-info">Bias</a></li>
+</ul></div></td>
+<td>
+<a class="collapse-link" data-toggle="collapse" href="#nam_pattern_son" role="button" aria-expanded="false" aria-controls="nam_pattern_son">SON</a>
+<div class="collapse" id="nam_pattern_son">
+<ul class="list-inline my-0">
+<li class="list-inline-item"><a href="#" onclick="showImage('{{ img('nam_pattern_son.indmem.png') }}'); return false;" class="badge badge-info">Indiv</a></li>
+<li class="list-inline-item"><a href="#" onclick="showImage('{{ img('nam_pattern_son.indmemdiff.png') }}'); return false;" class="badge badge-info">Bias</a></li>
+</ul></div></td>
+<td>
+<a class="collapse-link" data-toggle="collapse" href="#nam_pattern_ann" role="button" aria-expanded="false" aria-controls="nam_pattern_ann">ANN</a>
+<div class="collapse" id="nam_pattern_ann">
+<ul class="list-inline my-0">
+<li class="list-inline-item"><a href="#" onclick="showImage('{{ img('nam_pattern_ann.indmem.png') }}'); return false;" class="badge badge-info">Indiv</a></li>
+<li class="list-inline-item"><a href="#" onclick="showImage('{{ img('nam_pattern_ann.indmemdiff.png') }}'); return false;" class="badge badge-info">Bias</a></li>
+</ul></div></td></tr>
+<tr><td>Timeseries</td>
+<td><a href="#" onclick="showImage('{{ img('nam_timeseries_djf.indmem.png') }}'); return false;">DJF</a></td>
+<td><a href="#" onclick="showImage('{{ img('nam_timeseries_jfm.indmem.png') }}'); return false;">JFM</a></td>
+<td><a href="#" onclick="showImage('{{ img('nam_timeseries_mam.indmem.png') }}'); return false;">MAM</a></td>
+<td><a href="#" onclick="showImage('{{ img('nam_timeseries_jja.indmem.png') }}'); return false;">JJA</a></td>
+<td><a href="#" onclick="showImage('{{ img('nam_timeseries_jas.indmem.png') }}'); return false;">JAS</a></td>
+<td><a href="#" onclick="showImage('{{ img('nam_timeseries_son.indmem.png') }}'); return false;">SON</a></td>
+<td><a href="#" onclick="showImage('{{ img('nam_timeseries_ann.indmem.png') }}'); return false;">ANN</a></td></tr>
+<tr><td rowspan=2><b>NAO</b></td>
+<td>Patterns</td><td>
+<a class="collapse-link" data-toggle="collapse" href="#nao_pattern_djf" role="button" aria-expanded="false" aria-controls="nao_pattern_djf">DJF</a>
+<div class="collapse" id="nao_pattern_djf">
+<ul class="list-inline my-0">
+<li class="list-inline-item"><a href="#" onclick="showImage('{{ img('nao_pattern_djf.indmem.png') }}'); return false;" class="badge badge-info">Indiv</a></li>
+<li class="list-inline-item"><a href="#" onclick="showImage('{{ img('nao_pattern_djf.indmemdiff.png') }}'); return false;" class="badge badge-info">Bias</a></li>
+</ul></div></td>
+<td>
+<a class="collapse-link" data-toggle="collapse" href="#nao_pattern_jfm" role="button" aria-expanded="false" aria-controls="nao_pattern_jfm">JFM</a>
+<div class="collapse" id="nao_pattern_jfm">
+<ul class="list-inline my-0">
+<li class="list-inline-item"><a href="#" onclick="showImage('{{ img('nao_pattern_jfm.indmem.png') }}'); return false;" class="badge badge-info">Indiv</a></li>
+<li class="list-inline-item"><a href="#" onclick="showImage('{{ img('nao_pattern_jfm.indmemdiff.png') }}'); return false;" class="badge badge-info">Bias</a></li>
+</ul></div></td>
+<td>
+<a class="collapse-link" data-toggle="collapse" href="#nao_pattern_mam" role="button" aria-expanded="false" aria-controls="nao_pattern_mam">MAM</a>
+<div class="collapse" id="nao_pattern_mam">
+<ul class="list-inline my-0">
+<li class="list-inline-item"><a href="#" onclick="showImage('{{ img('nao_pattern_mam.indmem.png') }}'); return false;" class="badge badge-info">Indiv</a></li>
+<li class="list-inline-item"><a href="#" onclick="showImage('{{ img('nao_pattern_mam.indmemdiff.png') }}'); return false;" class="badge badge-info">Bias</a></li>
+</ul></div></td>
+<td>
+<a class="collapse-link" data-toggle="collapse" href="#nao_pattern_jja" role="button" aria-expanded="false" aria-controls="nao_pattern_jja">JJA</a>
+<div class="collapse" id="nao_pattern_jja">
+<ul class="list-inline my-0">
+<li class="list-inline-item"><a href="#" onclick="showImage('{{ img('nao_pattern_jja.indmem.png') }}'); return false;" class="badge badge-info">Indiv</a></li>
+<li class="list-inline-item"><a href="#" onclick="showImage('{{ img('nao_pattern_jja.indmemdiff.png') }}'); return false;" class="badge badge-info">Bias</a></li>
+</ul></div></td>
+<td>
+<a class="collapse-link" data-toggle="collapse" href="#nao_pattern_jas" role="button" aria-expanded="false" aria-controls="nao_pattern_jas">JAS</a>
+<div class="collapse" id="nao_pattern_jas">
+<ul class="list-inline my-0">
+<li class="list-inline-item"><a href="#" onclick="showImage('{{ img('nao_pattern_jas.indmem.png') }}'); return false;" class="badge badge-info">Indiv</a></li>
+<li class="list-inline-item"><a href="#" onclick="showImage('{{ img('nao_pattern_jas.indmemdiff.png') }}'); return false;" class="badge badge-info">Bias</a></li>
+</ul></div></td>
+<td>
+<a class="collapse-link" data-toggle="collapse" href="#nao_pattern_son" role="button" aria-expanded="false" aria-controls="nao_pattern_son">SON</a>
+<div class="collapse" id="nao_pattern_son">
+<ul class="list-inline my-0">
+<li class="list-inline-item"><a href="#" onclick="showImage('{{ img('nao_pattern_son.indmem.png') }}'); return false;" class="badge badge-info">Indiv</a></li>
+<li class="list-inline-item"><a href="#" onclick="showImage('{{ img('nao_pattern_son.indmemdiff.png') }}'); return false;" class="badge badge-info">Bias</a></li>
+</ul></div></td>
+<td>
+<a class="collapse-link" data-toggle="collapse" href="#nao_pattern_ann" role="button" aria-expanded="false" aria-controls="nao_pattern_ann">ANN</a>
+<div class="collapse" id="nao_pattern_ann">
+<ul class="list-inline my-0">
+<li class="list-inline-item"><a href="#" onclick="showImage('{{ img('nao_pattern_ann.indmem.png') }}'); return false;" class="badge badge-info">Indiv</a></li>
+<li class="list-inline-item"><a href="#" onclick="showImage('{{ img('nao_pattern_ann.indmemdiff.png') }}'); return false;" class="badge badge-info">Bias</a></li>
+</ul></div></td></tr>
+<tr><td>Timeseries</td>
+<td><a href="#" onclick="showImage('{{ img('nao_timeseries_djf.indmem.png') }}'); return false;">DJF</a></td>
+<td><a href="#" onclick="showImage('{{ img('nao_timeseries_jfm.indmem.png') }}'); return false;">JFM</a></td>
+<td><a href="#" onclick="showImage('{{ img('nao_timeseries_mam.indmem.png') }}'); return false;">MAM</a></td>
+<td><a href="#" onclick="showImage('{{ img('nao_timeseries_jja.indmem.png') }}'); return false;">JJA</a></td>
+<td><a href="#" onclick="showImage('{{ img('nao_timeseries_jas.indmem.png') }}'); return false;">JAS</a></td>
+<td><a href="#" onclick="showImage('{{ img('nao_timeseries_son.indmem.png') }}'); return false;">SON</a></td>
+<td><a href="#" onclick="showImage('{{ img('nao_timeseries_ann.indmem.png') }}'); return false;">ANN</a></td></tr>
+<tr><td rowspan=2><b>SAM</b></td>
+<td>Patterns</td><td>
+<a class="collapse-link" data-toggle="collapse" href="#sam_pattern_djf" role="button" aria-expanded="false" aria-controls="sam_pattern_djf">DJF</a>
+<div class="collapse" id="sam_pattern_djf">
+<ul class="list-inline my-0">
+<li class="list-inline-item"><a href="#" onclick="showImage('{{ img('sam_pattern_djf.indmem.png') }}'); return false;" class="badge badge-info">Indiv</a></li>
+<li class="list-inline-item"><a href="#" onclick="showImage('{{ img('sam_pattern_djf.indmemdiff.png') }}'); return false;" class="badge badge-info">Bias</a></li>
+</ul></div></td>
+<td>
+<a class="collapse-link" data-toggle="collapse" href="#sam_pattern_jfm" role="button" aria-expanded="false" aria-controls="sam_pattern_jfm">JFM</a>
+<div class="collapse" id="sam_pattern_jfm">
+<ul class="list-inline my-0">
+<li class="list-inline-item"><a href="#" onclick="showImage('{{ img('sam_pattern_jfm.indmem.png') }}'); return false;" class="badge badge-info">Indiv</a></li>
+<li class="list-inline-item"><a href="#" onclick="showImage('{{ img('sam_pattern_jfm.indmemdiff.png') }}'); return false;" class="badge badge-info">Bias</a></li>
+</ul></div></td>
+<td>
+<a class="collapse-link" data-toggle="collapse" href="#sam_pattern_mam" role="button" aria-expanded="false" aria-controls="sam_pattern_mam">MAM</a>
+<div class="collapse" id="sam_pattern_mam">
+<ul class="list-inline my-0">
+<li class="list-inline-item"><a href="#" onclick="showImage('{{ img('sam_pattern_mam.indmem.png') }}'); return false;" class="badge badge-info">Indiv</a></li>
+<li class="list-inline-item"><a href="#" onclick="showImage('{{ img('sam_pattern_mam.indmemdiff.png') }}'); return false;" class="badge badge-info">Bias</a></li>
+</ul></div></td>
+<td>
+<a class="collapse-link" data-toggle="collapse" href="#sam_pattern_jja" role="button" aria-expanded="false" aria-controls="sam_pattern_jja">JJA</a>
+<div class="collapse" id="sam_pattern_jja">
+<ul class="list-inline my-0">
+<li class="list-inline-item"><a href="#" onclick="showImage('{{ img('sam_pattern_jja.indmem.png') }}'); return false;" class="badge badge-info">Indiv</a></li>
+<li class="list-inline-item"><a href="#" onclick="showImage('{{ img('sam_pattern_jja.indmemdiff.png') }}'); return false;" class="badge badge-info">Bias</a></li>
+</ul></div></td>
+<td>
+<a class="collapse-link" data-toggle="collapse" href="#sam_pattern_jas" role="button" aria-expanded="false" aria-controls="sam_pattern_jas">JAS</a>
+<div class="collapse" id="sam_pattern_jas">
+<ul class="list-inline my-0">
+<li class="list-inline-item"><a href="#" onclick="showImage('{{ img('sam_pattern_jas.indmem.png') }}'); return false;" class="badge badge-info">Indiv</a></li>
+<li class="list-inline-item"><a href="#" onclick="showImage('{{ img('sam_pattern_jas.indmemdiff.png') }}'); return false;" class="badge badge-info">Bias</a></li>
+</ul></div></td>
+<td>
+<a class="collapse-link" data-toggle="collapse" href="#sam_pattern_son" role="button" aria-expanded="false" aria-controls="sam_pattern_son">SON</a>
+<div class="collapse" id="sam_pattern_son">
+<ul class="list-inline my-0">
+<li class="list-inline-item"><a href="#" onclick="showImage('{{ img('sam_pattern_son.indmem.png') }}'); return false;" class="badge badge-info">Indiv</a></li>
+<li class="list-inline-item"><a href="#" onclick="showImage('{{ img('sam_pattern_son.indmemdiff.png') }}'); return false;" class="badge badge-info">Bias</a></li>
+</ul></div></td>
+<td>
+<a class="collapse-link" data-toggle="collapse" href="#sam_pattern_ann" role="button" aria-expanded="false" aria-controls="sam_pattern_ann">ANN</a>
+<div class="collapse" id="sam_pattern_ann">
+<ul class="list-inline my-0">
+<li class="list-inline-item"><a href="#" onclick="showImage('{{ img('sam_pattern_ann.indmem.png') }}'); return false;" class="badge badge-info">Indiv</a></li>
+<li class="list-inline-item"><a href="#" onclick="showImage('{{ img('sam_pattern_ann.indmemdiff.png') }}'); return false;" class="badge badge-info">Bias</a></li>
+</ul></div></td></tr>
+<tr><td>Timeseries</td>
+<td><a href="#" onclick="showImage('{{ img('sam_timeseries_djf.indmem.png') }}'); return false;">DJF</a></td>
+<td><a href="#" onclick="showImage('{{ img('sam_timeseries_jfm.indmem.png') }}'); return false;">JFM</a></td>
+<td><a href="#" onclick="showImage('{{ img('sam_timeseries_mam.indmem.png') }}'); return false;">MAM</a></td>
+<td><a href="#" onclick="showImage('{{ img('sam_timeseries_jja.indmem.png') }}'); return false;">JJA</a></td>
+<td><a href="#" onclick="showImage('{{ img('sam_timeseries_jas.indmem.png') }}'); return false;">JAS</a></td>
+<td><a href="#" onclick="showImage('{{ img('sam_timeseries_son.indmem.png') }}'); return false;">SON</a></td>
+<td><a href="#" onclick="showImage('{{ img('sam_timeseries_ann.indmem.png') }}'); return false;">ANN</a></td></tr>
+<tr><td rowspan=2><b>PNA</b></td>
+<td>Patterns</td><td>
+<a class="collapse-link" data-toggle="collapse" href="#pna_pattern_djf" role="button" aria-expanded="false" aria-controls="pna_pattern_djf">DJF</a>
+<div class="collapse" id="pna_pattern_djf">
+<ul class="list-inline my-0">
+<li class="list-inline-item"><a href="#" onclick="showImage('{{ img('pna_pattern_djf.indmem.png') }}'); return false;" class="badge badge-info">Indiv</a></li>
+<li class="list-inline-item"><a href="#" onclick="showImage('{{ img('pna_pattern_djf.indmemdiff.png') }}'); return false;" class="badge badge-info">Bias</a></li>
+</ul></div></td>
+<td>
+<a class="collapse-link" data-toggle="collapse" href="#pna_pattern_jfm" role="button" aria-expanded="false" aria-controls="pna_pattern_jfm">JFM</a>
+<div class="collapse" id="pna_pattern_jfm">
+<ul class="list-inline my-0">
+<li class="list-inline-item"><a href="#" onclick="showImage('{{ img('pna_pattern_jfm.indmem.png') }}'); return false;" class="badge badge-info">Indiv</a></li>
+<li class="list-inline-item"><a href="#" onclick="showImage('{{ img('pna_pattern_jfm.indmemdiff.png') }}'); return false;" class="badge badge-info">Bias</a></li>
+</ul></div></td>
+<td>
+<a class="collapse-link" data-toggle="collapse" href="#pna_pattern_mam" role="button" aria-expanded="false" aria-controls="pna_pattern_mam">MAM</a>
+<div class="collapse" id="pna_pattern_mam">
+<ul class="list-inline my-0">
+<li class="list-inline-item"><a href="#" onclick="showImage('{{ img('pna_pattern_mam.indmem.png') }}'); return false;" class="badge badge-info">Indiv</a></li>
+<li class="list-inline-item"><a href="#" onclick="showImage('{{ img('pna_pattern_mam.indmemdiff.png') }}'); return false;" class="badge badge-info">Bias</a></li>
+</ul></div></td>
+<td>
+<a class="collapse-link" data-toggle="collapse" href="#pna_pattern_jja" role="button" aria-expanded="false" aria-controls="pna_pattern_jja">JJA</a>
+<div class="collapse" id="pna_pattern_jja">
+<ul class="list-inline my-0">
+<li class="list-inline-item"><a href="#" onclick="showImage('{{ img('pna_pattern_jja.indmem.png') }}'); return false;" class="badge badge-info">Indiv</a></li>
+<li class="list-inline-item"><a href="#" onclick="showImage('{{ img('pna_pattern_jja.indmemdiff.png') }}'); return false;" class="badge badge-info">Bias</a></li>
+</ul></div></td>
+<td>
+<a class="collapse-link" data-toggle="collapse" href="#pna_pattern_jas" role="button" aria-expanded="false" aria-controls="pna_pattern_jas">JAS</a>
+<div class="collapse" id="pna_pattern_jas">
+<ul class="list-inline my-0">
+<li class="list-inline-item"><a href="#" onclick="showImage('{{ img('pna_pattern_jas.indmem.png') }}'); return false;" class="badge badge-info">Indiv</a></li>
+<li class="list-inline-item"><a href="#" onclick="showImage('{{ img('pna_pattern_jas.indmemdiff.png') }}'); return false;" class="badge badge-info">Bias</a></li>
+</ul></div></td>
+<td>
+<a class="collapse-link" data-toggle="collapse" href="#pna_pattern_son" role="button" aria-expanded="false" aria-controls="pna_pattern_son">SON</a>
+<div class="collapse" id="pna_pattern_son">
+<ul class="list-inline my-0">
+<li class="list-inline-item"><a href="#" onclick="showImage('{{ img('pna_pattern_son.indmem.png') }}'); return false;" class="badge badge-info">Indiv</a></li>
+<li class="list-inline-item"><a href="#" onclick="showImage('{{ img('pna_pattern_son.indmemdiff.png') }}'); return false;" class="badge badge-info">Bias</a></li>
+</ul></div></td>
+<td>
+<a class="collapse-link" data-toggle="collapse" href="#pna_pattern_ann" role="button" aria-expanded="false" aria-controls="pna_pattern_ann">ANN</a>
+<div class="collapse" id="pna_pattern_ann">
+<ul class="list-inline my-0">
+<li class="list-inline-item"><a href="#" onclick="showImage('{{ img('pna_pattern_ann.indmem.png') }}'); return false;" class="badge badge-info">Indiv</a></li>
+<li class="list-inline-item"><a href="#" onclick="showImage('{{ img('pna_pattern_ann.indmemdiff.png') }}'); return false;" class="badge badge-info">Bias</a></li>
+</ul></div></td></tr>
+<tr><td>Timeseries</td>
+<td><a href="#" onclick="showImage('{{ img('pna_timeseries_djf.indmem.png') }}'); return false;">DJF</a></td>
+<td><a href="#" onclick="showImage('{{ img('pna_timeseries_jfm.indmem.png') }}'); return false;">JFM</a></td>
+<td><a href="#" onclick="showImage('{{ img('pna_timeseries_mam.indmem.png') }}'); return false;">MAM</a></td>
+<td><a href="#" onclick="showImage('{{ img('pna_timeseries_jja.indmem.png') }}'); return false;">JJA</a></td>
+<td><a href="#" onclick="showImage('{{ img('pna_timeseries_jas.indmem.png') }}'); return false;">JAS</a></td>
+<td><a href="#" onclick="showImage('{{ img('pna_timeseries_son.indmem.png') }}'); return false;">SON</a></td>
+<td><a href="#" onclick="showImage('{{ img('pna_timeseries_ann.indmem.png') }}'); return false;">ANN</a></td></tr>
+<tr><td rowspan=2><b>NPO</b></td>
+<td>Patterns</td><td>
+<a class="collapse-link" data-toggle="collapse" href="#npo_pattern_djf" role="button" aria-expanded="false" aria-controls="npo_pattern_djf">DJF</a>
+<div class="collapse" id="npo_pattern_djf">
+<ul class="list-inline my-0">
+<li class="list-inline-item"><a href="#" onclick="showImage('{{ img('npo_pattern_djf.indmem.png') }}'); return false;" class="badge badge-info">Indiv</a></li>
+<li class="list-inline-item"><a href="#" onclick="showImage('{{ img('npo_pattern_djf.indmemdiff.png') }}'); return false;" class="badge badge-info">Bias</a></li>
+</ul></div></td>
+<td>
+<a class="collapse-link" data-toggle="collapse" href="#npo_pattern_jfm" role="button" aria-expanded="false" aria-controls="npo_pattern_jfm">JFM</a>
+<div class="collapse" id="npo_pattern_jfm">
+<ul class="list-inline my-0">
+<li class="list-inline-item"><a href="#" onclick="showImage('{{ img('npo_pattern_jfm.indmem.png') }}'); return false;" class="badge badge-info">Indiv</a></li>
+<li class="list-inline-item"><a href="#" onclick="showImage('{{ img('npo_pattern_jfm.indmemdiff.png') }}'); return false;" class="badge badge-info">Bias</a></li>
+</ul></div></td>
+<td>
+<a class="collapse-link" data-toggle="collapse" href="#npo_pattern_mam" role="button" aria-expanded="false" aria-controls="npo_pattern_mam">MAM</a>
+<div class="collapse" id="npo_pattern_mam">
+<ul class="list-inline my-0">
+<li class="list-inline-item"><a href="#" onclick="showImage('{{ img('npo_pattern_mam.indmem.png') }}'); return false;" class="badge badge-info">Indiv</a></li>
+<li class="list-inline-item"><a href="#" onclick="showImage('{{ img('npo_pattern_mam.indmemdiff.png') }}'); return false;" class="badge badge-info">Bias</a></li>
+</ul></div></td>
+<td>
+<a class="collapse-link" data-toggle="collapse" href="#npo_pattern_jja" role="button" aria-expanded="false" aria-controls="npo_pattern_jja">JJA</a>
+<div class="collapse" id="npo_pattern_jja">
+<ul class="list-inline my-0">
+<li class="list-inline-item"><a href="#" onclick="showImage('{{ img('npo_pattern_jja.indmem.png') }}'); return false;" class="badge badge-info">Indiv</a></li>
+<li class="list-inline-item"><a href="#" onclick="showImage('{{ img('npo_pattern_jja.indmemdiff.png') }}'); return false;" class="badge badge-info">Bias</a></li>
+</ul></div></td>
+<td>
+<a class="collapse-link" data-toggle="collapse" href="#npo_pattern_jas" role="button" aria-expanded="false" aria-controls="npo_pattern_jas">JAS</a>
+<div class="collapse" id="npo_pattern_jas">
+<ul class="list-inline my-0">
+<li class="list-inline-item"><a href="#" onclick="showImage('{{ img('npo_pattern_jas.indmem.png') }}'); return false;" class="badge badge-info">Indiv</a></li>
+<li class="list-inline-item"><a href="#" onclick="showImage('{{ img('npo_pattern_jas.indmemdiff.png') }}'); return false;" class="badge badge-info">Bias</a></li>
+</ul></div></td>
+<td>
+<a class="collapse-link" data-toggle="collapse" href="#npo_pattern_son" role="button" aria-expanded="false" aria-controls="npo_pattern_son">SON</a>
+<div class="collapse" id="npo_pattern_son">
+<ul class="list-inline my-0">
+<li class="list-inline-item"><a href="#" onclick="showImage('{{ img('npo_pattern_son.indmem.png') }}'); return false;" class="badge badge-info">Indiv</a></li>
+<li class="list-inline-item"><a href="#" onclick="showImage('{{ img('npo_pattern_son.indmemdiff.png') }}'); return false;" class="badge badge-info">Bias</a></li>
+</ul></div></td>
+<td>
+<a class="collapse-link" data-toggle="collapse" href="#npo_pattern_ann" role="button" aria-expanded="false" aria-controls="npo_pattern_ann">ANN</a>
+<div class="collapse" id="npo_pattern_ann">
+<ul class="list-inline my-0">
+<li class="list-inline-item"><a href="#" onclick="showImage('{{ img('npo_pattern_ann.indmem.png') }}'); return false;" class="badge badge-info">Indiv</a></li>
+<li class="list-inline-item"><a href="#" onclick="showImage('{{ img('npo_pattern_ann.indmemdiff.png') }}'); return false;" class="badge badge-info">Bias</a></li>
+</ul></div></td></tr>
+<tr><td>Timeseries</td>
+<td><a href="#" onclick="showImage('{{ img('npo_timeseries_djf.indmem.png') }}'); return false;">DJF</a></td>
+<td><a href="#" onclick="showImage('{{ img('npo_timeseries_jfm.indmem.png') }}'); return false;">JFM</a></td>
+<td><a href="#" onclick="showImage('{{ img('npo_timeseries_mam.indmem.png') }}'); return false;">MAM</a></td>
+<td><a href="#" onclick="showImage('{{ img('npo_timeseries_jja.indmem.png') }}'); return false;">JJA</a></td>
+<td><a href="#" onclick="showImage('{{ img('npo_timeseries_jas.indmem.png') }}'); return false;">JAS</a></td>
+<td><a href="#" onclick="showImage('{{ img('npo_timeseries_son.indmem.png') }}'); return false;">SON</a></td>
+<td><a href="#" onclick="showImage('{{ img('npo_timeseries_ann.indmem.png') }}'); return false;">ANN</a></td></tr>
+<tr><td rowspan=2><b>PSA1</b></td>
+<td>Patterns</td><td>
+<a class="collapse-link" data-toggle="collapse" href="#psa1_pattern_djf" role="button" aria-expanded="false" aria-controls="psa1_pattern_djf">DJF</a>
+<div class="collapse" id="psa1_pattern_djf">
+<ul class="list-inline my-0">
+<li class="list-inline-item"><a href="#" onclick="showImage('{{ img('psa1_pattern_djf.indmem.png') }}'); return false;" class="badge badge-info">Indiv</a></li>
+<li class="list-inline-item"><a href="#" onclick="showImage('{{ img('psa1_pattern_djf.indmemdiff.png') }}'); return false;" class="badge badge-info">Bias</a></li>
+</ul></div></td>
+<td>
+<a class="collapse-link" data-toggle="collapse" href="#psa1_pattern_jfm" role="button" aria-expanded="false" aria-controls="psa1_pattern_jfm">JFM</a>
+<div class="collapse" id="psa1_pattern_jfm">
+<ul class="list-inline my-0">
+<li class="list-inline-item"><a href="#" onclick="showImage('{{ img('psa1_pattern_jfm.indmem.png') }}'); return false;" class="badge badge-info">Indiv</a></li>
+<li class="list-inline-item"><a href="#" onclick="showImage('{{ img('psa1_pattern_jfm.indmemdiff.png') }}'); return false;" class="badge badge-info">Bias</a></li>
+</ul></div></td>
+<td>
+<a class="collapse-link" data-toggle="collapse" href="#psa1_pattern_mam" role="button" aria-expanded="false" aria-controls="psa1_pattern_mam">MAM</a>
+<div class="collapse" id="psa1_pattern_mam">
+<ul class="list-inline my-0">
+<li class="list-inline-item"><a href="#" onclick="showImage('{{ img('psa1_pattern_mam.indmem.png') }}'); return false;" class="badge badge-info">Indiv</a></li>
+<li class="list-inline-item"><a href="#" onclick="showImage('{{ img('psa1_pattern_mam.indmemdiff.png') }}'); return false;" class="badge badge-info">Bias</a></li>
+</ul></div></td>
+<td>
+<a class="collapse-link" data-toggle="collapse" href="#psa1_pattern_jja" role="button" aria-expanded="false" aria-controls="psa1_pattern_jja">JJA</a>
+<div class="collapse" id="psa1_pattern_jja">
+<ul class="list-inline my-0">
+<li class="list-inline-item"><a href="#" onclick="showImage('{{ img('psa1_pattern_jja.indmem.png') }}'); return false;" class="badge badge-info">Indiv</a></li>
+<li class="list-inline-item"><a href="#" onclick="showImage('{{ img('psa1_pattern_jja.indmemdiff.png') }}'); return false;" class="badge badge-info">Bias</a></li>
+</ul></div></td>
+<td>
+<a class="collapse-link" data-toggle="collapse" href="#psa1_pattern_jas" role="button" aria-expanded="false" aria-controls="psa1_pattern_jas">JAS</a>
+<div class="collapse" id="psa1_pattern_jas">
+<ul class="list-inline my-0">
+<li class="list-inline-item"><a href="#" onclick="showImage('{{ img('psa1_pattern_jas.indmem.png') }}'); return false;" class="badge badge-info">Indiv</a></li>
+<li class="list-inline-item"><a href="#" onclick="showImage('{{ img('psa1_pattern_jas.indmemdiff.png') }}'); return false;" class="badge badge-info">Bias</a></li>
+</ul></div></td>
+<td>
+<a class="collapse-link" data-toggle="collapse" href="#psa1_pattern_son" role="button" aria-expanded="false" aria-controls="psa1_pattern_son">SON</a>
+<div class="collapse" id="psa1_pattern_son">
+<ul class="list-inline my-0">
+<li class="list-inline-item"><a href="#" onclick="showImage('{{ img('psa1_pattern_son.indmem.png') }}'); return false;" class="badge badge-info">Indiv</a></li>
+<li class="list-inline-item"><a href="#" onclick="showImage('{{ img('psa1_pattern_son.indmemdiff.png') }}'); return false;" class="badge badge-info">Bias</a></li>
+</ul></div></td>
+<td>
+<a class="collapse-link" data-toggle="collapse" href="#psa1_pattern_ann" role="button" aria-expanded="false" aria-controls="psa1_pattern_ann">ANN</a>
+<div class="collapse" id="psa1_pattern_ann">
+<ul class="list-inline my-0">
+<li class="list-inline-item"><a href="#" onclick="showImage('{{ img('psa1_pattern_ann.indmem.png') }}'); return false;" class="badge badge-info">Indiv</a></li>
+<li class="list-inline-item"><a href="#" onclick="showImage('{{ img('psa1_pattern_ann.indmemdiff.png') }}'); return false;" class="badge badge-info">Bias</a></li>
+</ul></div></td></tr>
+<tr><td>Timeseries</td>
+<td><a href="#" onclick="showImage('{{ img('psa1_timeseries_djf.indmem.png') }}'); return false;">DJF</a></td>
+<td><a href="#" onclick="showImage('{{ img('psa1_timeseries_jfm.indmem.png') }}'); return false;">JFM</a></td>
+<td><a href="#" onclick="showImage('{{ img('psa1_timeseries_mam.indmem.png') }}'); return false;">MAM</a></td>
+<td><a href="#" onclick="showImage('{{ img('psa1_timeseries_jja.indmem.png') }}'); return false;">JJA</a></td>
+<td><a href="#" onclick="showImage('{{ img('psa1_timeseries_jas.indmem.png') }}'); return false;">JAS</a></td>
+<td><a href="#" onclick="showImage('{{ img('psa1_timeseries_son.indmem.png') }}'); return false;">SON</a></td>
+<td><a href="#" onclick="showImage('{{ img('psa1_timeseries_ann.indmem.png') }}'); return false;">ANN</a></td></tr>
+<tr><td rowspan=2><b>PSA2</b></td>
+<td>Patterns</td><td>
+<a class="collapse-link" data-toggle="collapse" href="#psa2_pattern_djf" role="button" aria-expanded="false" aria-controls="psa2_pattern_djf">DJF</a>
+<div class="collapse" id="psa2_pattern_djf">
+<ul class="list-inline my-0">
+<li class="list-inline-item"><a href="#" onclick="showImage('{{ img('psa2_pattern_djf.indmem.png') }}'); return false;" class="badge badge-info">Indiv</a></li>
+<li class="list-inline-item"><a href="#" onclick="showImage('{{ img('psa2_pattern_djf.indmemdiff.png') }}'); return false;" class="badge badge-info">Bias</a></li>
+</ul></div></td>
+<td>
+<a class="collapse-link" data-toggle="collapse" href="#psa2_pattern_jfm" role="button" aria-expanded="false" aria-controls="psa2_pattern_jfm">JFM</a>
+<div class="collapse" id="psa2_pattern_jfm">
+<ul class="list-inline my-0">
+<li class="list-inline-item"><a href="#" onclick="showImage('{{ img('psa2_pattern_jfm.indmem.png') }}'); return false;" class="badge badge-info">Indiv</a></li>
+<li class="list-inline-item"><a href="#" onclick="showImage('{{ img('psa2_pattern_jfm.indmemdiff.png') }}'); return false;" class="badge badge-info">Bias</a></li>
+</ul></div></td>
+<td>
+<a class="collapse-link" data-toggle="collapse" href="#psa2_pattern_mam" role="button" aria-expanded="false" aria-controls="psa2_pattern_mam">MAM</a>
+<div class="collapse" id="psa2_pattern_mam">
+<ul class="list-inline my-0">
+<li class="list-inline-item"><a href="#" onclick="showImage('{{ img('psa2_pattern_mam.indmem.png') }}'); return false;" class="badge badge-info">Indiv</a></li>
+<li class="list-inline-item"><a href="#" onclick="showImage('{{ img('psa2_pattern_mam.indmemdiff.png') }}'); return false;" class="badge badge-info">Bias</a></li>
+</ul></div></td>
+<td>
+<a class="collapse-link" data-toggle="collapse" href="#psa2_pattern_jja" role="button" aria-expanded="false" aria-controls="psa2_pattern_jja">JJA</a>
+<div class="collapse" id="psa2_pattern_jja">
+<ul class="list-inline my-0">
+<li class="list-inline-item"><a href="#" onclick="showImage('{{ img('psa2_pattern_jja.indmem.png') }}'); return false;" class="badge badge-info">Indiv</a></li>
+<li class="list-inline-item"><a href="#" onclick="showImage('{{ img('psa2_pattern_jja.indmemdiff.png') }}'); return false;" class="badge badge-info">Bias</a></li>
+</ul></div></td>
+<td>
+<a class="collapse-link" data-toggle="collapse" href="#psa2_pattern_jas" role="button" aria-expanded="false" aria-controls="psa2_pattern_jas">JAS</a>
+<div class="collapse" id="psa2_pattern_jas">
+<ul class="list-inline my-0">
+<li class="list-inline-item"><a href="#" onclick="showImage('{{ img('psa2_pattern_jas.indmem.png') }}'); return false;" class="badge badge-info">Indiv</a></li>
+<li class="list-inline-item"><a href="#" onclick="showImage('{{ img('psa2_pattern_jas.indmemdiff.png') }}'); return false;" class="badge badge-info">Bias</a></li>
+</ul></div></td>
+<td>
+<a class="collapse-link" data-toggle="collapse" href="#psa2_pattern_son" role="button" aria-expanded="false" aria-controls="psa2_pattern_son">SON</a>
+<div class="collapse" id="psa2_pattern_son">
+<ul class="list-inline my-0">
+<li class="list-inline-item"><a href="#" onclick="showImage('{{ img('psa2_pattern_son.indmem.png') }}'); return false;" class="badge badge-info">Indiv</a></li>
+<li class="list-inline-item"><a href="#" onclick="showImage('{{ img('psa2_pattern_son.indmemdiff.png') }}'); return false;" class="badge badge-info">Bias</a></li>
+</ul></div></td>
+<td>
+<a class="collapse-link" data-toggle="collapse" href="#psa2_pattern_ann" role="button" aria-expanded="false" aria-controls="psa2_pattern_ann">ANN</a>
+<div class="collapse" id="psa2_pattern_ann">
+<ul class="list-inline my-0">
+<li class="list-inline-item"><a href="#" onclick="showImage('{{ img('psa2_pattern_ann.indmem.png') }}'); return false;" class="badge badge-info">Indiv</a></li>
+<li class="list-inline-item"><a href="#" onclick="showImage('{{ img('psa2_pattern_ann.indmemdiff.png') }}'); return false;" class="badge badge-info">Bias</a></li>
+</ul></div></td></tr>
+<tr><td>Timeseries</td>
+<td><a href="#" onclick="showImage('{{ img('psa2_timeseries_djf.indmem.png') }}'); return false;">DJF</a></td>
+<td><a href="#" onclick="showImage('{{ img('psa2_timeseries_jfm.indmem.png') }}'); return false;">JFM</a></td>
+<td><a href="#" onclick="showImage('{{ img('psa2_timeseries_mam.indmem.png') }}'); return false;">MAM</a></td>
+<td><a href="#" onclick="showImage('{{ img('psa2_timeseries_jja.indmem.png') }}'); return false;">JJA</a></td>
+<td><a href="#" onclick="showImage('{{ img('psa2_timeseries_jas.indmem.png') }}'); return false;">JAS</a></td>
+<td><a href="#" onclick="showImage('{{ img('psa2_timeseries_son.indmem.png') }}'); return false;">SON</a></td>
+<td><a href="#" onclick="showImage('{{ img('psa2_timeseries_ann.indmem.png') }}'); return false;">ANN</a></td></tr>
+</table></div></div>
+<div class="row">
+<div class="col">
+<table class="table table-striped table-bordered">
+<h3 class="display-6">Global Timeseries</h3>
+<tr class="d-flex">
+<td class="col"><b>SST</b></td>
+<td class="col"><a href="#" onclick="showImage('{{ img('sst_global_avg_djf.indmem.png') }}'); return false;">DJF</a></td>
+<td class="col"><a href="#" onclick="showImage('{{ img('sst_global_avg_jfm.indmem.png') }}'); return false;">JFM</a></td>
+<td class="col"><a href="#" onclick="showImage('{{ img('sst_global_avg_mam.indmem.png') }}'); return false;">MAM</a></td>
+<td class="col"><a href="#" onclick="showImage('{{ img('sst_global_avg_jja.indmem.png') }}'); return false;">JJA</a></td>
+<td class="col"><a href="#" onclick="showImage('{{ img('sst_global_avg_jas.indmem.png') }}'); return false;">JAS</a></td>
+<td class="col"><a href="#" onclick="showImage('{{ img('sst_global_avg_son.indmem.png') }}'); return false;">SON</a></td>
+<td class="col"><a href="#" onclick="showImage('{{ img('sst_global_avg_ann.indmem.png') }}'); return false;">ANN</a></td>
+</tr>
+<tr class="d-flex">
+<td class="col"><b>TAS</b></td>
+<td class="col"><a href="#" onclick="showImage('{{ img('tas_global_avg_djf.indmem.png') }}'); return false;">DJF</a></td>
+<td class="col"><a href="#" onclick="showImage('{{ img('tas_global_avg_jfm.indmem.png') }}'); return false;">JFM</a></td>
+<td class="col"><a href="#" onclick="showImage('{{ img('tas_global_avg_mam.indmem.png') }}'); return false;">MAM</a></td>
+<td class="col"><a href="#" onclick="showImage('{{ img('tas_global_avg_jja.indmem.png') }}'); return false;">JJA</a></td>
+<td class="col"><a href="#" onclick="showImage('{{ img('tas_global_avg_jas.indmem.png') }}'); return false;">JAS</a></td>
+<td class="col"><a href="#" onclick="showImage('{{ img('tas_global_avg_son.indmem.png') }}'); return false;">SON</a></td>
+<td class="col"><a href="#" onclick="showImage('{{ img('tas_global_avg_ann.indmem.png') }}'); return false;">ANN</a></td>
+</tr>
+<tr class="d-flex">
+<td class="col"><b>PR</b></td>
+<td class="col"><a href="#" onclick="showImage('{{ img('pr_global_avg_djf.indmem.png') }}'); return false;">DJF</a></td>
+<td class="col"><a href="#" onclick="showImage('{{ img('pr_global_avg_jfm.indmem.png') }}'); return false;">JFM</a></td>
+<td class="col"><a href="#" onclick="showImage('{{ img('pr_global_avg_mam.indmem.png') }}'); return false;">MAM</a></td>
+<td class="col"><a href="#" onclick="showImage('{{ img('pr_global_avg_jja.indmem.png') }}'); return false;">JJA</a></td>
+<td class="col"><a href="#" onclick="showImage('{{ img('pr_global_avg_jas.indmem.png') }}'); return false;">JAS</a></td>
+<td class="col"><a href="#" onclick="showImage('{{ img('pr_global_avg_son.indmem.png') }}'); return false;">SON</a></td>
+<td class="col"><a href="#" onclick="showImage('{{ img('pr_global_avg_ann.indmem.png') }}'); return false;">ANN</a></td>
+</tr>
+<tr class="d-flex">
+<td class="col"><b>PR<br>(land-only)</b></td>
+<td class="col"><a href="#" onclick="showImage('{{ img('pr_global_avg_land_djf.indmem.png') }}'); return false;">DJF</a></td>
+<td class="col"><a href="#" onclick="showImage('{{ img('pr_global_avg_land_jfm.indmem.png') }}'); return false;">JFM</a></td>
+<td class="col"><a href="#" onclick="showImage('{{ img('pr_global_avg_land_mam.indmem.png') }}'); return false;">MAM</a></td>
+<td class="col"><a href="#" onclick="showImage('{{ img('pr_global_avg_land_jja.indmem.png') }}'); return false;">JJA</a></td>
+<td class="col"><a href="#" onclick="showImage('{{ img('pr_global_avg_land_jas.indmem.png') }}'); return false;">JAS</a></td>
+<td class="col"><a href="#" onclick="showImage('{{ img('pr_global_avg_land_son.indmem.png') }}'); return false;">SON</a></td>
+<td class="col"><a href="#" onclick="showImage('{{ img('pr_global_avg_land_ann.indmem.png') }}'); return false;">ANN</a></td>
+</tr>
+</tr></table></div></div>
+<div class="row">
+<div class="col">
+<table class="table table-striped table-bordered">
+<h3 class="display-6">Regional Timeseries</h3>
+<tr class="d-flex">
+<td class="col"><a href="#" onclick="showImage('{{ img('atlantic_meridional_mode.timeseries.indmem.png') }}'); return false;">Atlantic SST Meridional Mode</a></td>
+<td class="col"><a href="#" onclick="showImage('{{ img('atlantic_nino.timeseries.indmem.png') }}'); return false;">Atlantic Ni&ntilde;o SST</a></td>
+<td class="col"><a href="#" onclick="showImage('{{ img('north_atlantic.timeseries.indmem.png') }}'); return false;">North Atlantic SST</a></td>
+<td class="col"><a href="#" onclick="showImage('{{ img('north_tropical_atlantic.timeseries.indmem.png') }}'); return false;">Tropical North Atlantic SST</a></td>
+<td class="col"><a href="#" onclick="showImage('{{ img('south_tropical_atlantic.timeseries.indmem.png') }}'); return false;">Tropical South Atlantic SST</a></td></tr>
+<tr class="d-flex"><td class="col"><a href="#" onclick="showImage('{{ img('nino12.timeseries.indmem.png') }}'); return false;">ni&ntilde;o1+2 SST</a></td>
+<td class="col"><a href="#" onclick="showImage('{{ img('nino3.timeseries.indmem.png') }}'); return false;">ni&ntilde;o3 SST</a></td>
+<td class="col"><a href="#" onclick="showImage('{{ img('nino34.timeseries.indmem.png') }}'); return false;">ni&ntilde;o3.4 SST</a></td>
+<td class="col"><a href="#" onclick="showImage('{{ img('nino4.timeseries.indmem.png') }}'); return false;">ni&ntilde;o4 SST</a></td></tr>
+<tr class="d-flex"><td class="col"><a href="#" onclick="showImage('{{ img('north_pacific_index_ndjfm.indmem.png') }}'); return false;">North Pacific PSL Index (NPI)</a></td>
+<td class="col"><a href="#" onclick="showImage('{{ img('north_pacific_meridional_mode.timeseries.indmem.png') }}'); return false;">North Pacific SST Meridional Mode</a></td>
+<td class="col"><a href="#" onclick="showImage('{{ img('south_pacific_meridional_mode.timeseries.indmem.png') }}'); return false;">South Pacific SST Meridional Mode</a></td></tr>
+<tr class="d-flex"><td class="col"><a href="#" onclick="showImage('{{ img('indian_ocean_dipole.timeseries.indmem.png') }}'); return false;">Indian Ocean SST Dipole</a></td>
+<td class="col"><a href="#" onclick="showImage('{{ img('tropical_indian_ocean.timeseries.indmem.png') }}'); return false;">Tropical Indian Ocean SST</a></td>
+<td class="col"><a href="#" onclick="showImage('{{ img('southern_ocean.timeseries.indmem.png') }}'); return false;">Southern Ocean SST</a></td></tr>
+</table></div></div>
+<div class="row">
+<div class="col">
+<table class="table table-striped table-bordered">
+<h3 class="display-6">Sea Ice Extent Timeseries</h3>
+<tr><td rowspan=2><b>NH</b></td>
+<td><a href="#" onclick="showImage('{{ img('siconc_nh_extent_djf.indmem.png') }}'); return false;">DJF</a></td>
+<td><a href="#" onclick="showImage('{{ img('siconc_nh_extent_jfm.indmem.png') }}'); return false;">JFM</a></td>
+<td><a href="#" onclick="showImage('{{ img('siconc_nh_extent_mam.indmem.png') }}'); return false;">MAM</a></td>
+<td><a href="#" onclick="showImage('{{ img('siconc_nh_extent_jja.indmem.png') }}'); return false;">JJA</a></td>
+<td><a href="#" onclick="showImage('{{ img('siconc_nh_extent_jas.indmem.png') }}'); return false;">JAS</a></td>
+<td><a href="#" onclick="showImage('{{ img('siconc_nh_extent_son.indmem.png') }}'); return false;">SON</a></td>
+<td><a href="#" onclick="showImage('{{ img('siconc_nh_extent_ann.indmem.png') }}'); return false;">ANN</a></td></tr>
+<tr><td><a href="#" onclick="showImage('{{ img('siconc_nh_extent_feb.indmem.png') }}'); return false;">Feb</a></td>
+<td><a href="#" onclick="showImage('{{ img('siconc_nh_extent_mar.indmem.png') }}'); return false;">Mar</a></td>
+<td><a href="#" onclick="showImage('{{ img('siconc_nh_extent_sep.indmem.png') }}'); return false;">Sep</a></td>
+<td><a href="#" onclick="showImage('{{ img('siconc_nh_extent_oct.indmem.png') }}'); return false;">Oct</a></td>
+<td><a href="#" onclick="showImage('{{ img('siconc_nh_extent_mon.indmem.png') }}'); return false;">Monthly</a></td>
+<td><a href="#" onclick="showImage('{{ img('siconc_nh_extent_anom_mon.indmem.png') }}'); return false;">Monthly Anomalies</a></td>
+<td><a href="#" onclick="showImage('{{ img('siconc_nh_extent.climo.indmem.png') }}'); return false;">Climatology</a></td></tr>
+<tr><td rowspan=2><b>SH</b></td>
+<td><a href="#" onclick="showImage('{{ img('siconc_sh_extent_djf.indmem.png') }}'); return false;">DJF</a></td>
+<td><a href="#" onclick="showImage('{{ img('siconc_sh_extent_jfm.indmem.png') }}'); return false;">JFM</a></td>
+<td><a href="#" onclick="showImage('{{ img('siconc_sh_extent_mam.indmem.png') }}'); return false;">MAM</a></td>
+<td><a href="#" onclick="showImage('{{ img('siconc_sh_extent_jja.indmem.png') }}'); return false;">JJA</a></td>
+<td><a href="#" onclick="showImage('{{ img('siconc_sh_extent_jas.indmem.png') }}'); return false;">JAS</a></td>
+<td><a href="#" onclick="showImage('{{ img('siconc_sh_extent_son.indmem.png') }}'); return false;">SON</a></td>
+<td><a href="#" onclick="showImage('{{ img('siconc_sh_extent_ann.indmem.png') }}'); return false;">ANN</a></td></tr>
+<tr><td><a href="#" onclick="showImage('{{ img('siconc_sh_extent_feb.indmem.png') }}'); return false;">Feb</a></td>
+<td><a href="#" onclick="showImage('{{ img('siconc_sh_extent_mar.indmem.png') }}'); return false;">Mar</a></td>
+<td><a href="#" onclick="showImage('{{ img('siconc_sh_extent_sep.indmem.png') }}'); return false;">Sep</a></td>
+<td><a href="#" onclick="showImage('{{ img('siconc_sh_extent_oct.indmem.png') }}'); return false;">Oct</a></td>
+<td><a href="#" onclick="showImage('{{ img('siconc_sh_extent_mon.indmem.png') }}'); return false;">Monthly</a></td>
+<td><a href="#" onclick="showImage('{{ img('siconc_sh_extent_anom_mon.indmem.png') }}'); return false;">Monthly Anomalies</a></td>
+<td><a href="#" onclick="showImage('{{ img('siconc_sh_extent.climo.indmem.png') }}'); return false;">Climatology</a></td></tr>
+</table></div></div>
+</div>
+
+<!-- Image Popup Modal -->
+<div id="imgModal" class="modal">
+  <span class="close">&times;</span>
+  <img class="modal-content" id="popupImg">
+</div>
+
+<style>
+.modal {
+  display: none;
+  position: fixed;
+  z-index: 1000;
+  padding-top: 60px;
+  left: 0;
+  top: 0;
+  width: 100%;
+  height: 100%;
+  overflow: auto;
+  background-color: rgba(0,0,0,0.9);
+}
+
+.modal-content {
+  margin: auto;
+  display: block;
+  max-width: 90%;
+  max-height: 85%;
+  cursor: pointer;
+}
+
+.close {
+  position: absolute;
+  top: 20px;
+  right: 45px;
+  color: white;
+  font-size: 40px;
+  cursor: pointer;
+}
+</style>
+
+
+<script>
+
+function showImage(src) {
+
+    const modal = document.getElementById("imgModal");
+    const modalImg = document.getElementById("popupImg");
+
+    modal.style.display = "block";
+    modalImg.src = src;
+
+    modalImg.onclick = function() {
+        window.open(src, "_blank");
+    }
+}
+
+document.querySelector(".close").onclick = function() {
+    document.getElementById("imgModal").style.display = "none";
+}
+
+window.onclick = function(event) {
+    const modal = document.getElementById("imgModal");
+    if (event.target == modal) {
+        modal.style.display = "none";
+    }
+}
+
+</script>
+
+</body></html>
