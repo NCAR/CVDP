@@ -124,19 +124,16 @@ def data_read_in_3D(fil0,sy,ey,vari, lsmask=None):
     eydata = int(cpathE[len(cpathE)-9:len(cpathE)-5])    # end year of data
     emdata = int(cpathE[len(cpathE)-5:len(cpathE)-3])    # end month of data
 
-    vname = {"sst":'ts',"TS":'ts',"ts":'ts',"t_surf":'ts',"skt":'ts',
-             "TREFHT":'trefht',"tas":'trefht',"temp":'trefht',"air":'trefht',"temperature_anomaly":'trefht',"temperature":'trefht',"t2m":'trefht',"t_ref":'trefht',"T2":'trefht',"tempanomaly":'trefht',
+    vname = {"sst":'sst',"TS":'sst',"ts":'sst',"t_surf":'sst',"skt":'sst',
+             "TREFHT":'tas',"tas":'tas',"temp":'tas',"air":'tas',"temperature_anomaly":'tas',"temperature":'tas',"t2m":'tas',"t_ref":'tas',"T2":'tas',"tempanomaly":'tas',
              "PSL":'psl',"psl":'psl',"slp":'psl',"SLP":'psl',"prmsl":'psl',"msl":'psl',"slp_dyn":'psl',
              "PRECC":'prect',"PRECL":'prect',"PRECT":'prect',"pr":'prect',"PPT":'prect',"ppt":'prect',"p":'prect',"P":'prect',"precip":'prect',"PRECIP":'prect',"tp":'prect',"prcp":'prect',"prate":'prect'
             }
-    #print("type(vname)",type(vname))
-    #print("type(vari)",type(vari))
     if vari in vname:
         cvdp_v = vname[vari]
     print(f"File Var: {vari}")
 
     ds = xr.open_mfdataset(fil0,coords="minimal", compat="override", decode_times=True)
-    #print("ds raw",ds,"\n\n")
     #print(ds['time'].values,type(ds['time'].values[0]),"\n")
     ds['time'] = convert_to_cftime_no_leap(ds['time'].values,fil0)
     sydata = ds['time'].values[0].year  # start year of data (specified in file name)
@@ -155,7 +152,7 @@ def data_read_in_3D(fil0,sy,ey,vari, lsmask=None):
             ds = xr.decode_cf(ds)
     if vari in ds:
         print(f"    ** The variable {vari} is used for CVDP variable {cvdp_v} **\n")
-    #print("ds fixed",ds,"\n\n")
+
     ds = ds.rename({vari : cvdp_v})
     arr = ds.data_vars[cvdp_v]
     ds.close()
@@ -207,7 +204,6 @@ def data_read_in_3D(fil0,sy,ey,vari, lsmask=None):
              arr = arr.sel(time=slice(str(sy).zfill(4)+'-01-01',str(ey).zfill(4)+'-12-31'))
 
     time_check = arr.time.values
-    #years = time_check.astype('datetime64[Y]').astype(int)+1970
     months = time_check.astype('datetime64[M]').astype(int) % 12 + 1
     if months[0] != 1:
         print("First requested year is incomplete; alter first year")

@@ -33,14 +33,11 @@ logger = logging.getLogger(__name__)
 
 # Map many possible variable names to canonical CVDP variable names
 # (Lookup is case-insensitive)
-VARNAME_MAP = {
-    "sst": "ts", "ts": "ts", "t_surf": "ts", "skt": "ts", "trefht": "trefht", "tas": "trefht",
-    "temp": "trefht", "air": "trefht", "temperature_anomaly": "trefht", "temperature": "trefht",
-    "t2m": "trefht", "t_ref": "trefht", "t2": "trefht",
-    "psl": "psl", "slp": "psl", "prmsl": "psl", "msl": "psl", "slp_dyn": "psl",
-    "prect": "prect", "pr": "prect", "ppt": "prect", "p": "prect", "prcp": "prect", "prate": "prect",
-    # also include uppercase forms to be explicit (lookup will lowercase keys anyway)
-}
+VARNAME_MAP = {"sst":'sst',"TS":'sst',"ts":'sst',"t_surf":'sst',"skt":'sst',
+             "TREFHT":'tas',"tas":'tas',"temp":'tas',"air":'tas',"temperature_anomaly":'tas',"temperature":'tas',"t2m":'tas',"t_ref":'tas',"T2":'tas',"tempanomaly":'tas',
+             "PSL":'psl',"psl":'psl',"slp":'psl',"SLP":'psl',"prmsl":'psl',"msl":'psl',"slp_dyn":'psl',
+             "PRECC":'prect',"PRECL":'prect',"PRECT":'prect',"pr":'prect',"PPT":'prect',"ppt":'prect',"p":'prect',"P":'prect',"precip":'prect',"PRECIP":'prect',"tp":'prect',"prcp":'prect',"prate":'prect'
+            }
 # ensure lowercase keys for robust lookup
 VARNAME_MAP = {k.lower(): v for k, v in VARNAME_MAP.items()}
 
@@ -143,7 +140,8 @@ def read_datasets(
 def _open_premade_dataset(path: Path, xr_varname: str) -> xr.DataArray:
     """Open a premade NetCDF (or multi-file dataset) and return the requested DataArray."""
     if not path.exists():
-        raise FileNotFoundError(f"Premade path not found: {path}")
+        print(f"Premade path not found: {path}")
+        return None
     # open_mfdataset supports a list or glob — but path might be a single file
     ds = xr.open_dataset(path, engine=None) if path.is_file() else xr.open_mfdataset(str(path), combine="by_coords", coords="minimal", compat="override", decode_times=True)
     if xr_varname not in ds:
@@ -157,6 +155,44 @@ def _resolve_paths(paths_field: Union[str, Iterable[str]]) -> List[str]:
         return sorted(glob(paths_field))
     return list(paths_field)
 
+
+def _build_dataset(ds_name, paths, var_config_name, yrs, members, out_file, config_dict):
+    # Build dataset from raw inputs
+    logger.info("No premade path for %s; building dataset and saving to %s", ds_name, out_file)
+    print("out file, eh?",out_file)
+    var_data_array = read_datasets(paths, var_config_name, [yrs[0], yrs[1]], members)
+    var_data_array.attrs['run'] = ds_name
+    if members:
+        config_dict[ds_name]["members"] = members
+
+    # store data year span in attrs
+    # robustly extract years from time coordinate
+    try:
+        years_unique = np.unique(var_data_array["time.year"])
+        if len(years_unique) > 0:
+            var_data_array.attrs["yrs"] = [int(years_unique[0]), int(years_unique[-1])]
+    except Exception:
+        logger.debug("Could not compute attr yrs from time coordinate for %s", ds_name)
+
+    # write out netcdf
+    try:
+        _ensure_dir(out_file.parent)
+        var_data_array.to_netcdf(out_file)
+    except Exception as exc:
+        logger.exception("Failed to write NetCDF for %s to %s: %s", ds_name, out_file, exc)
+        raise
+    return var_data_array, config_dict
+
+def resolve_path(path_str):
+    if path_str:
+        if path_str.startswith("http://") or path_str.startswith("https://"):
+            # It's a URL — return as-is
+            return path_str
+        else:
+            # Assume local filesystem path — use Path
+            return Path(path_str)
+    else:
+        return None
 
 def get_input_data(config_path: Union[str, Path]) -> Tuple[Dict[str, Dict[str, xr.DataArray]], Dict[str, Dict[str, xr.DataArray]], Dict]:
     """
@@ -176,17 +212,31 @@ def get_input_data(config_path: Union[str, Path]) -> Tuple[Dict[str, Dict[str, x
     sim_dataarray: Dict[str, Dict[str, xr.DataArray]] = {}
     config_dict: Dict[str, Dict] = {}
 
-    save_root = Path(config["Paths"].get("nc_save_loc", "./cvdp_output/netcdf/"))
-    save_root = save_root.expanduser()
+    save_root = resolve_path(config["Paths"]["nc_save_loc"])
+    if not save_root:
+        save_root = "./cvdp_output/netcdf/"
+    #save_root = Path(config["Paths"].get("nc_save_loc", "./cvdp_output/netcdf/"))
+    #save_root = save_root.expanduser()
+    config_dict["nc_save_loc"] = save_root
+
+    #ncl_plot_root = Path(config["Paths"].get("ncl_comp_plots", None))
+    ncl_plot_root = resolve_path(config["Paths"]["ncl_comp_plots"])
+    if ncl_plot_root:
+        if "ncl_plot_loc" not in config_dict:
+            config_dict["ncl_plot_loc"] = ncl_plot_root
 
     for ds_name, ds_info in config.get("Data", {}).items():
         print("\nCase Name",ds_name,"\n")
         logger.info("Processing dataset '%s'", ds_name)
+
+        
         var_config_name = ds_info["variable"]
         varname_lookup = VARNAME_MAP.get(var_config_name.lower())
         if not varname_lookup:
             logger.warning("Variable '%s' not found in VARNAME_MAP; using original string", var_config_name)
             varname_lookup = var_config_name  # fall back to original
+
+        cvdp_var = varname_lookup
 
         # resolve provided paths and extract file-based years if needed
         paths = _resolve_paths(ds_info["paths"])
@@ -221,52 +271,39 @@ def get_input_data(config_path: Union[str, Path]) -> Tuple[Dict[str, Dict[str, x
         case_save_loc = Path(ds_info.get("nc_save_loc")) if ds_info.get("nc_save_loc") else save_root
         case_save_loc = case_save_loc.expanduser()
         _ensure_dir(case_save_loc)
-        fno = f"{ds_name}.cvdp_data.{var_config_name}.mm.ts.{syr}-{eyr}.nc"
+        fno = f"{ds_name}.cvdp_data.{cvdp_var}.mm.ts.{syr}-{eyr}.nc"
         out_file = case_save_loc / fno
         config_dict[ds_name]["file_name"] = out_file
         config_dict[ds_name]["save_loc"] = str(case_save_loc)
 
-        if premade_path:
-            logger.info("Found premade path for %s: %s", ds_name, premade_path)
-            print("Found premade path for %s: %s", ds_name, premade_path)
+        members = ds_info.get("members", None)
+        config_dict[ds_name]["members"] = members
+        if out_file:
+            logger.info("Found premade path for %s: %s", ds_name, out_file)
+            print("Found premade path for %s: %s", ds_name, out_file)
             # if premade file exists, open and extract variable
-            if premade_path.exists():
-                var_data_array = _open_premade_dataset(premade_path, varname_lookup)
+            if out_file.exists():
+                var_data_array = _open_premade_dataset(out_file, varname_lookup)
+                if var_data_array is not None:
+                    if "members" in var_data_array.attrs:
+                        config_dict[ds_name]["members"] = members
+                else:
+                    print("Premade path requested but file does not exist, so it wil lbe made yeah?")
+                    var_data_array, config_dict = _build_dataset(ds_name, paths, var_config_name, [syr, eyr], members, out_file, config_dict)
             else:
                 # if premade_path was provided but doesn't exist, raise
-                raise FileNotFoundError(f"Premade path specified but not found: {premade_path}")
+                #raise FileNotFoundError(f"Premade path specified but not found: {premade_path}")
+                print(f"File not found: {out_file}")
+                var_data_array, config_dict = _build_dataset(ds_name, paths, var_config_name, [syr, eyr], members, out_file, config_dict)
         else:
             # Build dataset from raw inputs
             logger.info("No premade path for %s; building dataset and saving to %s", ds_name, out_file)
-            members = ds_info.get("members", None)
-            print("out file, eh?",out_file)
-            var_data_array = read_datasets(paths, var_config_name, [syr, eyr], members)
-            var_data_array.attrs['run'] = ds_name
-            if members:
-                config_dict[ds_name]["members"] = members
-
-            # store data year span in attrs
-            # robustly extract years from time coordinate
-            try:
-                years_unique = np.unique(var_data_array["time.year"])
-                if len(years_unique) > 0:
-                    var_data_array.attrs["yrs"] = [int(years_unique[0]), int(years_unique[-1])]
-            except Exception:
-                logger.debug("Could not compute attr yrs from time coordinate for %s", ds_name)
-
-            # write out netcdf
-            try:
-                _ensure_dir(out_file.parent)
-                var_data_array.to_netcdf(out_file)
-            except Exception as exc:
-                logger.exception("Failed to write NetCDF for %s to %s: %s", ds_name, out_file, exc)
-                raise
+            var_data_array, config_dict = _build_dataset(ds_name, paths, var_config_name, [syr, eyr], members, out_file, config_dict)
 
         # place in ref or sim dict depending on ds_info["reference"] flag
-        cvdp_var = varname_lookup
         if ds_info.get("reference", False):
             ref_dataarray.setdefault(ds_name, {})[cvdp_var] = var_data_array
         else:
             sim_dataarray.setdefault(ds_name, {})[cvdp_var] = var_data_array
-
+    #print("ref_dataarray['ERSSTv5'].keys()",ref_dataarray['ERSSTv5'].keys())
     return ref_dataarray, sim_dataarray, config_dict

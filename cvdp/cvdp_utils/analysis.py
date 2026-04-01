@@ -2,13 +2,18 @@ import os
 import xarray as xr
 import numpy as np
 import xesmf as xe
+import xskillscore as xs
 from geocat.comp import eofunc_eofs, eofunc_pcs, month_to_season
 
 import warnings
 warnings.simplefilter(action='ignore', category=FutureWarning)
 
 import os
+import cvdp_utils.avg_functions as af
 
+EOF_VARS = ["NAM", "SAM", "PSA1", "PSA2"]
+NH_VARS = ["NAM"]
+SH_VARS = ["SAM", "PSA1", "PSA2"]
 
 # Now you can import the script
 #import analysis as an
@@ -130,6 +135,14 @@ def interp_mask(arr, lsmask):
 #######
 
 
+def compute_diff(sim, ref):
+    interp = interp_diff(sim, ref)
+    diff = sim - (interp if interp is not None else ref)
+    diff.attrs["units"] = sim.attrs.get("units")
+    diff.attrs["run"] = f"{sim.attrs['run']} - {ref.attrs['run']}"
+    return diff
+
+
 def interp_diff(arr_anom1, arr_anom2):
     """
     Check if the Obs array needs to be interpolated
@@ -200,11 +213,37 @@ def interp_diff(arr_anom1, arr_anom2):
 #######
 
 
+def compute_eof(var, run_anom, season, run_name):
+    index_map = {"NAM": 0, "SAM": 0, "PSA1": 1, "PSA2": 2}
+    num = index_map[var]
+    bounds = {"n": 90, "s": 20} if var in NH_VARS else {"n": -20, "s": -90}
+
+    run_attrs = run_anom.attrs.copy()
+
+    def _eof(arr, run_name):
+        """
+        When you compute the NAM via EOF of SLP:
+        X = EOF x PC
+        both of these are mathematically valid:
+        (EOF,PC) or (-EOF,-PC)
+
+        NAM positive phase → lower pressure over the Arctic
+        NAM negative phase → higher pressure over the Arctic
+
+        So the EOF spatial pattern should have a negative center over the North Pole when NAM is positive.
+        """
+        eofs, pcs, slp = calculate_eof(arr, season, bounds, neof=3, run_name=run_name, eof_var=var)
+        pcs_std = (pcs.sel(pc=num) - pcs.sel(pc=num).mean("time")) / pcs.sel(pc=num).std("time")
+
+        return xs.linslope(pcs_std, slp, dim="time"), pcs_std
+
+    run_pattern, run_pc = _eof(run_anom, run_name)
+    run_pattern.attrs = run_attrs
+
+    return run_pattern, run_pc
 
 
-
-
-def get_eof(ds, season, latlon_dict, neof):
+def calculate_eof(ds, season, latlon_dict, neof, run_name, eof_var):
     """
     EOF
     """
@@ -212,24 +251,19 @@ def get_eof(ds, season, latlon_dict, neof):
     latS = latlon_dict['s']
     latN = latlon_dict['n']
 
-    #neof = 3  # number of EOFs
-
     # To facilitate data subsetting
     ds2 = ds.copy()
-    #print("ds2",ds2)
-    #season = "DJF"
-    SLP = month_to_season(ds2, season)
+    slp = month_to_season(ds2, season)
 
-    clat = SLP['lat'].astype(np.float64)
+    clat = slp['lat'].astype(np.float64)
     clat = np.sqrt(np.cos(np.deg2rad(clat)))
 
-    wSLP = SLP
-    wSLP = SLP * clat
+    wrap_slp = slp * clat
 
     # For now, metadata for slp must be copied over explicitly; it is not preserved by binary operators like multiplication.
-    wSLP.attrs = ds2.attrs
+    wrap_slp.attrs = ds2.attrs
 
-    xw = wSLP.sel(lat=slice(latS, latN))
+    xw = wrap_slp.sel(lat=slice(latS, latN))
 
     # Transpose data to have 'time' in the first dimension
     # as `eofunc` functions expects so for xarray inputs for now
@@ -246,17 +280,15 @@ def get_eof(ds, season, latlon_dict, neof):
     # https://www.ncl.ucar.edu/Support/talk_archives/2009/2015.html
     # about that EOF signs are arbitrary and do not change the physical
     # interpretation.
-    for i in range(neof):
-        if i == 1:
+    polar_mean = None
+    if eof_var == "NAM":
+        polar_mean = eofs[0].where(eofs[0].lat >= 60).mean()#skipna=True
+    if eof_var == "SAM":
+        polar_mean = eofs[0].where(eofs[0].lat <= -60).mean()#skipna=True
+    if polar_mean is not None and polar_mean > 0:
+        for i in range(neof):
             pcs[i, :] *= (-1)
             eofs[i, :, :] *= (-1)
-        
-
-    """
-    eofs[1, :, :] = eofs[1, :, :] #* (-1)
-
-    pcs[1, :] = pcs[1, :] #* (-1)
-    """
 
     # Sum spatial weights over the area used.
     nLon = xw.sizes["lon"]
@@ -266,4 +298,21 @@ def get_eof(ds, season, latlon_dict, neof):
     weightTotal = clat_subset.sum() * nLon
     pcs = pcs / weightTotal
 
-    return eofs, pcs, SLP
+    return eofs, pcs, slp
+
+
+def compute_trend(data):
+    return af.lin_regress(data)[0]
+
+
+def compute_npi(arr_ts):
+    def _standardize(arr):
+        return (arr - arr.mean("time")) / arr.std("time")
+
+    def _npi(arr):
+        sliced = arr.sel(lat=slice(30, 65), lon=slice(160, 220))
+        weighted = sliced.weighted(np.cos(np.radians(sliced.lat))).mean(["lat", "lon"])
+        return _standardize(weighted)
+
+    arr_npi = xs.linslope(_npi(arr_ts), arr_ts, dim="time")
+    return arr_npi

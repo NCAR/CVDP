@@ -6,11 +6,11 @@ CVDP functions for calculating means, standard deviations, and trends.
 License: MIT
 """
 
-from diag import compute_seasonal_avgs
+import cvdp_utils.avg_functions as af
 from pathlib import Path
 import xarray as xr
 
-def mean_seasonal_calc(ds_name, dataset, var_name, config_dict):
+def _mean_seasonal_calc(ds_name, dataset, var_name, config_dict):
     save_loc = config_dict[ds_name]["save_loc"]
     Path(save_loc).mkdir(parents=True, exist_ok=True)
     syr = config_dict[ds_name]["syr"]
@@ -22,7 +22,8 @@ def mean_seasonal_calc(ds_name, dataset, var_name, config_dict):
     data_dict = {}
     calc_all_mean = False
 
-    if "members" in config_dict[ds_name]:
+    if config_dict[ds_name]["members"]:
+    
         print("AtmOcnMean.py:  members are in this case:",ds_name)
 
         if ts_fno.is_file():
@@ -44,7 +45,8 @@ def mean_seasonal_calc(ds_name, dataset, var_name, config_dict):
                 data_dict[f"seas_ts{member[:-1]}_mean"] = seas_mem_mean_ts
                 calc_all_mean = False
             else:
-                seas_ts = compute_seasonal_avgs(dataset, var_name)
+                seas_ts = af.compute_seasonal_avgs(dataset, var_name)
+                #seas_ts = compute_seasonal_avgs(dataset, var_name)
                 print(f"\tDid not find pre-existing climatology files for {ds_name}{member[:-1]} {var_name}, calculating seasonal means...")
                 seas_ts.attrs["member"] = member
                 seas_mem_ts = seas_ts.sel(member=member)
@@ -73,11 +75,12 @@ def mean_seasonal_calc(ds_name, dataset, var_name, config_dict):
             seas_ts = xr.open_dataset(ts_fno)
         else:
             print(f"\tDid not find pre-existing climatology files for {ds_name} {var_name}, calculating seasonal means...")
-            seas_ts = compute_seasonal_avgs(dataset, var_name)
+            seas_ts = af.compute_seasonal_avgs(dataset, var_name)
+            #seas_ts = compute_seasonal_avgs(dataset, var_name)
             print(f"\t  SUCCESS: Climatological seasonal saved to file: {ts_fno}")
             seas_ts.to_netcdf(ts_fno)
 
-            ts_mean_filename = f'{ds_name}.cvdp_data.{var_name}climo.ts.mean.{syr}-{eyr}.nc'
+            ts_mean_filename = f'{ds_name}.cvdp_data.{var_name}.climo.ts.mean.{syr}-{eyr}.nc'
             ts_mean_fno = save_loc / Path(ts_mean_filename)
             sim = seas_ts.mean("time")
             sim.to_netcdf(ts_mean_fno)
@@ -85,3 +88,37 @@ def mean_seasonal_calc(ds_name, dataset, var_name, config_dict):
     
     data_dict["seas_ts"] = seas_ts
     return data_dict
+
+
+def _populate_run_dict(kwargs, vn, run_name, run_datasets, config_dict, sim_type="a run"):
+    print(f"Trying {sim_type} {run_name} for climatologies")
+    if run_name not in kwargs:
+        kwargs[run_name] = {}
+    kwargs[f"{run_name}_run_type"] = sim_type
+    run_var = run_datasets[run_name][vn]
+    data_dict = _mean_seasonal_calc(run_name, run_var,
+                                               vn, config_dict)
+
+    kwargs[f"{run_name}_season_trnd_avgs"] = run_var
+    run_seas_ts = data_dict["seas_ts"]
+    kwargs[run_name] = run_seas_ts
+
+    if "members" in run_seas_ts.attrs:
+        members_sub = config_dict[run_name]["members"]
+        members = run_seas_ts.attrs["members"]
+        huh = [mem for mem in members if mem in members_sub]
+        kwargs[f"{run_name}_members"] = huh
+        for member in huh:
+            try:
+                kwargs[f"{run_name}{member[:-1]}"] = data_dict[f"seas_ts{member[:-1]}"]
+                kwargs[f"{run_name}{member[:-1]}_trnds"] = run_var.sel(member=member)
+            except KeyError as e:
+                print(f"seas_ts{member[:-1]}")
+    return kwargs
+
+def get_run_dict(vn, ref_names, sim_names, ref_datasets, sim_datasets, config_dict, kwargs):
+    for ref_name in ref_names:
+        kwargs = _populate_run_dict(kwargs, vn, ref_name, ref_datasets, config_dict, sim_type="reference")
+    for sim_name in sim_names:
+        kwargs = _populate_run_dict(kwargs, vn, sim_name, sim_datasets, config_dict, sim_type="simulation")
+    return kwargs

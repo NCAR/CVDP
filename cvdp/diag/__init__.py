@@ -1,1 +1,1 @@
-from diag.climatology import compute_seasonal_avgs#, compute_seasonal_stds
+from cvdp_utils.avg_functions import compute_seasonal_avgs

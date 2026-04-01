@@ -5,8 +5,11 @@ import xarray as xr
 from matplotlib.colors import Normalize
 from matplotlib.colors import LinearSegmentedColormap
 import matplotlib as mpl
+import matplotlib.pyplot as plt
 from mpl_toolkits.axes_grid1.inset_locator import inset_axes
 from cartopy.util import add_cyclic_point
+
+from vis import get_NCL_colormap
 
 # Land mask: for TS -> SST masking
 def land_mask():
@@ -31,6 +34,29 @@ def land_mask():
     lsmask = ncl_masks.LSMASK
     ncl_masks.close()
     return lsmask, ncl_masks
+
+def add_landmask(ax):
+    lsmask, ncl_masks = af.land_mask()
+    # Mask out land using masking data
+    land_data = lsmask.where(lsmask == 1)
+
+    # Set up data for land mask
+    lon_idx = land_data.dims.index("lon")
+    wrap_data_land, wrap_lon_land = add_cyclic_point(
+                    land_data.values, coord=land_data.lon, axis=lon_idx
+                )
+
+    # Set up normalization of data based off non-linear set of contour levels
+    #norm = mpl.colors.BoundaryNorm(levels, vis_utils.amwg_cmap.N)
+    #contourf_args["norm"] = norm
+
+    # Plot masked continents over TS plot to mimic SST's
+    ax.contourf(wrap_lon_land, land_data.lat, wrap_data_land, colors="w",
+                                transform=ccrs.PlateCarree(), zorder=300)
+    # Plot lakes
+    ax.add_feature(cfeature.LAKES.with_scale("110m"),
+                               edgecolor="#b5b5b5", facecolor="none", zorder=300)
+    return ax
 
 
 def clean_data(vn, wrap_data, ptype, diff=False):
@@ -250,3 +276,68 @@ def add_centered_colorbar(
     cbar.outline.set_linewidth(0.6)
 
     return cbar
+
+
+def get_levels(plot_dict, prefix, default_arr_max=None, default_arr_min=None):
+    """
+    prefix = "sim" for normal
+    prefix = "diff" for difference panels
+    """
+
+    levels = None
+    if f"{prefix}_levels_linspace" in plot_dict:
+        levels = np.linspace(*plot_dict[f"{prefix}_levels_linspace"])
+    elif f"{prefix}_levels_range" in plot_dict:
+        levels = np.arange(*plot_dict[f"{prefix}_levels_range"])
+    elif f"{prefix}_levels_list" in plot_dict:
+        levels = np.array(plot_dict[f"{prefix}_levels_list"])
+
+    if levels is None:
+        if (default_arr_max is not None) and (default_arr_min is not None):
+            levels = np.linspace(default_arr_min, default_arr_max, 20)
+
+    return levels
+
+
+def get_cmap(plot_dict, prefix, extend="None"):
+    """
+    prefix = "sim" for normal
+    prefix = "diff" for difference panels
+    """
+
+    if prefix == "sim":
+        default = "viridis"
+    if prefix == "diff":
+        default = "PuOr"
+
+    cmap = plot_dict.get(
+        f"{prefix}_cmap",
+        plot_dict.get("cmap", default),
+    )
+
+    if cmap not in plt.colormaps():
+        cmap = get_NCL_colormap(cmap, extend=extend)
+
+    return cmap
+
+
+def get_ticks(plot_dict, prefix, levels):
+    """
+    prefix = "sim" for normal
+    prefix = "diff" for difference panels
+    """
+
+    ticks = None
+    if f"{prefix}_ticks_list" in plot_dict:
+        ticks = plot_dict.get(f"{prefix}_ticks_list",levels)
+    elif f"{prefix}_ticks_linspace" in plot_dict:
+        ticks = np.linspace(*plot_dict.get(f"{prefix}_ticks_linspace",levels))
+    elif f"{prefix}_ticks_range" in plot_dict:
+        ticks = plot_dict.get(f"{prefix}_ticks_range",levels)
+    if isinstance(ticks,list) and len(ticks)==3:
+        ticks = np.arange(*ticks)
+
+    if ticks is not None:
+        ticks = levels
+
+    return ticks
