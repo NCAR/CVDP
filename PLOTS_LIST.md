@@ -28,3 +28,15 @@
 * 
 * Note #1: For some calculations the patterns are created by regressing anomalies onto a normalized timeseries, others do not use a normalized timeseries.
 * Note #2: Need global option to specify detrending method by month prior to all calculations (minus linear trends and spatial means)
+
+## Finished plots as of March 2026:
+Summary, Indmem, Indmemdiff
+* PSL - spatial mean, spatial stnddev, trends for global lat/lon - (DJF,JFM,MAM,JJA,JAS,SON,ANN)
+
+Pattern
+* NPI - spatial mean, spatial stnddev, trend for global lat/lon - (NDJFM)
+* NAM/SAM - spatial mean, spatial stnddev, trends for polar lat/lon - (DJF,JFM,MAM,JJA,JAS,SON,ANN)
+* PSA1/PSA2 - spatial mean, spatial stnddev, trends for polar lat/lon - (DJF,JFM,MAM,JJA,JAS,SON,ANN)
+
+Timeseries
+*
