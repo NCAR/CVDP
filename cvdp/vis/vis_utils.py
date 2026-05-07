@@ -5,8 +5,11 @@ import xarray as xr
 from matplotlib.colors import Normalize
 from matplotlib.colors import LinearSegmentedColormap
 import matplotlib as mpl
+import matplotlib.pyplot as plt
 from mpl_toolkits.axes_grid1.inset_locator import inset_axes
 from cartopy.util import add_cyclic_point
+
+from vis import get_NCL_colormap
 
 # Land mask: for TS -> SST masking
 def land_mask():
@@ -31,6 +34,29 @@ def land_mask():
     lsmask = ncl_masks.LSMASK
     ncl_masks.close()
     return lsmask, ncl_masks
+
+def add_landmask(ax):
+    lsmask, ncl_masks = af.land_mask()
+    # Mask out land using masking data
+    land_data = lsmask.where(lsmask == 1)
+
+    # Set up data for land mask
+    lon_idx = land_data.dims.index("lon")
+    wrap_data_land, wrap_lon_land = add_cyclic_point(
+                    land_data.values, coord=land_data.lon, axis=lon_idx
+                )
+
+    # Set up normalization of data based off non-linear set of contour levels
+    #norm = mpl.colors.BoundaryNorm(levels, vis_utils.amwg_cmap.N)
+    #contourf_args["norm"] = norm
+
+    # Plot masked continents over TS plot to mimic SST's
+    ax.contourf(wrap_lon_land, land_data.lat, wrap_data_land, colors="w",
+                                transform=ccrs.PlateCarree(), zorder=300)
+    # Plot lakes
+    ax.add_feature(cfeature.LAKES.with_scale("110m"),
+                               edgecolor="#b5b5b5", facecolor="none", zorder=300)
+    return ax
 
 
 def clean_data(vn, wrap_data, ptype, diff=False):
@@ -101,3 +127,217 @@ for i in range(1,14):
 cmap_name="blue_green"
 bg_cmap = LinearSegmentedColormap.from_list(
             cmap_name, bg_colors)
+
+
+def add_centered_colorbar(
+    fig, axes, mappable, unit, ticks,
+    n_cols_per_row,
+    pad_inches=0.75,
+    height_inches=0.35,
+    label=None
+):
+    """
+    Add a horizontal colorbar under the last row of subplots, with
+    custom span rules for 2–10 columns (special rules included).
+    """
+    import numpy as np
+
+    axes = np.atleast_1d(axes)
+    n_axes = len(axes)
+    n_rows = (n_axes + n_cols_per_row - 1) // n_cols_per_row
+
+    # Last row axes
+    start_idx = (n_rows - 1) * n_cols_per_row
+    end_idx = n_axes
+    axs_bottom = axes[start_idx:end_idx]
+    ncols_last = len(axs_bottom)
+
+    # Determine span width
+    if ncols_last >= 10:
+        span = 6
+    elif ncols_last == 2:
+        span = 2
+    elif ncols_last == 3:
+        span = 3
+    elif ncols_last == 4:
+        span = 2
+    elif ncols_last == 6:
+        span = 4
+    elif ncols_last == 7:
+        span = 5
+    elif ncols_last == 8:
+        span = 4
+    elif ncols_last % 2 == 0:
+        span = ncols_last // 2
+    else:
+        span = max(1, (ncols_last // 2) | 1)
+
+    start = (ncols_last - span) // 2
+    end = start + span
+
+    fig.canvas.draw()
+    left_ax = axs_bottom[start].get_position()
+    right_ax = axs_bottom[end - 1].get_position()
+
+    # Custom left/right positions based on your previous logic
+    if ncols_last == 2:
+        left = left_ax.x0 + left_ax.width / 2
+        right = right_ax.x0 + right_ax.width / 2
+    elif ncols_last == 3:
+        left = axs_bottom[0].get_position().x0 + axs_bottom[0].get_position().width
+        right = axs_bottom[2].get_position().x0
+    elif ncols_last == 4:
+        left = axs_bottom[1].get_position().x0
+        right = axs_bottom[2].get_position().x0 + axs_bottom[2].get_position().width
+    elif ncols_last == 6:
+        left = axs_bottom[1].get_position().x0 + axs_bottom[1].get_position().width/2
+        right = axs_bottom[4].get_position().x0 + axs_bottom[4].get_position().width/2
+    elif ncols_last == 7:
+        ax2 = axs_bottom[1].get_position()
+        ax6 = axs_bottom[5].get_position()
+        left = ax2.x0 + (2/3) * ax2.width
+        right = ax6.x0 + (1/3) * ax6.width
+    elif ncols_last == 8:
+        left = axs_bottom[2].get_position().x0
+        right = axs_bottom[5].get_position().x0 + axs_bottom[5].get_position().width
+    elif span == 1:
+        left = left_ax.x0
+        right = left_ax.x1
+    elif span % 2 == 0:
+        left = left_ax.x0 + left_ax.width / 2
+        right = right_ax.x0 + right_ax.width / 2
+    else:
+        left = left_ax.x0
+        right = right_ax.x0 + right_ax.width
+
+    width = right - left
+    bottom = left_ax.y0 - pad_inches / fig.get_size_inches()[1]
+
+    # Fixed height in inches
+    height = height_inches / fig.get_size_inches()[1]
+    if ncols_last == 2:
+        height = height/2
+    if ncols_last == 3:
+        height = height/2
+    if ncols_last == 4:
+        height = height*.6
+    if ncols_last == 5:
+        height = height*.66
+    if ncols_last == 6:
+        height = height*.75
+    if ncols_last == 7:
+        height = height*.75
+    if ncols_last == 8:
+        height = height*.90
+    if ncols_last == 9:
+        height = height*.95
+
+    cax = fig.add_axes([left, bottom, width, height])
+    cbar = fig.colorbar(mappable, cax=cax, orientation="horizontal", ticks=ticks)
+    if label is not None:
+        cbar.set_label(label)
+
+    # Scale tick labels with figure width (Option 3)
+    fig_width = fig.get_size_inches()[0]
+    ticksize = np.clip(0.9 * fig_width, 10, 18)
+    title_size = ticksize + 2
+    label_size = ticksize + 1
+    #print(__file__, "label_size",label_size)
+    for ax in axes[:n_axes]:
+        ax.tick_params(labelsize=ticksize)
+        ax.title.set_fontsize(title_size)
+
+    if ncols_last == 2:
+        label_size = (label_size)*.75
+        ts = (ticksize-1)*.75
+    elif ncols_last == 3:
+        label_size = (label_size)*.75
+        ts = (ticksize-1)*.75
+    elif ncols_last == 4:
+        label_size = (label_size)*.75
+        ts = (ticksize-1)*.75
+    elif ncols_last == 5:
+        label_size = (label_size)*.75
+        ts = (ticksize-1)*.75
+    else: 
+        ts = ticksize-1
+    #print("label_size different?",label_size)
+    #ts = ticksize-1
+    cbar.ax.tick_params(labelsize=ts)
+    cbar.set_label(unit, fontsize=label_size)
+
+    # Remove the tick lines (optional)
+    cbar.ax.tick_params(size=0)
+
+    # Remove border of colorbar
+    #cbar.outline.set_visible(False)
+
+    cbar.outline.set_edgecolor("grey")
+    cbar.outline.set_linewidth(0.6)
+
+    return cbar
+
+
+def get_levels(plot_dict, prefix, default_arr_max=None, default_arr_min=None):
+    """
+    prefix = "sim" for normal
+    prefix = "diff" for difference panels
+    """
+
+    levels = None
+    if f"{prefix}_levels_linspace" in plot_dict:
+        levels = np.linspace(*plot_dict[f"{prefix}_levels_linspace"])
+    elif f"{prefix}_levels_range" in plot_dict:
+        levels = np.arange(*plot_dict[f"{prefix}_levels_range"])
+    elif f"{prefix}_levels_list" in plot_dict:
+        levels = np.array(plot_dict[f"{prefix}_levels_list"])
+
+    if levels is None:
+        if (default_arr_max is not None) and (default_arr_min is not None):
+            levels = np.linspace(default_arr_min, default_arr_max, 20)
+
+    return levels
+
+
+def get_cmap(plot_dict, prefix, extend="None"):
+    """
+    prefix = "sim" for normal
+    prefix = "diff" for difference panels
+    """
+
+    if prefix == "sim":
+        default = "viridis"
+    if prefix == "diff":
+        default = "PuOr"
+
+    cmap = plot_dict.get(
+        f"{prefix}_cmap",
+        plot_dict.get("cmap", default),
+    )
+
+    if cmap not in plt.colormaps():
+        cmap = get_NCL_colormap(cmap, extend=extend)
+
+    return cmap
+
+
+def get_ticks(plot_dict, prefix, levels):
+    """
+    prefix = "sim" for normal
+    prefix = "diff" for difference panels
+    """
+
+    ticks = None
+    if f"{prefix}_ticks_list" in plot_dict:
+        ticks = plot_dict.get(f"{prefix}_ticks_list",levels)
+    elif f"{prefix}_ticks_linspace" in plot_dict:
+        ticks = np.linspace(*plot_dict.get(f"{prefix}_ticks_linspace",levels))
+    elif f"{prefix}_ticks_range" in plot_dict:
+        ticks = plot_dict.get(f"{prefix}_ticks_range",levels)
+    if isinstance(ticks,list) and len(ticks)==3:
+        ticks = np.arange(*ticks)
+
+    if ticks is not None:
+        ticks = levels
+
+    return ticks

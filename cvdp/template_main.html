@@ -1,0 +1,674 @@
+<html><head><title>Climate Variability Diagnostics Package for Large Ensembles PYTHON EDITION, YAY AREN'T YOU GLAD WE'RE HERE?!?!!?!!????!?!?????!?</title>
+<link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.1.3/css/bootstrap.min.css" integrity="sha384-MCw98/SFnGE8fJT3GXwEOngsV7Zt27NXFoaoApmYm81iuXoPkFOJwJ8ERdknLPMO" crossorigin="anonymous">
+<script src="https://code.jquery.com/jquery-3.3.1.slim.min.js" integrity="sha384-q8i/X+965DzO0rT7abK41JStQIAqVgRVzpbzo5smXKp4YfRvH+8abtTE1Pi6jizo" crossorigin="anonymous"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/popper.js/1.14.3/umd/popper.min.js" integrity="sha384-ZMP7rVo3mIykV+2+9J3UJ46jBk0WLaUAdn689aCwoqbBJiSnjAK/l8WvCWPIPm49" crossorigin="anonymous"></script>
+<script src="https://stackpath.bootstrapcdn.com/bootstrap/4.1.3/js/bootstrap.min.js" integrity="sha384-ChfqqxuZUCnJSK3+MXmPNIyE6ZbWh2IMqE241rYiqJxyMiZ6OW/JmZQ5stwEULTy" crossorigin="anonymous"></script>
+<STYLE>body {background-color: WhiteSmoke; font-family: Verdana, Geneva, sans-serif}
+img.title {width:990; height:105; align:left}
+p.subtitle {font-size:20pt; color:black; text-align:center; font-weight:bold}
+p.btext {font-size:11pt; text-align:left}
+font.s1 {font-size:13.5pt; text-align:left}
+td {text-align:center; font-size:12pt}
+td.s1 {text-align:left; font-size:11pt}
+td.s2 {border-bottom: 4px double darkgray}
+CAPTION {text-align:left; font-size:14pt; font-weight:bold}
+</style></head>
+<body>
+<div class="container">
+<div class="row">
+<img class="img-fluid" src="cas_cvdp-le.png" alt="CVDP-LE logo">
+</div>
+<div class="row">
+<div class="col">
+<table class="table my-0">
+<tr>
+<td class="text-left">
+<ul class="list-inline my-0">
+<li class="list-inline-item"><a href="http://dx.doi.org/10.5065/h7c7-f961">User's Guide</a></li><br>
+<li class="list-inline-item">Metrics: <a href="metrics.ensemble.pc.html">Graphics</a> | <a href="metrics.table_0E.html">Ensemble Tables</a> | 
+<li class="list-inline-item">Namelists: <a href="namelist_obs.html">Input</a> | <a href="namelist_msftmz.html">Derived</a></li>
+<li class="list-inline-item">Created: {{ create_time }}<br>CVDP-LE Version 0.0.1</li>
+<li class="list-inline-item"><b>Ensemble Summary</b> | <a href="index_indmem.html">Individual Members</a></li>
+<li class="list-inline-item"><a href="ncl_compare_index.html">Comparisons to NCL Output</a></li>
+</ul></td>
+</tr>
+</table>
+</div>
+<div class="col align-self-center">
+<h2 class="text-center">Python Images</h2>
+</div>
+</div>
+<div class="row">
+<div class="col">
+<table class="table table-striped table-bordered">
+<h3 class="display-6">Climatological Averages</h3>
+<tr class="d-flex">
+<td class="col"><b>SST</b></td>
+<td class="col"><a href="#" onclick="showImage('{{ img('sst_spatialmean_djf.summary.png') }}'); return false;">DJF</a></td>
+<td class="col"><a href="#" onclick="showImage('{{ img('sst_spatialmean_jfm.summary.png') }}'); return false;">JFM</a></td>
+<td class="col"><a href="#" onclick="showImage('{{ img('sst_spatialmean_mam.summary.png') }}'); return false;">MAM</a></td>
+<td class="col"><a href="#" onclick="showImage('{{ img('sst_spatialmean_jja.summary.png') }}'); return false;">JJA</a></td>
+<td class="col"><a href="#" onclick="showImage('{{ img('sst_spatialmean_jas.summary.png') }}'); return false;">JAS</a></td>
+<td class="col"><a href="#" onclick="showImage('{{ img('sst_spatialmean_son.summary.png') }}'); return false;">SON</a></td>
+<td class="col"><a href="#" onclick="showImage('{{ img('sst_spatialmean_ann.summary.png') }}'); return false;">ANN</a></td>
+</tr>
+<tr class="d-flex">
+<td class="col"><b>TAS</b></td>
+<td class="col"><a href="#" onclick="showImage('{{ img('tas_spatialmean_djf.summary.png') }}'); return false;">DJF</a></td>
+<td class="col"><a href="#" onclick="showImage('{{ img('tas_spatialmean_jfm.summary.png') }}'); return false;">JFM</a></td>
+<td class="col"><a href="#" onclick="showImage('{{ img('tas_spatialmean_mam.summary.png') }}'); return false;">MAM</a></td>
+<td class="col"><a href="#" onclick="showImage('{{ img('tas_spatialmean_jja.summary.png') }}'); return false;">JJA</a></td>
+<td class="col"><a href="#" onclick="showImage('{{ img('tas_spatialmean_jas.summary.png') }}'); return false;">JAS</a></td>
+<td class="col"><a href="#" onclick="showImage('{{ img('tas_spatialmean_son.summary.png') }}'); return false;">SON</a></td>
+<td class="col"><a href="#" onclick="showImage('{{ img('tas_spatialmean_ann.summary.png') }}'); return false;">ANN</a></td>
+</tr>
+<tr class="d-flex">
+<td class="col"><b>PSL</b></td>
+<!--<td class="col"><a href="#" onclick="showImage('{{ img('psl_spatialmean_djf.summary.png') }}'); return false;">DJF</a></td>-->
+<td class="col"><a href="#" onclick="showImage('{{ img('psl_spatialmean_djf.summary.png') }}'); return false;">DJF</a></td>
+<td class="col"><a href="#" onclick="showImage('{{ img('psl_spatialmean_jfm.summary.png') }}'); return false;">JFM</a></td>
+<td class="col"><a href="#" onclick="showImage('{{ img('psl_spatialmean_mam.summary.png') }}'); return false;">MAM</a></td>
+<td class="col"><a href="#" onclick="showImage('{{ img('psl_spatialmean_jja.summary.png') }}'); return false;">JJA</a></td>
+<td class="col"><a href="#" onclick="showImage('{{ img('psl_spatialmean_jas.summary.png') }}'); return false;">JAS</a></td>
+<td class="col"><a href="#" onclick="showImage('{{ img('psl_spatialmean_son.summary.png') }}'); return false;">SON</a></td>
+<td class="col"><a href="#" onclick="showImage('{{ img('psl_spatialmean_ann.summary.png') }}'); return false;">ANN</a></td>
+</tr>
+<tr class="d-flex">
+<td class="col"><b>PR</b></td>
+<td class="col"><a href="#" onclick="showImage('{{ img('pr_spatialmean_djf.summary.png') }}'); return false;">DJF</a></td>
+<td class="col"><a href="#" onclick="showImage('{{ img('pr_spatialmean_jfm.summary.png') }}'); return false;">JFM</a></td>
+<td class="col"><a href="#" onclick="showImage('{{ img('pr_spatialmean_mam.summary.png') }}'); return false;">MAM</a></td>
+<td class="col"><a href="#" onclick="showImage('{{ img('pr_spatialmean_jja.summary.png') }}'); return false;">JJA</a></td>
+<td class="col"><a href="#" onclick="showImage('{{ img('pr_spatialmean_jas.summary.png') }}'); return false;">JAS</a></td>
+<td class="col"><a href="#" onclick="showImage('{{ img('pr_spatialmean_son.summary.png') }}'); return false;">SON</a></td>
+<td class="col"><a href="#" onclick="showImage('{{ img('pr_spatialmean_ann.summary.png') }}'); return false;">ANN</a></td>
+</tr>
+<tr class="d-flex">
+<td class="col"><b>SIC NH</b></td>
+<td class="col">DJF</td>
+<td class="col">JFM</td>
+<td class="col">MAM</td>
+<td class="col">JJA</td>
+<td class="col">JAS</td>
+<td class="col">SON</td>
+<td class="col">ANN</td>
+</tr>
+<tr class="d-flex">
+<td class="col"><b>SIC SH</b></td>
+<td class="col">DJF</td>
+<td class="col">JFM</td>
+<td class="col">MAM</td>
+<td class="col">JJA</td>
+<td class="col">JAS</td>
+<td class="col">SON</td>
+<td class="col">ANN</td>
+</tr></table></div></div>
+<div class="row">
+<div class="col">
+<table class="table table-striped table-bordered">
+<h3 class="display-6">Standard Deviations</h3>
+<tr class="d-flex">
+<td class="col"><b>SST</b></td>
+<td class="col"><a href="#" onclick="showImage('{{ img('sst_spatialstddev_djf.summary.png') }}'); return false;">DJF</a></td>
+<td class="col"><a href="#" onclick="showImage('{{ img('sst_spatialstddev_jfm.summary.png') }}'); return false;">JFM</a></td>
+<td class="col"><a href="#" onclick="showImage('{{ img('sst_spatialstddev_mam.summary.png') }}'); return false;">MAM</a></td>
+<td class="col"><a href="#" onclick="showImage('{{ img('sst_spatialstddev_jja.summary.png') }}'); return false;">JJA</a></td>
+<td class="col"><a href="#" onclick="showImage('{{ img('sst_spatialstddev_jas.summary.png') }}'); return false;">JAS</a></td>
+<td class="col"><a href="#" onclick="showImage('{{ img('sst_spatialstddev_son.summary.png') }}'); return false;">SON</a></td>
+<td class="col"><a href="#" onclick="showImage('{{ img('sst_spatialstddev_ann.summary.png') }}'); return false;">ANN</a></td>
+</tr>
+<tr class="d-flex">
+<td class="col"><b>TAS</b></td>
+<td class="col"><a href="#" onclick="showImage('{{ img('tas_spatialstddev_djf.summary.png') }}'); return false;">DJF</a></td>
+<td class="col"><a href="#" onclick="showImage('{{ img('tas_spatialstddev_jfm.summary.png') }}'); return false;">JFM</a></td>
+<td class="col"><a href="#" onclick="showImage('{{ img('tas_spatialstddev_mam.summary.png') }}'); return false;">MAM</a></td>
+<td class="col"><a href="#" onclick="showImage('{{ img('tas_spatialstddev_jja.summary.png') }}'); return false;">JJA</a></td>
+<td class="col"><a href="#" onclick="showImage('{{ img('tas_spatialstddev_jas.summary.png') }}'); return false;">JAS</a></td>
+<td class="col"><a href="#" onclick="showImage('{{ img('tas_spatialstddev_son.summary.png') }}'); return false;">SON</a></td>
+<td class="col"><a href="#" onclick="showImage('{{ img('tas_spatialstddev_ann.summary.png') }}'); return false;">ANN</a></td>
+</tr>
+<tr class="d-flex">
+<td class="col"><b>PSL</b></td>
+<td class="col"><a href="#" onclick="showImage('{{ img('psl_spatialstddev_djf.summary.png') }}'); return false;">DJF</a></td>
+<td class="col"><a href="#" onclick="showImage('{{ img('psl_spatialstddev_jfm.summary.png') }}'); return false;">JFM</a></td>
+<td class="col"><a href="#" onclick="showImage('{{ img('psl_spatialstddev_mam.summary.png') }}'); return false;">MAM</a></td>
+<td class="col"><a href="#" onclick="showImage('{{ img('psl_spatialstddev_jja.summary.png') }}'); return false;">JJA</a></td>
+<td class="col"><a href="#" onclick="showImage('{{ img('psl_spatialstddev_jas.summary.png') }}'); return false;">JAS</a></td>
+<td class="col"><a href="#" onclick="showImage('{{ img('psl_spatialstddev_son.summary.png') }}'); return false;">SON</a></td>
+<td class="col"><a href="#" onclick="showImage('{{ img('psl_spatialstddev_ann.summary.png') }}'); return false;">ANN</a></td>
+</tr>
+<tr class="d-flex">
+<td class="col"><b>PR</b></td>
+<td class="col"><a href="#" onclick="showImage('{{ img('pr_spatialstddev_djf.summary.png') }}'); return false;">DJF</a></td>
+<td class="col"><a href="#" onclick="showImage('{{ img('pr_spatialstddev_jfm.summary.png') }}'); return false;">JFM</a></td>
+<td class="col"><a href="#" onclick="showImage('{{ img('pr_spatialstddev_mam.summary.png') }}'); return false;">MAM</a></td>
+<td class="col"><a href="#" onclick="showImage('{{ img('pr_spatialstddev_jja.summary.png') }}'); return false;">JJA</a></td>
+<td class="col"><a href="#" onclick="showImage('{{ img('pr_spatialstddev_jas.summary.png') }}'); return false;">JAS</a></td>
+<td class="col"><a href="#" onclick="showImage('{{ img('pr_spatialstddev_son.summary.png') }}'); return false;">SON</a></td>
+<td class="col"><a href="#" onclick="showImage('{{ img('pr_spatialstddev_ann.summary.png') }}'); return false;">ANN</a></td>
+</tr>
+<tr class="d-flex">
+<td class="col"><b>SIC NH</b></td>
+<td class="col">DJF</td>
+<td class="col">JFM</td>
+<td class="col">MAM</td>
+<td class="col">JJA</td>
+<td class="col">JAS</td>
+<td class="col">SON</td>
+<td class="col">ANN</td>
+</tr>
+<tr class="d-flex">
+<td class="col"><b>SIC SH</b></td>
+<td class="col">DJF</td>
+<td class="col">JFM</td>
+<td class="col">MAM</td>
+<td class="col">JJA</td>
+<td class="col">JAS</td>
+<td class="col">SON</td>
+<td class="col">ANN</td>
+</tr></table></div></div>
+<div class="row">
+<div class="col">
+<table class="table table-striped table-bordered">
+<h3 class="display-6">Global Trend Maps</h3>
+<tr class="d-flex">
+<td class="col"><b>SST</b></td>
+<td class="col"><a href="#" onclick="showImage('{{ img('sst_trends_djf.summary.png') }}'); return false;">DJF</a></td>
+<td class="col"><a href="#" onclick="showImage('{{ img('sst_trends_jfm.summary.png') }}'); return false;">JFM</a></td>
+<td class="col"><a href="#" onclick="showImage('{{ img('sst_trends_mam.summary.png') }}'); return false;">MAM</a></td>
+<td class="col"><a href="#" onclick="showImage('{{ img('sst_trends_jja.summary.png') }}'); return false;">JJA</a></td>
+<td class="col"><a href="#" onclick="showImage('{{ img('sst_trends_jas.summary.png') }}'); return false;">JAS</a></td>
+<td class="col"><a href="#" onclick="showImage('{{ img('sst_trends_son.summary.png') }}'); return false;">SON</a></td>
+<td class="col"><a href="#" onclick="showImage('{{ img('sst_trends_ann.summary.png') }}'); return false;">ANN</a></td>
+</tr>
+<tr class="d-flex">
+<td class="col"><b>TAS</b></td>
+<td class="col"><a href="#" onclick="showImage('{{ img('tas_trends_djf.summary.png') }}'); return false;">DJF</a></td>
+<td class="col"><a href="#" onclick="showImage('{{ img('tas_trends_jfm.summary.png') }}'); return false;">JFM</a></td>
+<td class="col"><a href="#" onclick="showImage('{{ img('tas_trends_mam.summary.png') }}'); return false;">MAM</a></td>
+<td class="col"><a href="#" onclick="showImage('{{ img('tas_trends_jja.summary.png') }}'); return false;">JJA</a></td>
+<td class="col"><a href="#" onclick="showImage('{{ img('tas_trends_jas.summary.png') }}'); return false;">JAS</a></td>
+<td class="col"><a href="#" onclick="showImage('{{ img('tas_trends_son.summary.png') }}'); return false;">SON</a></td>
+<td class="col"><a href="#" onclick="showImage('{{ img('tas_trends_ann.summary.png') }}'); return false;">ANN</a></td>
+</tr>
+<tr class="d-flex">
+<td class="col"><b>PSL</b></td>
+<td class="col"><a href="#" onclick="showImage('{{ img('psl_trends_djf.summary.png') }}'); return false;">DJF</a></td>
+<td class="col"><a href="#" onclick="showImage('{{ img('psl_trends_jfm.summary.png') }}'); return false;">JFM</a></td>
+<td class="col"><a href="#" onclick="showImage('{{ img('psl_trends_mam.summary.png') }}'); return false;">MAM</a></td>
+<td class="col"><a href="#" onclick="showImage('{{ img('psl_trends_jja.summary.png') }}'); return false;">JJA</a></td>
+<td class="col"><a href="#" onclick="showImage('{{ img('psl_trends_jas.summary.png') }}'); return false;">JAS</a></td>
+<td class="col"><a href="#" onclick="showImage('{{ img('psl_trends_son.summary.png') }}'); return false;">SON</a></td>
+<td class="col"><a href="#" onclick="showImage('{{ img('psl_trends_ann.summary.png') }}'); return false;">ANN</a></td>
+</tr>
+<tr class="d-flex">
+<td class="col"><b>PR</b></td>
+<td class="col"><a href="#" onclick="showImage('{{ img('pr_trends_djf.summary.png') }}'); return false;">DJF</a></td>
+<td class="col"><a href="#" onclick="showImage('{{ img('pr_trends_jfm.summary.png') }}'); return false;">JFM</a></td>
+<td class="col"><a href="#" onclick="showImage('{{ img('pr_trends_mam.summary.png') }}'); return false;">MAM</a></td>
+<td class="col"><a href="#" onclick="showImage('{{ img('pr_trends_jja.summary.png') }}'); return false;">JJA</a></td>
+<td class="col"><a href="#" onclick="showImage('{{ img('pr_trends_jas.summary.png') }}'); return false;">JAS</a></td>
+<td class="col"><a href="#" onclick="showImage('{{ img('pr_trends_son.summary.png') }}'); return false;">SON</a></td>
+<td class="col"><a href="#" onclick="showImage('{{ img('pr_trends_ann.summary.png') }}'); return false;">ANN</a></td>
+</tr>
+<tr class="d-flex">
+<td class="col"><b>NPI</b></td>
+<td class="col"><a href="#" onclick="showImage('{{ img('npi_pattern_ndjfm.summary.png') }}'); return false;">NDJFM</a></td>
+<td class="col"><a href="#"></a></td>
+<td class="col"><a href="#"></a></td>
+<td class="col"><a href="#"></a></td>
+<td class="col"><a href="#"></a></td>
+<td class="col"><a href="#"></a></td>
+<td class="col"><a href="#"></a></td>
+</tr>
+<tr class="d-flex">
+<td class="col"><b>SIC NH</b></td>
+<td class="col">DJF</td>
+<td class="col">JFM</td>
+<td class="col">MAM</td>
+<td class="col">JJA</td>
+<td class="col">JAS</td>
+<td class="col">SON</td>
+<td class="col">ANN</td>
+</tr>
+<tr class="d-flex">
+<td class="col"><b>SIC SH</b></td>
+<td class="col">DJF</td>
+<td class="col">JFM</td>
+<td class="col">MAM</td>
+<td class="col">JJA</td>
+<td class="col">JAS</td>
+<td class="col">SON</td>
+<td class="col">ANN</td>
+</tr></table></div></div>
+<div class="row">
+<div class="col">
+<table class="table table-bordered">
+<h3 class="display-6">Coupled Modes of Variability</h3>
+<tr>
+<td rowspan=7><b>ENSO</b></td>
+<td rowspan=4>Spatial Composites</td>
+<td>El Ni&ntilde;o - La Ni&ntilde;a<br>SST/TAS/PSL<br>
+<a href="#" onclick="showImage('{{ img('nino34.spatialcomp.summary.jja0.png') }}'); return false;">JJA<sup>0</sup></a> 
+<a href="#" onclick="showImage('{{ img('nino34.spatialcomp.summary.son0.png') }}'); return false;">SON<sup>0</sup></a> 
+<a href="#" onclick="showImage('{{ img('nino34.spatialcomp.summary.djf1.png') }}'); return false;">DJF<sup>1</sup></a> 
+<a href="#" onclick="showImage('{{ img('nino34.spatialcomp.summary.mam1.png') }}'); return false;">MAM<sup>1</sup></a></td>
+<td>El Ni&ntilde;o - La Ni&ntilde;a<br>PR<br>
+<a href="#" onclick="showImage('{{ img('nino34.spatialcomp.pr.summary.jja0.png') }}'); return false;">JJA<sup>0</sup></a> 
+<a href="#" onclick="showImage('{{ img('nino34.spatialcomp.pr.summary.son0.png') }}'); return false;">SON<sup>0</sup></a> 
+<a href="#" onclick="showImage('{{ img('nino34.spatialcomp.pr.summary.djf1.png') }}'); return false;">DJF<sup>1</sup></a> 
+<a href="#" onclick="showImage('{{ img('nino34.spatialcomp.pr.summary.mam1.png') }}'); return false;">MAM<sup>1</sup></a></td></tr>
+<td>El Ni&ntilde;o SST/TAS/PSL<br>
+<a href="#" onclick="showImage('{{ img('nino34.spatialcomp.elnino.summary.jja0.png') }}'); return false;">JJA<sup>0</sup></a> 
+<a href="#" onclick="showImage('{{ img('nino34.spatialcomp.elnino.summary.son0.png') }}'); return false;">SON<sup>0</sup></a> 
+<a href="#" onclick="showImage('{{ img('nino34.spatialcomp.elnino.summary.djf1.png') }}'); return false;">DJF<sup>1</sup></a> 
+<a href="#" onclick="showImage('{{ img('nino34.spatialcomp.elnino.summary.mam1.png') }}'); return false;">MAM<sup>1</sup></a></td>
+<td>El Ni&ntilde;o PR<br>
+<a href="#" onclick="showImage('{{ img('nino34.spatialcomp.elnino.pr.summary.jja0.png') }}'); return false;">JJA<sup>0</sup></a> 
+<a href="#" onclick="showImage('{{ img('nino34.spatialcomp.elnino.pr.summary.son0.png') }}'); return false;">SON<sup>0</sup></a> 
+<a href="#" onclick="showImage('{{ img('nino34.spatialcomp.elnino.pr.summary.djf1.png') }}'); return false;">DJF<sup>1</sup></a> 
+<a href="#" onclick="showImage('{{ img('nino34.spatialcomp.elnino.pr.summary.mam1.png') }}'); return false;">MAM<sup>1</sup></a></td></tr>
+<td>La Ni&ntilde;a SST/TAS/PSL<br>
+<a href="#" onclick="showImage('{{ img('nino34.spatialcomp.lanina.summary.jja0.png') }}'); return false;">JJA<sup>0</sup></a> 
+<a href="#" onclick="showImage('{{ img('nino34.spatialcomp.lanina.summary.son0.png') }}'); return false;">SON<sup>0</sup></a> 
+<a href="#" onclick="showImage('{{ img('nino34.spatialcomp.lanina.summary.djf1.png') }}'); return false;">DJF<sup>1</sup></a> 
+<a href="#" onclick="showImage('{{ img('nino34.spatialcomp.lanina.summary.mam1.png') }}'); return false;">MAM<sup>1</sup></a></td>
+<td>La Ni&ntilde;a PR<br>
+<a href="#" onclick="showImage('{{ img('nino34.spatialcomp.lanina.pr.summary.jja0.png') }}'); return false;">JJA<sup>0</sup></a> 
+<a href="#" onclick="showImage('{{ img('nino34.spatialcomp.lanina.pr.summary.son0.png') }}'); return false;">SON<sup>0</sup></a> 
+<a href="#" onclick="showImage('{{ img('nino34.spatialcomp.lanina.pr.summary.djf1.png') }}'); return false;">DJF<sup>1</sup></a> 
+<a href="#" onclick="showImage('{{ img('nino34.spatialcomp.lanina.pr.summary.mam1.png') }}'); return false;">MAM<sup>1</sup></a></td></tr>
+<tr>
+<td><a href="#" onclick="showImage('{{ img('nino34.hov.elnino.summary.png') }}'); return false;">El Ni&ntilde;o Hovm&ouml;ller</a></td>
+<td><a href="#" onclick="showImage('{{ img('nino34.hov.lanina.summary.png') }}'); return false;">La Ni&ntilde;a Hovm&ouml;ller</a></td></tr>
+<tr><td rowspan=3>Ni&ntilde;o3.4</td>
+<td><a href="#" onclick="showImage('{{ img('nino34.timeseries.summary.png') }}'); return false;">Timeseries</a></td>
+<td><a href="#" onclick="showImage('{{ img('nino34.monstddev.summary.png') }}'); return false;">Monthly Std. Dev.</a></td>
+<tr><td><a href="#" onclick="showImage('{{ img('nino34.powspec.summary.png') }}'); return false;">Power Spectra</a></td>
+<td><a href="#" onclick="showImage('{{ img('nino34.wavelet.summary.png') }}'); return false;">Wavelet</a></td></tr>
+<tr><td><a href="#" onclick="showImage('{{ img('nino34.autocor.summary.png') }}'); return false;">Autocorrelation</a></td>
+<td><a href="#" onclick="showImage('{{ img('nino34_runstddev.timeseries.summary.png') }}'); return false;">Running Standard Deviation</a></td></tr>
+<tr><td rowspan=2><b>AMV</b></td>
+<td>Regr: 
+<a href="#" onclick="showImage('{{ img('amv.summary.png') }}'); return false;">SST</a> 
+<a href="#" onclick="showImage('{{ img('amv.tassstreg.summary.png') }}'); return false;">TAS</a> 
+<a href="#" onclick="showImage('{{ img('amv.prreg.summary.png') }}'); return false;">PR</a></td>
+<td><a href="#" onclick="showImage('{{ img('amv_timeseries_mon.summary.png') }}'); return false;">Timeseries</a></td>
+<td rowspan=2><a href="#" onclick="showImage('{{ img('amv.powspec.summary.png') }}'); return false;">Power Spectra</a></td></tr>
+<tr><td>Regr LP: 
+<a href="#" onclick="showImage('{{ img('amv.lp.summary.png') }}'); return false;">SST</a> 
+<a href="#" onclick="showImage('{{ img('amv.lp.tassstreg.summary.png') }}'); return false;">TAS</a> 
+<a href="#" onclick="showImage('{{ img('amv.lp.prreg.summary.png') }}'); return false;">PR</a></td>
+<td><a href="#" onclick="showImage('{{ img('amv_timeseries_lowpass_mon.summary.png') }}'); return false;">Timeseries</a></td></tr>
+<tr><td rowspan=2><b>AMV'</b></td>
+<td>Regr: 
+SST 
+TAS 
+PR</td>
+<td><a href="#" onclick="showImage('{{ img('amv_prime_timeseries_mon.summary.png') }}'); return false;">Timeseries</a></td>
+<td rowspan=2><a href="#" onclick="showImage('{{ img('amv.prime.powspec.summary.png') }}'); return false;">Power Spectra</a></td></tr>
+<tr><td>Regr LP: 
+SST 
+TAS 
+PR</td>
+<td><a href="#" onclick="showImage('{{ img('amv_prime_timeseries_lowpass_mon.summary.png') }}'); return false;">Timeseries</a></td></tr>
+<tr><td><b>PDV</b></td>
+<td>Regr: 
+<a href="#" onclick="showImage('{{ img('pdv.summary.png') }}'); return false;">SST</a> 
+<a href="#" onclick="showImage('{{ img('pdv.tassstreg.summary.png') }}'); return false;">TAS</a> 
+<a href="#" onclick="showImage('{{ img('pdv.prreg.summary.png') }}'); return false;">PR</a></td>
+<td><a href="#" onclick="showImage('{{ img('pdv_timeseries_mon.summary.png') }}'); return false;">Timeseries</a></td>
+<td><a href="#" onclick="showImage('{{ img('pdv.powspec.summary.png') }}'); return false;">Power Spectra</a></td></tr>
+<tr><td><b>PDV'</b></td>
+<td>Regr: 
+SST 
+TAS 
+PR</td>
+<td><a href="#" onclick="showImage('{{ img('pdv_prime_timeseries_mon.summary.png') }}'); return false;">Timeseries</a></td>
+<td><a href="#" onclick="showImage('{{ img('pdv.prime.powspec.summary.png') }}'); return false;">Power Spectra</a></td></tr>
+</td></tr>
+<tr><td rowspan=3><b>AMOC</b></td>
+<td>Means</td>
+<td>Standard Deviations</td>
+<td>Patterns</td></tr>
+<tr><td><a href="#" onclick="showImage('{{ img('amoc.timeseries.ann.summary.png') }}'); return false;">Timeseries</a></td>
+<td colspan=2>SST/TAS Regressions</td></tr>
+<tr><td><a href="#" onclick="showImage('{{ img('amoc.powspec.summary.png') }}'); return false;">Spectra</a></td>
+<td colspan=2>AMV/AMOC Lag Correlations</td></tr>
+</table></div></div>
+<div class="row">
+<div class="col">
+<table class="table table-striped table-bordered">
+<h3 class="display-6">Atmospheric Modes of Variability</h3>
+<tr><td rowspan=2><b>SO</b></td>
+<td>Patterns</td>
+<td><a href="#" onclick="showImage('{{ img('so_pattern_djf.summary.png') }}'); return false;">DJF</a></td>
+<td><a href="#" onclick="showImage('{{ img('so_pattern_jfm.summary.png') }}'); return false;">JFM</a></td>
+<td><a href="#" onclick="showImage('{{ img('so_pattern_mam.summary.png') }}'); return false;">MAM</a></td>
+<td><a href="#" onclick="showImage('{{ img('so_pattern_jja.summary.png') }}'); return false;">JJA</a></td>
+<td><a href="#" onclick="showImage('{{ img('so_pattern_jas.summary.png') }}'); return false;">JAS</a></td>
+<td><a href="#" onclick="showImage('{{ img('so_pattern_son.summary.png') }}'); return false;">SON</a></td>
+<td><a href="#" onclick="showImage('{{ img('so_pattern_ann.summary.png') }}'); return false;">ANN</a></td></tr>
+<td>Timeseries</td>
+<td><a href="#" onclick="showImage('{{ img('so_timeseries_djf.summary.png') }}'); return false;">DJF</a></td>
+<td><a href="#" onclick="showImage('{{ img('so_timeseries_jfm.summary.png') }}'); return false;">JFM</a></td>
+<td><a href="#" onclick="showImage('{{ img('so_timeseries_mam.summary.png') }}'); return false;">MAM</a></td>
+<td><a href="#" onclick="showImage('{{ img('so_timeseries_jja.summary.png') }}'); return false;">JJA</a></td>
+<td><a href="#" onclick="showImage('{{ img('so_timeseries_jas.summary.png') }}'); return false;">JAS</a></td>
+<td><a href="#" onclick="showImage('{{ img('so_timeseries_son.summary.png') }}'); return false;">SON</a></td>
+<td><a href="#" onclick="showImage('{{ img('so_timeseries_ann.summary.png') }}'); return false;">ANN</a></td></tr>
+<tr><td rowspan=2><b>NAM</b></td>
+<td>Patterns</td>
+<td><a href="#" onclick="showImage('{{ img('nam_pattern_djf.summary.png') }}'); return false;">DJF</a></td>
+<td><a href="#" onclick="showImage('{{ img('nam_pattern_jfm.summary.png') }}'); return false;">JFM</a></td>
+<td><a href="#" onclick="showImage('{{ img('nam_pattern_mam.summary.png') }}'); return false;">MAM</a></td>
+<td><a href="#" onclick="showImage('{{ img('nam_pattern_jja.summary.png') }}'); return false;">JJA</a></td>
+<td><a href="#" onclick="showImage('{{ img('nam_pattern_jas.summary.png') }}'); return false;">JAS</a></td>
+<td><a href="#" onclick="showImage('{{ img('nam_pattern_son.summary.png') }}'); return false;">SON</a></td>
+<td><a href="#" onclick="showImage('{{ img('nam_pattern_ann.summary.png') }}'); return false;">ANN</a></td></tr>
+<td>Timeseries</td>
+<td><a href="#" onclick="showImage('{{ img('nam_timeseries_djf.summary.png') }}'); return false;">DJF</a></td>
+<td><a href="#" onclick="showImage('{{ img('nam_timeseries_jfm.summary.png') }}'); return false;">JFM</a></td>
+<td><a href="#" onclick="showImage('{{ img('nam_timeseries_mam.summary.png') }}'); return false;">MAM</a></td>
+<td><a href="#" onclick="showImage('{{ img('nam_timeseries_jja.summary.png') }}'); return false;">JJA</a></td>
+<td><a href="#" onclick="showImage('{{ img('nam_timeseries_jas.summary.png') }}'); return false;">JAS</a></td>
+<td><a href="#" onclick="showImage('{{ img('nam_timeseries_son.summary.png') }}'); return false;">SON</a></td>
+<td><a href="#" onclick="showImage('{{ img('nam_timeseries_ann.summary.png') }}'); return false;">ANN</a></td></tr>
+<tr><td rowspan=2><b>NAO</b></td>
+<td>Patterns</td>
+<td><a href="#" onclick="showImage('{{ img('nao_pattern_djf.summary.png') }}'); return false;">DJF</a></td>
+<td><a href="#" onclick="showImage('{{ img('nao_pattern_jfm.summary.png') }}'); return false;">JFM</a></td>
+<td><a href="#" onclick="showImage('{{ img('nao_pattern_mam.summary.png') }}'); return false;">MAM</a></td>
+<td><a href="#" onclick="showImage('{{ img('nao_pattern_jja.summary.png') }}'); return false;">JJA</a></td>
+<td><a href="#" onclick="showImage('{{ img('nao_pattern_jas.summary.png') }}'); return false;">JAS</a></td>
+<td><a href="#" onclick="showImage('{{ img('nao_pattern_son.summary.png') }}'); return false;">SON</a></td>
+<td><a href="#" onclick="showImage('{{ img('nao_pattern_ann.summary.png') }}'); return false;">ANN</a></td></tr>
+<td>Timeseries</td>
+<td><a href="#" onclick="showImage('{{ img('nao_timeseries_djf.summary.png') }}'); return false;">DJF</a></td>
+<td><a href="#" onclick="showImage('{{ img('nao_timeseries_jfm.summary.png') }}'); return false;">JFM</a></td>
+<td><a href="#" onclick="showImage('{{ img('nao_timeseries_mam.summary.png') }}'); return false;">MAM</a></td>
+<td><a href="#" onclick="showImage('{{ img('nao_timeseries_jja.summary.png') }}'); return false;">JJA</a></td>
+<td><a href="#" onclick="showImage('{{ img('nao_timeseries_jas.summary.png') }}'); return false;">JAS</a></td>
+<td><a href="#" onclick="showImage('{{ img('nao_timeseries_son.summary.png') }}'); return false;">SON</a></td>
+<td><a href="#" onclick="showImage('{{ img('nao_timeseries_ann.summary.png') }}'); return false;">ANN</a></td></tr>
+<tr><td rowspan=2><b>SAM</b></td>
+<td>Patterns</td>
+<td><a href="#" onclick="showImage('{{ img('sam_pattern_djf.summary.png') }}'); return false;">DJF</a></td>
+<td><a href="#" onclick="showImage('{{ img('sam_pattern_jfm.summary.png') }}'); return false;">JFM</a></td>
+<td><a href="#" onclick="showImage('{{ img('sam_pattern_mam.summary.png') }}'); return false;">MAM</a></td>
+<td><a href="#" onclick="showImage('{{ img('sam_pattern_jja.summary.png') }}'); return false;">JJA</a></td>
+<td><a href="#" onclick="showImage('{{ img('sam_pattern_jas.summary.png') }}'); return false;">JAS</a></td>
+<td><a href="#" onclick="showImage('{{ img('sam_pattern_son.summary.png') }}'); return false;">SON</a></td>
+<td><a href="#" onclick="showImage('{{ img('sam_pattern_ann.summary.png') }}'); return false;">ANN</a></td></tr>
+<td>Timeseries</td>
+<td><a href="#" onclick="showImage('{{ img('sam_timeseries_djf.summary.png') }}'); return false;">DJF</a></td>
+<td><a href="#" onclick="showImage('{{ img('sam_timeseries_jfm.summary.png') }}'); return false;">JFM</a></td>
+<td><a href="#" onclick="showImage('{{ img('sam_timeseries_mam.summary.png') }}'); return false;">MAM</a></td>
+<td><a href="#" onclick="showImage('{{ img('sam_timeseries_jja.summary.png') }}'); return false;">JJA</a></td>
+<td><a href="#" onclick="showImage('{{ img('sam_timeseries_jas.summary.png') }}'); return false;">JAS</a></td>
+<td><a href="#" onclick="showImage('{{ img('sam_timeseries_son.summary.png') }}'); return false;">SON</a></td>
+<td><a href="#" onclick="showImage('{{ img('sam_timeseries_ann.summary.png') }}'); return false;">ANN</a></td></tr>
+<tr><td rowspan=2><b>PNA</b></td>
+<td>Patterns</td>
+<td><a href="#" onclick="showImage('{{ img('pna_pattern_djf.summary.png') }}'); return false;">DJF</a></td>
+<td><a href="#" onclick="showImage('{{ img('pna_pattern_jfm.summary.png') }}'); return false;">JFM</a></td>
+<td><a href="#" onclick="showImage('{{ img('pna_pattern_mam.summary.png') }}'); return false;">MAM</a></td>
+<td><a href="#" onclick="showImage('{{ img('pna_pattern_jja.summary.png') }}'); return false;">JJA</a></td>
+<td><a href="#" onclick="showImage('{{ img('pna_pattern_jas.summary.png') }}'); return false;">JAS</a></td>
+<td><a href="#" onclick="showImage('{{ img('pna_pattern_son.summary.png') }}'); return false;">SON</a></td>
+<td><a href="#" onclick="showImage('{{ img('pna_pattern_ann.summary.png') }}'); return false;">ANN</a></td></tr>
+<td>Timeseries</td>
+<td><a href="#" onclick="showImage('{{ img('pna_timeseries_djf.summary.png') }}'); return false;">DJF</a></td>
+<td><a href="#" onclick="showImage('{{ img('pna_timeseries_jfm.summary.png') }}'); return false;">JFM</a></td>
+<td><a href="#" onclick="showImage('{{ img('pna_timeseries_mam.summary.png') }}'); return false;">MAM</a></td>
+<td><a href="#" onclick="showImage('{{ img('pna_timeseries_jja.summary.png') }}'); return false;">JJA</a></td>
+<td><a href="#" onclick="showImage('{{ img('pna_timeseries_jas.summary.png') }}'); return false;">JAS</a></td>
+<td><a href="#" onclick="showImage('{{ img('pna_timeseries_son.summary.png') }}'); return false;">SON</a></td>
+<td><a href="#" onclick="showImage('{{ img('pna_timeseries_ann.summary.png') }}'); return false;">ANN</a></td></tr>
+<tr><td rowspan=2><b>NPO</b></td>
+<td>Patterns</td>
+<td><a href="#" onclick="showImage('{{ img('npo_pattern_djf.summary.png') }}'); return false;">DJF</a></td>
+<td><a href="#" onclick="showImage('{{ img('npo_pattern_jfm.summary.png') }}'); return false;">JFM</a></td>
+<td><a href="#" onclick="showImage('{{ img('npo_pattern_mam.summary.png') }}'); return false;">MAM</a></td>
+<td><a href="#" onclick="showImage('{{ img('npo_pattern_jja.summary.png') }}'); return false;">JJA</a></td>
+<td><a href="#" onclick="showImage('{{ img('npo_pattern_jas.summary.png') }}'); return false;">JAS</a></td>
+<td><a href="#" onclick="showImage('{{ img('npo_pattern_son.summary.png') }}'); return false;">SON</a></td>
+<td><a href="#" onclick="showImage('{{ img('npo_pattern_ann.summary.png') }}'); return false;">ANN</a></td></tr>
+<td>Timeseries</td>
+<td><a href="#" onclick="showImage('{{ img('npo_timeseries_djf.summary.png') }}'); return false;">DJF</a></td>
+<td><a href="#" onclick="showImage('{{ img('npo_timeseries_jfm.summary.png') }}'); return false;">JFM</a></td>
+<td><a href="#" onclick="showImage('{{ img('npo_timeseries_mam.summary.png') }}'); return false;">MAM</a></td>
+<td><a href="#" onclick="showImage('{{ img('npo_timeseries_jja.summary.png') }}'); return false;">JJA</a></td>
+<td><a href="#" onclick="showImage('{{ img('npo_timeseries_jas.summary.png') }}'); return false;">JAS</a></td>
+<td><a href="#" onclick="showImage('{{ img('npo_timeseries_son.summary.png') }}'); return false;">SON</a></td>
+<td><a href="#" onclick="showImage('{{ img('npo_timeseries_ann.summary.png') }}'); return false;">ANN</a></td></tr>
+<tr><td rowspan=2><b>PSA1</b></td>
+<td>Patterns</td>
+<td><a href="#" onclick="showImage('{{ img('psa1_pattern_djf.summary.png') }}'); return false;">DJF</a></td>
+<td><a href="#" onclick="showImage('{{ img('psa1_pattern_jfm.summary.png') }}'); return false;">JFM</a></td>
+<td><a href="#" onclick="showImage('{{ img('psa1_pattern_mam.summary.png') }}'); return false;">MAM</a></td>
+<td><a href="#" onclick="showImage('{{ img('psa1_pattern_jja.summary.png') }}'); return false;">JJA</a></td>
+<td><a href="#" onclick="showImage('{{ img('psa1_pattern_jas.summary.png') }}'); return false;">JAS</a></td>
+<td><a href="#" onclick="showImage('{{ img('psa1_pattern_son.summary.png') }}'); return false;">SON</a></td>
+<td><a href="#" onclick="showImage('{{ img('psa1_pattern_ann.summary.png') }}'); return false;">ANN</a></td></tr>
+<td>Timeseries</td>
+<td><a href="#" onclick="showImage('{{ img('psa1_timeseries_djf.summary.png') }}'); return false;">DJF</a></td>
+<td><a href="#" onclick="showImage('{{ img('psa1_timeseries_jfm.summary.png') }}'); return false;">JFM</a></td>
+<td><a href="#" onclick="showImage('{{ img('psa1_timeseries_mam.summary.png') }}'); return false;">MAM</a></td>
+<td><a href="#" onclick="showImage('{{ img('psa1_timeseries_jja.summary.png') }}'); return false;">JJA</a></td>
+<td><a href="#" onclick="showImage('{{ img('psa1_timeseries_jas.summary.png') }}'); return false;">JAS</a></td>
+<td><a href="#" onclick="showImage('{{ img('psa1_timeseries_son.summary.png') }}'); return false;">SON</a></td>
+<td><a href="#" onclick="showImage('{{ img('psa1_timeseries_ann.summary.png') }}'); return false;">ANN</a></td></tr>
+<tr><td rowspan=2><b>PSA2</b></td>
+<td>Patterns</td>
+<td><a href="#" onclick="showImage('{{ img('psa2_pattern_djf.summary.png') }}'); return false;">DJF</a></td>
+<td><a href="#" onclick="showImage('{{ img('psa2_pattern_jfm.summary.png') }}'); return false;">JFM</a></td>
+<td><a href="#" onclick="showImage('{{ img('psa2_pattern_mam.summary.png') }}'); return false;">MAM</a></td>
+<td><a href="#" onclick="showImage('{{ img('psa2_pattern_jja.summary.png') }}'); return false;">JJA</a></td>
+<td><a href="#" onclick="showImage('{{ img('psa2_pattern_jas.summary.png') }}'); return false;">JAS</a></td>
+<td><a href="#" onclick="showImage('{{ img('psa2_pattern_son.summary.png') }}'); return false;">SON</a></td>
+<td><a href="#" onclick="showImage('{{ img('psa2_pattern_ann.summary.png') }}'); return false;">ANN</a></td></tr>
+<td>Timeseries</td>
+<td><a href="#" onclick="showImage('{{ img('psa2_timeseries_djf.summary.png') }}'); return false;">DJF</a></td>
+<td><a href="#" onclick="showImage('{{ img('psa2_timeseries_jfm.summary.png') }}'); return false;">JFM</a></td>
+<td><a href="#" onclick="showImage('{{ img('psa2_timeseries_mam.summary.png') }}'); return false;">MAM</a></td>
+<td><a href="#" onclick="showImage('{{ img('psa2_timeseries_jja.summary.png') }}'); return false;">JJA</a></td>
+<td><a href="#" onclick="showImage('{{ img('psa2_timeseries_jas.summary.png') }}'); return false;">JAS</a></td>
+<td><a href="#" onclick="showImage('{{ img('psa2_timeseries_son.summary.png') }}'); return false;">SON</a></td>
+<td><a href="#" onclick="showImage('{{ img('psa2_timeseries_ann.summary.png') }}'); return false;">ANN</a></td></tr>
+</table>
+<div class="row">
+<div class="col">
+<table class="table table-striped table-bordered">
+<h3 class="display-6">Global Timeseries</h3>
+<tr class="d-flex">
+<td class="col"><b>SST</b></td>
+<td class="col"><a href="#" onclick="showImage('{{ img('sst_global_avg_djf.summary.png') }}'); return false;">DJF</a></td>
+<td class="col"><a href="#" onclick="showImage('{{ img('sst_global_avg_jfm.summary.png') }}'); return false;">JFM</a></td>
+<td class="col"><a href="#" onclick="showImage('{{ img('sst_global_avg_mam.summary.png') }}'); return false;">MAM</a></td>
+<td class="col"><a href="#" onclick="showImage('{{ img('sst_global_avg_jja.summary.png') }}'); return false;">JJA</a></td>
+<td class="col"><a href="#" onclick="showImage('{{ img('sst_global_avg_jas.summary.png') }}'); return false;">JAS</a></td>
+<td class="col"><a href="#" onclick="showImage('{{ img('sst_global_avg_son.summary.png') }}'); return false;">SON</a></td>
+<td class="col"><a href="#" onclick="showImage('{{ img('sst_global_avg_ann.summary.png') }}'); return false;">ANN</a></td>
+</tr>
+<tr class="d-flex">
+<td class="col"><b>TAS</b></td>
+<td class="col"><a href="#" onclick="showImage('{{ img('tas_global_avg_djf.summary.png') }}'); return false;">DJF</a></td>
+<td class="col"><a href="#" onclick="showImage('{{ img('tas_global_avg_jfm.summary.png') }}'); return false;">JFM</a></td>
+<td class="col"><a href="#" onclick="showImage('{{ img('tas_global_avg_mam.summary.png') }}'); return false;">MAM</a></td>
+<td class="col"><a href="#" onclick="showImage('{{ img('tas_global_avg_jja.summary.png') }}'); return false;">JJA</a></td>
+<td class="col"><a href="#" onclick="showImage('{{ img('tas_global_avg_jas.summary.png') }}'); return false;">JAS</a></td>
+<td class="col"><a href="#" onclick="showImage('{{ img('tas_global_avg_son.summary.png') }}'); return false;">SON</a></td>
+<td class="col"><a href="#" onclick="showImage('{{ img('tas_global_avg_ann.summary.png') }}'); return false;">ANN</a></td>
+</tr>
+<tr class="d-flex">
+<td class="col"><b>PR</b></td>
+<td class="col"><a href="#" onclick="showImage('{{ img('pr_global_avg_djf.summary.png') }}'); return false;">DJF</a></td>
+<td class="col"><a href="#" onclick="showImage('{{ img('pr_global_avg_jfm.summary.png') }}'); return false;">JFM</a></td>
+<td class="col"><a href="#" onclick="showImage('{{ img('pr_global_avg_mam.summary.png') }}'); return false;">MAM</a></td>
+<td class="col"><a href="#" onclick="showImage('{{ img('pr_global_avg_jja.summary.png') }}'); return false;">JJA</a></td>
+<td class="col"><a href="#" onclick="showImage('{{ img('pr_global_avg_jas.summary.png') }}'); return false;">JAS</a></td>
+<td class="col"><a href="#" onclick="showImage('{{ img('pr_global_avg_son.summary.png') }}'); return false;">SON</a></td>
+<td class="col"><a href="#" onclick="showImage('{{ img('pr_global_avg_ann.summary.png') }}'); return false;">ANN</a></td>
+</tr>
+<tr class="d-flex">
+<td class="col"><b>PR<br>(land-only)</b></td>
+<td class="col"><a href="#" onclick="showImage('{{ img('pr_global_avg_land_djf.summary.png') }}'); return false;">DJF</a></td>
+<td class="col"><a href="#" onclick="showImage('{{ img('pr_global_avg_land_jfm.summary.png') }}'); return false;">JFM</a></td>
+<td class="col"><a href="#" onclick="showImage('{{ img('pr_global_avg_land_mam.summary.png') }}'); return false;">MAM</a></td>
+<td class="col"><a href="#" onclick="showImage('{{ img('pr_global_avg_land_jja.summary.png') }}'); return false;">JJA</a></td>
+<td class="col"><a href="#" onclick="showImage('{{ img('pr_global_avg_land_jas.summary.png') }}'); return false;">JAS</a></td>
+<td class="col"><a href="#" onclick="showImage('{{ img('pr_global_avg_land_son.summary.png') }}'); return false;">SON</a></td>
+<td class="col"><a href="#" onclick="showImage('{{ img('pr_global_avg_land_ann.summary.png') }}'); return false;">ANN</a></td>
+</tr>
+</tr></table></div></div>
+<div class="row">
+<div class="col">
+<table class="table table-striped table-bordered">
+<h3 class="display-6">Regional Timeseries</h3>
+<tr class="d-flex">
+<td class="col"><a href="#" onclick="showImage('{{ img('atlantic_meridional_mode.timeseries.summary.png') }}'); return false;">Atlantic SST Meridional Mode</a></td>
+<td class="col"><a href="#" onclick="showImage('{{ img('atlantic_nino.timeseries.summary.png') }}'); return false;">Atlantic Ni&ntilde;o SST</a></td>
+<td class="col"><a href="#" onclick="showImage('{{ img('north_atlantic.timeseries.summary.png') }}'); return false;">North Atlantic SST</a></td>
+<td class="col"><a href="#" onclick="showImage('{{ img('north_tropical_atlantic.timeseries.summary.png') }}'); return false;">Tropical North Atlantic SST</a></td>
+<td class="col"><a href="#" onclick="showImage('{{ img('south_tropical_atlantic.timeseries.summary.png') }}'); return false;">Tropical South Atlantic SST</a></td></tr>
+<tr class="d-flex"><td class="col"><a href="#" onclick="showImage('{{ img('nino12.timeseries.summary.png') }}'); return false;">ni&ntilde;o1+2 SST</a></td>
+<td class="col"><a href="#" onclick="showImage('{{ img('nino3.timeseries.summary.png') }}'); return false;">ni&ntilde;o3 SST</a></td>
+<td class="col"><a href="#" onclick="showImage('{{ img('nino34.timeseries.summary.png') }}'); return false;">ni&ntilde;o3.4 SST</a></td>
+<td class="col"><a href="#" onclick="showImage('{{ img('nino4.timeseries.summary.png') }}'); return false;">ni&ntilde;o4 SST</a></td></tr>
+<tr class="d-flex"><td class="col"><a href="#" onclick="showImage('{{ img('north_pacific_index_ndjfm.summary.png') }}'); return false;">North Pacific PSL Index (NPI)</a></td>
+<td class="col"><a href="#" onclick="showImage('{{ img('north_pacific_meridional_mode.timeseries.summary.png') }}'); return false;">North Pacific SST Meridional Mode</a></td>
+<td class="col"><a href="#" onclick="showImage('{{ img('south_pacific_meridional_mode.timeseries.summary.png') }}'); return false;">South Pacific SST Meridional Mode</a></td></tr>
+<tr class="d-flex"><td class="col"><a href="#" onclick="showImage('{{ img('indian_ocean_dipole.timeseries.summary.png') }}'); return false;">Indian Ocean SST Dipole</a></td>
+<td class="col"><a href="#" onclick="showImage('{{ img('tropical_indian_ocean.timeseries.summary.png') }}'); return false;">Tropical Indian Ocean SST</a></td>
+<td class="col"><a href="#" onclick="showImage('{{ img('southern_ocean.timeseries.summary.png') }}'); return false;">Southern Ocean SST</a></td></tr>
+</table></div></div>
+<div class="row">
+<div class="col">
+<table class="table table-striped table-bordered">
+<h3 class="display-6">Sea Ice Extent Timeseries</h3>
+<tr><td rowspan=2><b>NH</b></td>
+<td><a href="#" onclick="showImage('{{ img('siconc_nh_extent_djf.summary.png') }}'); return false;">DJF</a></td>
+<td><a href="#" onclick="showImage('{{ img('siconc_nh_extent_jfm.summary.png') }}'); return false;">JFM</a></td>
+<td><a href="#" onclick="showImage('{{ img('siconc_nh_extent_mam.summary.png') }}'); return false;">MAM</a></td>
+<td><a href="#" onclick="showImage('{{ img('siconc_nh_extent_jja.summary.png') }}'); return false;">JJA</a></td>
+<td><a href="#" onclick="showImage('{{ img('siconc_nh_extent_jas.summary.png') }}'); return false;">JAS</a></td>
+<td><a href="#" onclick="showImage('{{ img('siconc_nh_extent_son.summary.png') }}'); return false;">SON</a></td>
+<td><a href="#" onclick="showImage('{{ img('siconc_nh_extent_ann.summary.png') }}'); return false;">ANN</a></td></tr>
+<tr><td><a href="#" onclick="showImage('{{ img('siconc_nh_extent_feb.summary.png') }}'); return false;">Feb</a></td>
+<td><a href="#" onclick="showImage('{{ img('siconc_nh_extent_mar.summary.png') }}'); return false;">Mar</a></td>
+<td><a href="#" onclick="showImage('{{ img('siconc_nh_extent_sep.summary.png') }}'); return false;">Sep</a></td>
+<td><a href="#" onclick="showImage('{{ img('siconc_nh_extent_oct.summary.png') }}'); return false;">Oct</a></td>
+<td><a href="#" onclick="showImage('{{ img('siconc_nh_extent_mon.summary.png') }}'); return false;">Monthly</a></td>
+<td><a href="#" onclick="showImage('{{ img('siconc_nh_extent_anom_mon.summary.png') }}'); return false;">Monthly Anomalies</a></td>
+<td><a href="#" onclick="showImage('{{ img('siconc_nh_extent.climo.summary.png') }}'); return false;">Climatology</a></td></tr>
+<tr><td rowspan=2><b>SH</b></td>
+<td><a href="#" onclick="showImage('{{ img('siconc_sh_extent_djf.summary.png') }}'); return false;">DJF</a></td>
+<td><a href="#" onclick="showImage('{{ img('siconc_sh_extent_jfm.summary.png') }}'); return false;">JFM</a></td>
+<td><a href="#" onclick="showImage('{{ img('siconc_sh_extent_mam.summary.png') }}'); return false;">MAM</a></td>
+<td><a href="#" onclick="showImage('{{ img('siconc_sh_extent_jja.summary.png') }}'); return false;">JJA</a></td>
+<td><a href="#" onclick="showImage('{{ img('siconc_sh_extent_jas.summary.png') }}'); return false;">JAS</a></td>
+<td><a href="#" onclick="showImage('{{ img('siconc_sh_extent_son.summary.png') }}'); return false;">SON</a></td>
+<td><a href="#" onclick="showImage('{{ img('siconc_sh_extent_ann.summary.png') }}'); return false;">ANN</a></td></tr>
+<tr><td><a href="#" onclick="showImage('{{ img('siconc_sh_extent_feb.summary.png') }}'); return false;">Feb</a></td>
+<td><a href="#" onclick="showImage('{{ img('siconc_sh_extent_mar.summary.png') }}'); return false;">Mar</a></td>
+<td><a href="#" onclick="showImage('{{ img('siconc_sh_extent_sep.summary.png') }}'); return false;">Sep</a></td>
+<td><a href="#" onclick="showImage('{{ img('siconc_sh_extent_oct.summary.png') }}'); return false;">Oct</a></td>
+<td><a href="#" onclick="showImage('{{ img('siconc_sh_extent_mon.summary.png') }}'); return false;">Monthly</a></td>
+<td><a href="#" onclick="showImage('{{ img('siconc_sh_extent_anom_mon.summary.png') }}'); return false;">Monthly Anomalies</a></td>
+<td><a href="#" onclick="showImage('{{ img('siconc_sh_extent.climo.summary.png') }}'); return false;">Climatology</a></td></tr>
+</table></div></div>
+</div>
+
+
+
+
+<!-- Image Popup Modal -->
+
+<div id="imgModal" class="modal">
+  <span class="close">&times;</span>
+
+  <div class="modal-content-container">
+      <img class="popupImg" id="popupImg">
+  </div>
+</div>
+
+<style>
+.modal {
+  display: none;
+  position: fixed;
+  z-index: 1000;
+  padding-top: 60px;
+  left: 0;
+  top: 0;
+  width: 100%;
+  height: 100%;
+  overflow: auto;
+  background-color: rgba(0,0,0,0.9);
+}
+
+.modal-content {
+  margin: auto;
+  display: block;
+  max-width: 90%;
+  max-height: 85%;
+  cursor: pointer;
+}
+
+.close {
+  position: absolute;
+  top: 20px;
+  right: 45px;
+  color: white;
+  font-size: 40px;
+  cursor: pointer;
+}
+
+.modal-content-container {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 25px;
+  margin: auto;
+  max-width: 95%;
+}
+.popupImg {
+  max-width: 90%;
+  max-height: 80vh;
+  cursor: pointer;
+}
+</style>
+
+
+<script>
+
+function showImage(src) {
+
+    const modal = document.getElementById("imgModal");
+    const modalImg = document.getElementById("popupImg");
+
+    modal.style.display = "block";
+    modalImg.src = src;
+
+    modalImg.onclick = function() {
+        window.open(src, "_blank");
+    }
+}
+
+document.querySelector(".close").onclick = function() {
+    document.getElementById("imgModal").style.display = "none";
+}
+
+window.onclick = function(event) {
+    const modal = document.getElementById("imgModal");
+    if (event.target == modal) {
+        modal.style.display = "none";
+    }
+}
+
+</script>
+
+
+
+
+</body></html>
