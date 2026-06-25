@@ -220,10 +220,10 @@ def get_input_data(config_path: Union[str, Path]) -> Tuple[Dict[str, Dict[str, x
     config_dict["nc_save_loc"] = save_root
 
     #ncl_plot_root = Path(config["Paths"].get("ncl_comp_plots", None))
-    ncl_plot_root = resolve_path(config["Paths"]["ncl_comp_plots"])
-    if ncl_plot_root:
-        if "ncl_plot_loc" not in config_dict:
-            config_dict["ncl_plot_loc"] = ncl_plot_root
+    #ncl_plot_root = resolve_path(config["Paths"]["ncl_comp_plots"])
+    #if ncl_plot_root:
+    #    if "ncl_plot_loc" not in config_dict:
+    #        config_dict["ncl_plot_loc"] = ncl_plot_root
 
     for ds_name, ds_info in config.get("Data", {}).items():
         print("\nCase Name",ds_name,"\n")
