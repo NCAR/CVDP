@@ -6,7 +6,6 @@ Ocean circulation diagnostics.
 AMOC — maximum of the zonally-integrated Atlantic meridional overturning
        streamfunction, reported in Sverdrups (Sv).
 """
-import cftime
 import xarray as xr
 
 from cvdp.metrics.trends import detrend as apply_detrend
@@ -51,8 +50,7 @@ def amoc(
         ``basin`` dimension. Default ``"atlantic_arctic_ocean"``.
     detrend : str, optional
         Detrending applied to the index timeseries before returning.
-        One of ``"none"``, ``"linear"``, ``"quadratic"``,
-        ``"highpass30"``, ``"ensemble_mean"``. Default ``"none"``.
+        One of ``"none"``, ``"linear"``, ``"quadratic"``, ``"ensemble_mean"``. Default ``"none"``.
 
     Returns
     -------
