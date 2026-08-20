@@ -80,3 +80,36 @@ def sample_full_ds():
 
 def test_sample_full_ds(sample_full_ds):
     assert type(sample_full_ds) is xr.Dataset
+
+
+SAMPLE_MOC_LEVELS = [100.0, 600.0, 1200.0, 3000.0]
+SAMPLE_MOC_LATS = [-30.0, 0.0, 26.5, 60.0]
+SAMPLE_MOC_BASINS = ["atlantic_arctic_ocean", "indian_pacific_ocean"]
+
+
+@pytest.fixture(scope="function")
+def sample_moc():
+    times = xr.date_range(f"{SAMPLE_START_YEAR}-01", periods=12 * SAMPLE_LENGTH_YEARS,
+                          freq="MS", calendar=SAMPLE_TIME_CALENDAR, use_cftime=True)
+    shape = (len(times), len(SAMPLE_MOC_BASINS), len(SAMPLE_MOC_LEVELS), len(SAMPLE_MOC_LATS))
+    data = np.random.default_rng(0).standard_normal(shape)
+    moc = xr.DataArray(
+        data,
+        coords={"time": times, "basin": SAMPLE_MOC_BASINS,
+                "lev": SAMPLE_MOC_LEVELS, "lat": SAMPLE_MOC_LATS},
+        dims=["time", "basin", "lev", "lat"],
+        name="msftmz",
+    )
+    # Plant a known Atlantic maximum (20 Sv) below 500 m at lat 26.5, and a larger
+    # surface value (99) above depth_min that must be excluded by the depth mask.
+    moc.loc[{"basin": "atlantic_arctic_ocean", "lev": 1200.0, "lat": 26.5}] = 20.0
+    moc.loc[{"basin": "atlantic_arctic_ocean", "lev": 100.0, "lat": 26.5}] = 99.0
+    # Give the other basin a distinct, larger value so basin selection is testable.
+    moc.loc[{"basin": "indian_pacific_ocean", "lev": 1200.0, "lat": 26.5}] = 50.0
+    return moc
+
+
+def test_sample_moc(sample_moc):
+    assert sample_moc.name == "msftmz"
+    assert list(sample_moc["basin"].values) == SAMPLE_MOC_BASINS
+    assert set(sample_moc.dims) == {"time", "basin", "lev", "lat"}
