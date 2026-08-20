@@ -6,16 +6,16 @@ import xarray as xr
 import pytest
 
 
-# --- _region_index -------------------------------------------------------
+# --- box_mean --------------------------------------------------------------
 
-def test_region_index_constant_field(sample_ts):
+def test_box_mean_constant_field(sample_ts):
     const = xr.ones_like(sample_ts) * 7.0
     index = box_mean(const, REGIONS["nino34"])
     assert set(index.dims) == {"time"}
     assert np.allclose(index, 7.0)
 
 
-def test_region_index_selects_only_the_box(sample_ts):
+def test_box_mean_selects_only_the_box(sample_ts):
     # Field is 1 inside the nino34 box and 0 elsewhere; the area mean is then 1.
     lat_s, lat_n, lon_w, lon_e = REGIONS["nino34"]
     inside = ((sample_ts["lat"] >= lat_s) & (sample_ts["lat"] <= lat_n)
@@ -24,13 +24,13 @@ def test_region_index_selects_only_the_box(sample_ts):
     assert np.allclose(box_mean(field, REGIONS["nino34"]), 1.0)
 
 
-def test_region_index_handles_longitude_wrap(sample_ts):
+def test_box_mean_handles_longitude_wrap(sample_ts):
     # tsa spans 330->370 (i.e. across the prime meridian); it must select cells.
     index = box_mean(sample_ts, REGIONS["tsa"])
     assert int(index.notnull().sum()) == sample_ts.time.size
 
 
-def test_region_index_longitude_convention_invariance():
+def test_box_mean_longitude_convention_invariance():
     # The same physical field on 0..360 and -180..180 grids gives identical indices.
     t = xr.date_range("2000-01", periods=24, freq="MS", calendar="standard", use_cftime=True)
     lat = np.arange(-88, 90, 4.0)

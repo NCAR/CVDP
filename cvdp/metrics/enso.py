@@ -8,7 +8,6 @@ El Niño / La Niña events are defined by the December Niño3.4 value
 (3-point binomial smoothed) exceeding ±1 standard deviation.
 """
 import cftime
-import numpy as np
 import xarray as xr
 
 from cvdp.metrics.regional_timeseries import box_mean, monthly_anomalies, REGIONS

@@ -1,5 +1,8 @@
 from cvdp.metrics.enso import nino34_index
 from cvdp.metrics.enso import NINO34_BOUNDS
+from cvdp.metrics.enso import nino34_monthly_stddev
+from cvdp.metrics.enso import nino34_autocorrelation
+from cvdp.metrics.enso import sst_indices, SST_INDEX_REGIONS
 from cvdp.metrics.regional_timeseries import box_mean, monthly_anomalies, REGIONS
 from cvdp.tests.test_inputdata import *
 import numpy as np
@@ -29,9 +32,6 @@ def test_nino34_index_smoothing_changes_values_but_not_length(sample_ts):
     assert not bool(smoothed.isnull().any())
 
 
-from cvdp.metrics.enso import nino34_monthly_stddev
-
-
 def test_nino34_monthly_stddev(sample_ts):
     nino34 = nino34_index(sample_ts, smooth=False)
     std = nino34_monthly_stddev(nino34)
@@ -41,9 +41,6 @@ def test_nino34_monthly_stddev(sample_ts):
     # Matches a direct groupby standard deviation.
     expected = nino34.groupby("time.month").std("time")
     assert np.allclose(std.values, expected.values)
-
-
-from cvdp.metrics.enso import nino34_autocorrelation
 
 
 def test_nino34_autocorrelation(sample_ts):
@@ -66,9 +63,6 @@ def test_nino34_autocorrelation_matches_manual(sample_ts):
     for k in range(0, 6):
         manual = np.sum(x[: len(x) - k] * x[k:]) / denom
         assert np.isclose(acf.sel(lag=k), manual)
-
-
-from cvdp.metrics.enso import sst_indices, SST_INDEX_REGIONS
 
 
 def test_sst_indices_names_and_shape(sample_ts):
