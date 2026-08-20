@@ -41,7 +41,7 @@ REGIONS: dict[str, tuple[float, float, float, float]] = {
 }
 
 
-def _region_index(da: xr.DataArray, bounds: tuple[float, float, float, float]) -> xr.DataArray:
+def box_mean(da: xr.DataArray, bounds: tuple[float, float, float, float]) -> xr.DataArray:
     """Cosine-latitude weighted mean of ``da`` over one lat/lon box.
 
     Returns a timeseries (the spatial dims are reduced away). Longitude boxes
@@ -58,6 +58,17 @@ def _region_index(da: xr.DataArray, bounds: tuple[float, float, float, float]) -
     box = da.where(lat_mask & lon_mask)
     weights = np.cos(np.deg2rad(da["lat"]))
     return box.weighted(weights).mean(["lat", "lon"])
+
+
+def monthly_anomalies(da: xr.DataArray) -> xr.DataArray:
+    """Anomalies relative to the full-period monthly climatology of ``da``.
+
+    The baseline is the time span of ``da`` (slice beforehand to control it).
+    Works on gridded fields or a 1-D index. The leftover ``month`` coordinate
+    from the groupby is dropped.
+    """
+    anom = da.groupby("time.month") - da.groupby("time.month").mean("time")
+    return anom.drop_vars("month")
 
 
 def regional_timeseries(
@@ -104,12 +115,11 @@ def regional_timeseries(
 
     out: dict[str, xr.DataArray] = {}
     for region in regions:
-        index = _region_index(da, REGIONS[region])
+        index = box_mean(da, REGIONS[region])
         if detrend != "none":
             index = apply_detrend(index, detrend)
 
-        index = index.groupby("time.month") - index.groupby("time.month").mean("time")
-        index = index.drop_vars("month")
+        index = monthly_anomalies(index)
 
         if season_list is None:
             out[f"{da.name}_{region}"] = index

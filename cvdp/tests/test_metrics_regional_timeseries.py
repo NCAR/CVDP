@@ -1,4 +1,4 @@
-from cvdp.metrics.regional_timeseries import regional_timeseries, _region_index, REGIONS
+from cvdp.metrics.regional_timeseries import regional_timeseries, box_mean, monthly_anomalies, REGIONS
 from cvdp.metrics.seasons import CVDP_SEASONS, NDJFM
 from cvdp.tests.test_inputdata import *
 import numpy as np
@@ -10,7 +10,7 @@ import pytest
 
 def test_region_index_constant_field(sample_ts):
     const = xr.ones_like(sample_ts) * 7.0
-    index = _region_index(const, REGIONS["nino34"])
+    index = box_mean(const, REGIONS["nino34"])
     assert set(index.dims) == {"time"}
     assert np.allclose(index, 7.0)
 
@@ -21,12 +21,12 @@ def test_region_index_selects_only_the_box(sample_ts):
     inside = ((sample_ts["lat"] >= lat_s) & (sample_ts["lat"] <= lat_n)
               & (sample_ts["lon"] >= lon_w) & (sample_ts["lon"] <= lon_e))
     field = xr.ones_like(sample_ts).where(inside, 0.0)
-    assert np.allclose(_region_index(field, REGIONS["nino34"]), 1.0)
+    assert np.allclose(box_mean(field, REGIONS["nino34"]), 1.0)
 
 
 def test_region_index_handles_longitude_wrap(sample_ts):
     # tsa spans 330->370 (i.e. across the prime meridian); it must select cells.
-    index = _region_index(sample_ts, REGIONS["tsa"])
+    index = box_mean(sample_ts, REGIONS["tsa"])
     assert int(index.notnull().sum()) == sample_ts.time.size
 
 
@@ -45,8 +45,8 @@ def test_region_index_longitude_convention_invariance():
                           dims=["time", "lat", "lon"], name="ts")
 
     for region in ["nino34", "tsa", "north_atlantic"]:
-        a = _region_index(da_360, REGIONS[region])
-        b = _region_index(da_180, REGIONS[region])
+        a = box_mean(da_360, REGIONS[region])
+        b = box_mean(da_180, REGIONS[region])
         assert np.allclose(a.values, b.values)
 
 
@@ -96,3 +96,14 @@ def test_seasonal_reduces_time_dimension(sample_ts):
     out = regional_timeseries(sample_ts, regions=["nino34"], seasons=CVDP_SEASONS.subset(["JJA"]))
     # 10 years of monthly data collapse to one JJA value per year.
     assert out["ts_nino34_JJA"].time.size == SAMPLE_LENGTH_YEARS
+
+
+# --- monthly_anomalies -----------------------------------------------------
+
+def test_monthly_anomalies_removes_climatology(sample_ts):
+    anom = monthly_anomalies(sample_ts)
+    # Each calendar month's anomalies average to zero over the record.
+    clim = anom.groupby("time.month").mean("time")
+    assert np.allclose(clim, 0.0, atol=1e-9)
+    assert anom.name == sample_ts.name
+    assert "month" not in anom.coords
