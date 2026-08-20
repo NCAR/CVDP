@@ -41,3 +41,28 @@ def test_nino34_monthly_stddev(sample_ts):
     # Matches a direct groupby standard deviation.
     expected = nino34.groupby("time.month").std("time")
     assert np.allclose(std.values, expected.values)
+
+
+from cvdp.metrics.enso import nino34_autocorrelation
+
+
+def test_nino34_autocorrelation(sample_ts):
+    nino34 = nino34_index(sample_ts, smooth=False)
+    acf = nino34_autocorrelation(nino34, max_lag=12)
+    assert set(acf.dims) == {"lag"}
+    assert list(acf["lag"].values) == list(range(-12, 13))
+    # Zero lag is exactly 1; the function is symmetric in lag.
+    assert np.isclose(acf.sel(lag=0), 1.0)
+    for k in range(1, 13):
+        assert np.isclose(acf.sel(lag=k), acf.sel(lag=-k))
+    assert acf.name == "nino34_autocorrelation"
+
+
+def test_nino34_autocorrelation_matches_manual(sample_ts):
+    nino34 = nino34_index(sample_ts, smooth=False)
+    acf = nino34_autocorrelation(nino34, max_lag=5)
+    x = (nino34 - nino34.mean("time")).values
+    denom = np.sum(x * x)
+    for k in range(0, 6):
+        manual = np.sum(x[: len(x) - k] * x[k:]) / denom
+        assert np.isclose(acf.sel(lag=k), manual)
