@@ -27,3 +27,17 @@ def test_nino34_index_smoothing_changes_values_but_not_length(sample_ts):
     assert not np.allclose(raw.values, smoothed.values)
     # Endpoints fall back to the unsmoothed value (no NaNs introduced).
     assert not bool(smoothed.isnull().any())
+
+
+from cvdp.metrics.enso import nino34_monthly_stddev
+
+
+def test_nino34_monthly_stddev(sample_ts):
+    nino34 = nino34_index(sample_ts, smooth=False)
+    std = nino34_monthly_stddev(nino34)
+    assert set(std.dims) == {"month"}
+    assert std.month.size == 12
+    assert std.name == "nino34_monthly_stddev"
+    # Matches a direct groupby standard deviation.
+    expected = nino34.groupby("time.month").std("time")
+    assert np.allclose(std.values, expected.values)

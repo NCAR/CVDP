@@ -77,7 +77,9 @@ def nino34_monthly_stddev(
         Standard deviation for each calendar month, dim (month) with values
         1–12. Units same as ``nino34``.
     """
-    pass
+    std = nino34.groupby("time.month").std("time")
+    std.name = "nino34_monthly_stddev"
+    return std
 
 
 def nino34_autocorrelation(
