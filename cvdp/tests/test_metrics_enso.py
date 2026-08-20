@@ -1,6 +1,6 @@
 from cvdp.metrics.enso import nino34_index
 from cvdp.metrics.enso import NINO34_BOUNDS
-from cvdp.metrics.regional_timeseries import box_mean, monthly_anomalies
+from cvdp.metrics.regional_timeseries import box_mean, monthly_anomalies, REGIONS
 from cvdp.tests.test_inputdata import *
 import numpy as np
 import xarray as xr
@@ -66,3 +66,21 @@ def test_nino34_autocorrelation_matches_manual(sample_ts):
     for k in range(0, 6):
         manual = np.sum(x[: len(x) - k] * x[k:]) / denom
         assert np.isclose(acf.sel(lag=k), manual)
+
+
+from cvdp.metrics.enso import sst_indices, SST_INDEX_REGIONS
+
+
+def test_sst_indices_names_and_shape(sample_ts):
+    out = sst_indices(sample_ts)
+    assert isinstance(out, xr.Dataset)
+    assert set(out.data_vars) == set(SST_INDEX_REGIONS)
+    assert set(SST_INDEX_REGIONS) == {"nino12", "nino3", "nino34", "nino4", "tna", "tsa", "tio"}
+    for name in SST_INDEX_REGIONS:
+        assert set(out[name].dims) == {"time"}
+
+
+def test_sst_indices_match_box_anomaly(sample_ts):
+    out = sst_indices(sample_ts)
+    expected = monthly_anomalies(box_mean(sample_ts, REGIONS["nino34"]))
+    assert np.allclose(out["nino34"].values, expected.values)

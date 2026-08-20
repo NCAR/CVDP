@@ -15,6 +15,7 @@ from cvdp.metrics.regional_timeseries import box_mean, monthly_anomalies, REGION
 
 
 NINO34_BOUNDS = (-5.0, 5.0, 190.0, 240.0)  # 5°S–5°N, 170–120°W
+SST_INDEX_REGIONS = ["nino12", "nino3", "nino34", "nino4", "tna", "tsa", "tio"]
 
 
 def nino34_index(
@@ -289,4 +290,9 @@ def sst_indices(
         Variables ``nino12``, ``nino3``, ``nino34``, ``nino4``, ``tna``,
         ``tsa``, ``tio``, each with dim (time). Units same as ``ts``.
     """
-    pass
+    ts = ts.sel(time=slice(time_start, time_end))
+    out = {
+        region: monthly_anomalies(box_mean(ts, REGIONS[region]))
+        for region in SST_INDEX_REGIONS
+    }
+    return xr.Dataset(out)
