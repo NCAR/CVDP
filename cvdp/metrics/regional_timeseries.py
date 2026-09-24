@@ -50,8 +50,11 @@ def box_select(da: xr.DataArray, bounds: tuple[float, float, float, float]) -> x
     lat_s, lat_n, lon_w, lon_e = bounds
     lat_mask = (da["lat"] >= lat_s) & (da["lat"] <= lat_n)
     lon = da["lon"] % 360
+    full_circle = lon_e - lon_w >= 360
     lon_w, lon_e = lon_w % 360, lon_e % 360
-    if lon_w <= lon_e:
+    if full_circle:
+        lon_mask = lon >= 0
+    elif lon_w <= lon_e:
         lon_mask = (lon >= lon_w) & (lon <= lon_e)
     else:
         lon_mask = (lon >= lon_w) | (lon <= lon_e)
@@ -76,6 +79,13 @@ def monthly_anomalies(da: xr.DataArray) -> xr.DataArray:
     """
     anom = da.groupby("time.month") - da.groupby("time.month").mean("time")
     return anom.drop_vars("month")
+
+
+def detrended_anomalies(da: xr.DataArray, detrend: str) -> xr.DataArray:
+    """Monthly anomalies, then detrending (``"none"`` skips it): the CVDP-ncl
+    order (``rmMonAnnCycTLL`` then ``remove_trend``)."""
+    anom = monthly_anomalies(da)
+    return anom if detrend == "none" else apply_detrend(anom, detrend)
 
 
 def regional_timeseries(

@@ -17,6 +17,13 @@ def test_box_select_keeps_only_box_gridpoints(sample_ts):
     assert not box.isnull().any()
 
 
+def test_box_select_full_longitude_circle_keeps_every_longitude(sample_ts):
+    # (0, 360) must not collapse to lon 0 after the modulo (NAM/SAM/global boxes).
+    for lon_w, lon_e in ((0, 360), (-180, 180)):
+        box = box_select(sample_ts, (20, 90, lon_w, lon_e))
+        assert box.lon.size == sample_ts.lon.size
+
+
 def test_box_select_handles_longitude_wrap(sample_ts):
     box = box_select(sample_ts, REGIONS["tsa"])  # 330 -> 370 (10°E)
     lons = set(box.lon.values)

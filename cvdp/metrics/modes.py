@@ -28,20 +28,12 @@ import xarray as xr
 
 from cvdp.metrics.eof import eof, regress
 from cvdp.metrics.filters import wgt_runave, lanczos_weights, smth9
-from cvdp.metrics.regional_timeseries import box_mean, box_select, monthly_anomalies
+from cvdp.metrics.regional_timeseries import box_mean, box_select, detrended_anomalies as _anomalies
 from cvdp.metrics.seasons import SeasonalDefinition, CVDP_SEASONS, NDJFM
-from cvdp.metrics.trends import detrend as apply_detrend
 
 
 # Northern Hemisphere modes add the extended-winter NDJFM season.
 NH_SEASONS = CVDP_SEASONS + NDJFM
-
-
-def _anomalies(da: xr.DataArray, detrend: str) -> xr.DataArray:
-    """Monthly anomalies, then detrending: the CVDP-ncl order
-    (``rmMonAnnCycTLL`` then ``remove_trend``)."""
-    anom = monthly_anomalies(da)
-    return anom if detrend == "none" else apply_detrend(anom, detrend)
 
 
 def _regression_maps(index: xr.DataArray, detrend: str, **fields) -> xr.Dataset:
