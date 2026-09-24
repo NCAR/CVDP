@@ -25,20 +25,53 @@ def linear_field(name="ts", slope_per_year=0.5, n_years=10, calendar="360_day"):
 
 # --- detrend -------------------------------------------------------------
 
-def test_detrend_linear_removes_linear_signal():
-    da = linear_field(slope_per_year=0.5)
+def per_month_signal(da, curve):
+    """``da`` plus, for each calendar month m (1..12), ``m * curve(year index)``,
+    so every month has its own trend and its own mean."""
+    year = da["time"].dt.year - SAMPLE_START_YEAR
+    month = da["time"].dt.month
+    return da + month * curve(year)
+
+
+def month_means(da):
+    return da.groupby("time.month").mean("time")
+
+
+def test_detrend_linear_removes_per_month_trend_and_keeps_mean():
+    # As CVDP-ncl remove_trend "LinearTrend": each calendar month is detrended
+    # separately and its mean is retained, leaving each month constant in time.
+    da = per_month_signal(linear_field(slope_per_year=0.0), lambda y: 0.5 * y)
     residual = detrend(da, "linear")
-    assert np.allclose(residual, 0.0, atol=1e-9)
+    assert (residual["time"] == da["time"]).all()
+    assert np.allclose(residual.groupby("time.month") - month_means(residual), 0.0, atol=1e-9)
+    assert np.allclose(month_means(residual), month_means(da))
 
 
-def test_detrend_quadratic_removes_quadratic_signal():
+def test_detrend_linear_differs_from_single_fit_across_months():
+    # A step between December and January is not linear in the monthly series,
+    # but is linear within each calendar month, so only a per-month fit removes it.
     da = linear_field(slope_per_year=0.0)
-    t = np.array([t.year + (t.month - 1) / 12 for t in da["time"].values])
-    da = da + xr.DataArray((t - t.mean()) ** 2, dims="time").broadcast_like(da)
+    da = da + (da["time"].dt.year - SAMPLE_START_YEAR)
+    residual = detrend(da, "linear")
+    assert np.allclose(residual.groupby("time.month") - month_means(residual), 0.0, atol=1e-9)
+
+
+def test_detrend_quadratic_removes_per_month_quadratic_and_keeps_mean():
+    da = per_month_signal(linear_field(slope_per_year=0.0), lambda y: (y - 4.5) ** 2)
     residual = detrend(da, "quadratic")
-    assert np.allclose(residual, 0.0, atol=1e-6)
+    assert np.allclose(residual.groupby("time.month") - month_means(residual), 0.0, atol=1e-9)
+    assert np.allclose(month_means(residual), month_means(da))
     # A linear detrend should NOT fully remove a quadratic signal.
-    assert not np.allclose(detrend(da, "linear"), 0.0, atol=1e-6)
+    linear = detrend(da, "linear")
+    assert not np.allclose(linear.groupby("time.month") - month_means(linear), 0.0, atol=1e-6)
+
+
+def test_detrend_ignores_missing_gridpoints():
+    da = linear_field(slope_per_year=0.5)
+    da = da.where(da["lon"] != 0)
+    residual = detrend(da, "linear")
+    assert residual.sel(lon=0).isnull().all()
+    assert residual.sel(lon=4).notnull().all()
 
 
 def test_detrend_ensemble_mean():

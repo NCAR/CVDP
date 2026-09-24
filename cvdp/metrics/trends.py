@@ -18,9 +18,12 @@ DETREND_OPTIONS = ("linear", "quadratic", "ensemble_mean")
 
 
 def detrend(da: xr.DataArray, method: str) -> xr.DataArray:
-    t_num = np.array([t.year + (t.month - 1) / 12 for t in da["time"].values])
-    da_num = da.assign_coords(time=t_num)
+    """Remove a trend, following CVDP-ncl ``remove_trend``.
 
+    ``"linear"`` / ``"quadratic"`` fit a polynomial in year to each calendar
+    month separately and subtract it, keeping each month's mean.
+    ``"ensemble_mean"`` subtracts the mean over the ``member`` dim.
+    """
     if method == "ensemble_mean":
         return (da - da.mean("member")).rename(da.name)
     elif method == "linear":
@@ -30,9 +33,13 @@ def detrend(da: xr.DataArray, method: str) -> xr.DataArray:
     else:
         raise ValueError(f"detrend must be one of {DETREND_OPTIONS}")
 
-    coefs = da_num.polyfit("time", deg).polyfit_coefficients
-    fit = xr.polyval(xr.DataArray(t_num, dims="time"), coefs).assign_coords(time=da["time"])
-    return (da - fit).rename(da.name)
+    def remove_fit(month: xr.DataArray) -> xr.DataArray:
+        year = month["time"].dt.year - month["time"].dt.year[0]
+        by_year = month.assign_coords(time=year.values)
+        fit = xr.polyval(year, by_year.polyfit("time", deg).polyfit_coefficients)
+        return month - fit.assign_coords(time=month["time"]) + month.mean("time")
+
+    return da.groupby("time.month").map(remove_fit).drop_vars("month", errors="ignore").rename(da.name)
 
 _detrend = detrend  # the `detrend` parameter below shadows the function
 
