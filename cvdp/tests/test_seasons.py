@@ -78,6 +78,13 @@ def test_definition_collection():
     assert len(CVDP_SEASONS) == 7  # original unchanged
 
 
+def test_definition_rejects_duplicate_names():
+    with pytest.raises(ValueError, match="DJF"):
+        CVDP_SEASONS + Season("DJF", (12, 1, 2))
+    with pytest.raises(ValueError, match="JJA"):
+        SeasonalDefinition(Season("JJA", (6, 7, 8)), Season("JJA", (6, 7)))
+
+
 def test_definition_stacked_statistics(sample_ts):
     mean = CVDP_SEASONS.mean(sample_ts)
     std = CVDP_SEASONS.std(sample_ts)

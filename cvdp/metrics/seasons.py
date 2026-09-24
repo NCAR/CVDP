@@ -81,6 +81,10 @@ class SeasonalDefinition:
 
     def __init__(self, *seasons: Season):
         self._seasons = {s.name: s for s in seasons}
+        if len(self._seasons) != len(seasons):
+            names = [s.name for s in seasons]
+            dupes = sorted({n for n in names if names.count(n) > 1})
+            raise ValueError(f"Duplicate season names: {dupes}")
 
     @classmethod
     def from_months(cls, months_by_name: dict) -> "SeasonalDefinition":
