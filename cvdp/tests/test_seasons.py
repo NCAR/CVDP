@@ -70,6 +70,58 @@ def test_season_annual_missing_months(sample_ts):
     assert np.allclose(ann.annual(gappy).isel(time=1), expected)
 
 
+# --- ncl_annual: CVDP-ncl calculate_eofs seasonal means -------------------
+
+def _year_month(da):
+    return da["time"].dt.year - SAMPLE_START_YEAR, da["time"].dt.month
+
+
+def test_ncl_annual_equal_month_weights(sample_ts):
+    jja = CVDP_SEASONS["JJA"]
+    got = jja.ncl_annual(sample_ts)
+    sel = jja.sel(sample_ts)
+    expected = sel.groupby("time.year").mean("time")
+    assert list(got["time"].values) == list(expected["year"].values)
+    assert np.allclose(got, expected)
+    assert not np.allclose(got, jja.annual(sample_ts))  # not day-weighted
+
+
+def test_ncl_annual_ann_is_calendar_year_mean(sample_ts):
+    got = CVDP_SEASONS["ANN"].ncl_annual(sample_ts)
+    assert got.time.size == SAMPLE_LENGTH_YEARS
+    assert np.allclose(got, sample_ts.groupby("time.year").mean("time"))
+
+
+def test_ncl_annual_djf_edges(sample_ts):
+    # One value per calendar year: no trailing partial year from the last
+    # December, and the first DJF is the mean of the first Jan and Feb.
+    got = CVDP_SEASONS["DJF"].ncl_annual(sample_ts)
+    year, month = _year_month(sample_ts)
+    assert list(got["time"].values) == list(range(SAMPLE_START_YEAR, SAMPLE_START_YEAR + SAMPLE_LENGTH_YEARS))
+    first = sample_ts.sel(time=(year == 0) & (month <= 2)).mean("time")
+    assert np.allclose(got.isel(time=0), first)
+    second = sample_ts.sel(time=((year == 0) & (month == 12)) | ((year == 1) & (month <= 2))).mean("time")
+    assert np.allclose(got.isel(time=1), second)
+
+
+def test_ncl_annual_missing_month_gives_missing_season(sample_ts):
+    year, month = _year_month(sample_ts)
+    gappy = sample_ts.where(~((year == 3) & (month == 7)))
+    got = CVDP_SEASONS["JJA"].ncl_annual(gappy)
+    assert got.isel(time=3).isnull().all()
+    assert got.isel(time=2).notnull().all()
+
+
+def test_ncl_annual_longer_season_without_full_window_is_missing(sample_ts):
+    # NDJFM (centre month January) has no Nov/Dec before the first January.
+    got = NDJFM.ncl_annual(sample_ts)
+    year, month = _year_month(sample_ts)
+    assert got.time.size == SAMPLE_LENGTH_YEARS
+    assert got.isel(time=0).isnull().all()
+    window = sample_ts.sel(time=((year == 0) & (month >= 11)) | ((year == 1) & (month <= 3)))
+    assert np.allclose(got.isel(time=1), window.mean("time"))
+
+
 def test_season_mean_std(sample_ts):
     jja = CVDP_SEASONS["JJA"]
     sel = jja.sel(sample_ts)

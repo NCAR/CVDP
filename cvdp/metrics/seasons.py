@@ -75,6 +75,23 @@ class Season:
         mean = (sel * weights).groupby("season_year").sum() / weights.groupby("season_year").sum()
         return mean.rename(season_year="time")
 
+    def ncl_annual(self, obj):
+        """Equal-weighted seasonal mean for each year, as CVDP-ncl
+        ``calculate_eofs``: an NCL ``runave`` (kopt=0) over the season's
+        months, sampled at the centre month, on an integer-year ``time``
+        dimension (the centre month's year). A season-year with any missing
+        month, or whose window runs off the record, is NaN. As in NCL, a
+        3-month season centred on the first time step averages the first
+        two months instead."""
+        n = len(self.months)
+        # NCL runave alignment: step i averages steps i-(n-1)//2 .. i+n//2.
+        running = obj.rolling(time=n).mean().shift(time=-(n // 2))
+        if n == 3:
+            first = obj.isel(time=slice(0, 2)).mean("time")
+            running = running.where(running["time"] != obj["time"][0], first)
+        centre = running.sel(time=running["time"].dt.month == self.months[(n - 1) // 2])
+        return centre.assign_coords(time=centre["time"].dt.year.values)
+
 
 class SeasonalDefinition:
     """Ordered collection of Seasons. Iterate to visit each Season, index by
