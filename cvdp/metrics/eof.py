@@ -70,6 +70,8 @@ def regress(field: xr.DataArray, index: xr.DataArray) -> xr.DataArray:
     -------
     xr.DataArray
         ``field`` units per unit of ``index``, with ``time`` reduced away.
+        As NCL ``regCoef``, only time steps where both are valid are used.
         Gridpoints with no valid data are NaN.
     """
-    return xr.cov(field, index, "time") / index.var("time", ddof=1)
+    index = index.where(field.notnull())
+    return xr.cov(field, index, "time") / xr.cov(index, index, "time")

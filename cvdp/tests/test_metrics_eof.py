@@ -89,6 +89,14 @@ def test_regress_broadcasts_over_modes(sample_ts):
     assert set(maps.dims) == {"mode", "lat", "lon"}
 
 
+def test_regress_uses_only_valid_pairs(sample_ts):
+    # As NCL regCoef: where the field has gaps, the slope is the least-squares
+    # fit over the remaining time steps (index variance over those steps too).
+    index = sample_ts.isel(lat=0, lon=0, drop=True)
+    field = (3.0 * index + sample_ts.isel(time=0, drop=True)).where(sample_ts["time"].dt.year > SAMPLE_START_YEAR + 4)
+    assert np.allclose(regress(field, index), 3.0)
+
+
 def test_regress_missing_gridpoint_is_nan(sample_ts):
     index = sample_ts.isel(lat=0, lon=0, drop=True)
     field = sample_ts.where(sample_ts["lon"] != 0)
