@@ -68,13 +68,11 @@ def test_detrend_quadratic_removes_per_month_quadratic_and_keeps_mean():
 
 def ncl_highpass30(series, weights):
     """Reference: CVDP-ncl "30yrRunningMean" on one calendar month's yearly
-    values, per NCL wgt_runave (kopt=0): year i uses years i-14..i+15, weights
-    normalised to sum 1, and incomplete windows are missing."""
+    values, per NCL wgt_runave_n(x, wgt, 1, 0): year i uses years i-14..i+15,
+    weights normalised to sum 1, ends reflected about the end point (kopt=1)."""
     w = np.asarray(weights) / np.sum(weights)
-    out = np.full(len(series), np.nan)
-    for i in range(14, len(series) - 15):
-        out[i] = series[i] - np.dot(w, series[i - 14:i + 16])
-    return out
+    padded = np.pad(series, 15, mode="reflect")  # padded[k] = series[k - 15]
+    return np.array([series[i] - np.dot(w, padded[i + 1:i + 31]) for i in range(len(series))])
 
 
 def test_detrend_highpass30_matches_ncl_reference():
@@ -85,39 +83,37 @@ def test_detrend_highpass30_matches_ncl_reference():
     for month in range(1, 13):
         series = da.isel(lat=0, lon=0).sel(time=da["time"].dt.month == month).values
         got = residual.sel(time=residual["time"].dt.month == month).values
-        assert np.allclose(got, ncl_highpass30(series, HIGHPASS30_WEIGHTS), equal_nan=True)
+        assert np.allclose(got, ncl_highpass30(series, HIGHPASS30_WEIGHTS))
 
 
-def test_detrend_highpass30_missing_ends():
-    da = linear_field(n_years=50)
-    residual = detrend(da, "highpass30").isel(lat=0, lon=0)
-    year = residual["time"].dt.year - SAMPLE_START_YEAR
-    assert residual.where(year < 14).count() == 0
-    assert residual.where(year >= 35).count() == 0
-    assert residual.where((year >= 14) & (year < 35)).notnull().sum() == 21 * 12
+def test_detrend_highpass30_keeps_every_year():
+    # Reflected ends (kopt=1): no years are lost.
+    residual = detrend(linear_field(n_years=50), "highpass30")
+    assert residual.notnull().all()
 
 
 def test_detrend_highpass30_removes_per_month_constants():
     da = per_month_signal(linear_field(slope_per_year=0.0, n_years=50), lambda y: 10.0)
     residual = detrend(da, "highpass30")
-    assert np.allclose(residual.dropna("time"), 0.0, atol=1e-9)
+    assert np.allclose(residual, 0.0, atol=1e-9)
 
 
 def test_detrend_highpass30_linear_trend_leaves_half_step_offset():
     # The even-length window is centred half a year late (years i-14..i+15),
-    # so a linear trend leaves a constant -slope/2, as in NCL.
+    # so away from the (reflected) ends a linear trend leaves -slope/2, as in NCL.
     da = linear_field(slope_per_year=0.0, n_years=50)
     da = da + (da["time"].dt.year - SAMPLE_START_YEAR) * 0.3
-    residual = detrend(da, "highpass30")
-    assert np.allclose(residual.dropna("time"), -0.15, atol=1e-9)
+    year = da["time"].dt.year - SAMPLE_START_YEAR
+    residual = detrend(da, "highpass30").where((year >= 14) & (year < 35), drop=True)
+    assert np.allclose(residual, -0.15, atol=1e-9)
 
 
 def test_detrend_highpass30_passes_year_to_year_variability():
     # Alternating +1/-1 years: the symmetric weights cancel it exactly.
     da = linear_field(slope_per_year=0.0, n_years=50)
     alternating = (-1.0) ** (da["time"].dt.year - SAMPLE_START_YEAR)
-    residual = detrend(da + alternating, "highpass30").isel(lat=0, lon=0).dropna("time")
-    assert np.allclose(residual, alternating.sel(time=residual["time"]))
+    residual = detrend(da + alternating, "highpass30").isel(lat=0, lon=0)
+    assert np.allclose(residual, alternating)
 
 
 def test_detrend_ignores_missing_gridpoints():

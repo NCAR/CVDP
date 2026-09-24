@@ -11,6 +11,7 @@ before calling.
 import numpy as np
 import xarray as xr
 
+from cvdp.metrics.filters import wgt_runave
 from cvdp.metrics.seasons import SeasonalDefinition, CVDP_SEASONS
 
 
@@ -35,11 +36,8 @@ def _remove_polyfit(month: xr.DataArray, deg: int) -> xr.DataArray:
 
 
 def _remove_lowpass30(month: xr.DataArray) -> xr.DataArray:
-    # As NCL wgt_runave(kopt=0): weights normalised to sum 1, year i averages
-    # years i-14..i+15, and years without a full window are missing.
-    weights = xr.DataArray(HIGHPASS30_WEIGHTS / HIGHPASS30_WEIGHTS.sum(), dims="window")
-    lowpass = month.rolling(time=30).construct("window").dot(weights).shift(time=-15)
-    return month - lowpass
+    # As remove_trend: wgt_runave_n(x, swgts, 1, 0), i.e. reflected ends.
+    return month - wgt_runave(month, HIGHPASS30_WEIGHTS, kopt=1)
 
 
 def detrend(da: xr.DataArray, method: str) -> xr.DataArray:
@@ -51,12 +49,11 @@ def detrend(da: xr.DataArray, method: str) -> xr.DataArray:
     (CVDP-ncl ``"30yrRunningMean"``). ``"ensemble_mean"`` subtracts the mean
     over the ``member`` dim.
 
-    ``"highpass30"`` loses the ends of the record: the first 14 and last 15
-    years of every month are NaN, because a full 30-yr window is unavailable
-    there. This mirrors NCL ``wgt_runave`` with ``kopt=0`` as used by
-    CVDP-ncl, rather than extrapolating (e.g. reflecting) the series. It is
-    intended for long records: a 46-yr record keeps 17 valid years, and one
-    shorter than 30 yr is entirely NaN.
+    ``"highpass30"`` reflects each month's series about its end points to
+    fill the 30-yr window near the record ends (NCL ``wgt_runave`` with
+    ``kopt=1``, as CVDP-ncl calls it), so no years are lost; values within
+    ~15 yr of either end rely on the reflected data. Records need at least
+    30 years.
     """
     if method == "ensemble_mean":
         return (da - da.mean("member")).rename(da.name)
