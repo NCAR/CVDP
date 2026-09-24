@@ -41,11 +41,11 @@ REGIONS: dict[str, tuple[float, float, float, float]] = {
 }
 
 
-def box_mean(da: xr.DataArray, bounds: tuple[float, float, float, float]) -> xr.DataArray:
-    """Cosine-latitude weighted mean of ``da`` over one lat/lon box.
+def box_select(da: xr.DataArray, bounds: tuple[float, float, float, float]) -> xr.DataArray:
+    """Subset ``da`` to the gridpoints inside one lat/lon box.
 
-    Returns a timeseries (the spatial dims are reduced away). Longitude boxes
-    that straddle the prime meridian (west bound > east bound) are handled.
+    Longitude boxes that straddle the prime meridian (west bound > east bound)
+    are handled; the original longitude values and order are kept.
     """
     lat_s, lat_n, lon_w, lon_e = bounds
     lat_mask = (da["lat"] >= lat_s) & (da["lat"] <= lat_n)
@@ -55,9 +55,16 @@ def box_mean(da: xr.DataArray, bounds: tuple[float, float, float, float]) -> xr.
         lon_mask = (lon >= lon_w) & (lon <= lon_e)
     else:
         lon_mask = (lon >= lon_w) | (lon <= lon_e)
-    box = da.where(lat_mask & lon_mask)
-    weights = np.cos(np.deg2rad(da["lat"]))
-    return box.weighted(weights).mean(["lat", "lon"])
+    return da.isel(lat=lat_mask.values, lon=lon_mask.values)
+
+
+def box_mean(da: xr.DataArray, bounds: tuple[float, float, float, float]) -> xr.DataArray:
+    """Cosine-latitude weighted mean of ``da`` over one lat/lon box.
+
+    Returns a timeseries (the spatial dims are reduced away).
+    """
+    box = box_select(da, bounds)
+    return box.weighted(np.cos(np.deg2rad(box["lat"]))).mean(["lat", "lon"])
 
 
 def monthly_anomalies(da: xr.DataArray) -> xr.DataArray:

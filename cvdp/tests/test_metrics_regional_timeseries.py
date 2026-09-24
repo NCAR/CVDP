@@ -1,9 +1,27 @@
-from cvdp.metrics.regional_timeseries import regional_timeseries, box_mean, monthly_anomalies, REGIONS
+from cvdp.metrics.regional_timeseries import regional_timeseries, box_mean, box_select, monthly_anomalies, REGIONS
 from cvdp.metrics.seasons import CVDP_SEASONS, NDJFM
 from cvdp.tests.test_inputdata import *
 import numpy as np
 import xarray as xr
 import pytest
+
+
+# --- box_select ------------------------------------------------------------
+
+def test_box_select_keeps_only_box_gridpoints(sample_ts):
+    lat_s, lat_n, lon_w, lon_e = REGIONS["nino34"]
+    box = box_select(sample_ts, REGIONS["nino34"])
+    assert box.time.size == sample_ts.time.size
+    assert float(box.lat.min()) >= lat_s and float(box.lat.max()) <= lat_n
+    assert float(box.lon.min()) >= lon_w and float(box.lon.max()) <= lon_e
+    assert not box.isnull().any()
+
+
+def test_box_select_handles_longitude_wrap(sample_ts):
+    box = box_select(sample_ts, REGIONS["tsa"])  # 330 -> 370 (10°E)
+    lons = set(box.lon.values)
+    assert {332.0, 356.0, 0.0, 8.0} <= lons
+    assert not lons & {12.0, 180.0, 328.0}
 
 
 # --- box_mean --------------------------------------------------------------
