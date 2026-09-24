@@ -33,4 +33,4 @@ def test_amoc_annual_index(sample_moc):
 
 def test_amoc_invalid_detrend_raises(sample_moc):
     with pytest.raises(ValueError):
-        amoc(sample_moc, detrend="highpass30")
+        amoc(sample_moc, detrend="not_a_method")

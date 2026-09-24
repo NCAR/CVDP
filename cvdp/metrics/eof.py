@@ -14,9 +14,10 @@ def eof(da: xr.DataArray, n: int = 1) -> xr.DataArray:
     Leading principal components of a (time, lat, lon) field.
 
     The field is centred in time and weighted by √cos(lat) before an SVD, so
-    each gridpoint contributes in proportion to its area. Gridpoints with any
-    missing value (e.g. land in SST) are excluded. The sign of each PC is
-    arbitrary.
+    each gridpoint contributes in proportion to its area. Time steps missing
+    everywhere (e.g. the ends of a ``highpass30`` record) are dropped, then
+    gridpoints with any missing value (e.g. land in SST) are excluded. The
+    sign of each PC is arbitrary.
 
     Parameters
     ----------
@@ -36,6 +37,7 @@ def eof(da: xr.DataArray, n: int = 1) -> xr.DataArray:
         :func:`regress` to get patterns in units per standard deviation.
     """
     weights = np.sqrt(np.cos(np.deg2rad(da["lat"])))
+    da = da.dropna("time", how="all")
     anom = (da - da.mean("time")) * weights
     X = anom.stack(space=("lat", "lon")).dropna("space", how="any").transpose("time", "space")
     u, s, _ = np.linalg.svd(X.values, full_matrices=False)

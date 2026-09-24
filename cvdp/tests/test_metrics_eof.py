@@ -64,6 +64,14 @@ def test_eof_ignores_missing_gridpoints(sample_ts):
     assert abs(_corr(pcs.sel(mode=1), pc)) > 0.99
 
 
+def test_eof_skips_fully_missing_time_steps(sample_ts):
+    signal, pc = _signal(sample_ts, 5.0, (-20, 20), (150, 250), seed=1)
+    field = (signal + 0.01 * sample_ts).where(sample_ts["time"].dt.year > SAMPLE_START_YEAR)
+    pcs = eof(field, n=1)
+    assert pcs.time.size == sample_ts.time.size - 12
+    assert abs(_corr(pcs.sel(mode=1), pc.sel(time=pcs["time"]))) > 0.99
+
+
 # --- regress ---------------------------------------------------------------
 
 def test_regress_returns_slope(sample_ts):

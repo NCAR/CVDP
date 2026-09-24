@@ -55,6 +55,21 @@ def test_season_annual_weighting(sample_ts):
     assert not np.allclose(annual, even_annual)
 
 
+def test_season_annual_missing_months(sample_ts):
+    ann = CVDP_SEASONS["ANN"]
+    year = sample_ts["time"].dt.year - SAMPLE_START_YEAR
+    month = sample_ts["time"].dt.month
+    # Year 0 entirely missing -> NaN, not a zero-valued mean.
+    annual = ann.annual(sample_ts.where(year > 0))
+    assert annual.isel(time=0).isnull().all()
+    assert annual.isel(time=1).notnull().all()
+    # Year 1 missing January -> day-weighted mean of the remaining months.
+    gappy = sample_ts.where(~((year == 1) & (month == 1)))
+    rest = sample_ts.sel(time=(year == 1) & (month > 1))
+    expected = rest.weighted(rest["time"].dt.days_in_month).mean("time")
+    assert np.allclose(ann.annual(gappy).isel(time=1), expected)
+
+
 def test_season_mean_std(sample_ts):
     jja = CVDP_SEASONS["JJA"]
     sel = jja.sel(sample_ts)

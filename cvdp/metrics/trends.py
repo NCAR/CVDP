@@ -14,32 +14,62 @@ import xarray as xr
 from cvdp.metrics.seasons import SeasonalDefinition, CVDP_SEASONS
 
 
-DETREND_OPTIONS = ("linear", "quadratic", "ensemble_mean")
+DETREND_OPTIONS = ("linear", "quadratic", "highpass30", "ensemble_mean")
+
+# IPCC AR4 30-yr low-pass weights, from CVDP-ncl functions.ncl:remove_trend.
+HIGHPASS30_WEIGHTS = np.array([
+    0.007968192496166648, 0.01846646831109216, 0.02878470788332294, 0.03879919256962656, 0.04840267283059424,
+    0.05749315621761927, 0.0659742298821802, 0.07375597473770572, 0.08075589522941848, 0.08689978720108463,
+    0.09212252223778641, 0.09636873717464459, 0.09959342058679507, 0.1017623897484056, 0.1028526528935592,
+    0.1028526528935592, 0.1017623897484056, 0.09959342058679507, 0.09636873717464459, 0.09212252223778641,
+    0.08689978720108463, 0.08075589522941848, 0.07375597473770572, 0.0659742298821802, 0.05749315621761927,
+    0.04840267283059424, 0.03879919256962656, 0.02878470788332294, 0.01846646831109216, 0.007968192496166648,
+])
+
+
+def _remove_polyfit(month: xr.DataArray, deg: int) -> xr.DataArray:
+    year = month["time"].dt.year - month["time"].dt.year[0]
+    by_year = month.assign_coords(time=year.values)
+    fit = xr.polyval(year, by_year.polyfit("time", deg).polyfit_coefficients)
+    return month - fit.assign_coords(time=month["time"]) + month.mean("time")
+
+
+def _remove_lowpass30(month: xr.DataArray) -> xr.DataArray:
+    # As NCL wgt_runave(kopt=0): weights normalised to sum 1, year i averages
+    # years i-14..i+15, and years without a full window are missing.
+    weights = xr.DataArray(HIGHPASS30_WEIGHTS / HIGHPASS30_WEIGHTS.sum(), dims="window")
+    lowpass = month.rolling(time=30).construct("window").dot(weights).shift(time=-15)
+    return month - lowpass
 
 
 def detrend(da: xr.DataArray, method: str) -> xr.DataArray:
     """Remove a trend, following CVDP-ncl ``remove_trend``.
 
-    ``"linear"`` / ``"quadratic"`` fit a polynomial in year to each calendar
-    month separately and subtract it, keeping each month's mean.
-    ``"ensemble_mean"`` subtracts the mean over the ``member`` dim.
+    Each calendar month's yearly series is treated separately:
+    ``"linear"`` / ``"quadratic"`` subtract a polynomial fit in year, keeping
+    the mean; ``"highpass30"`` subtracts a 30-yr weighted running mean
+    (CVDP-ncl ``"30yrRunningMean"``). ``"ensemble_mean"`` subtracts the mean
+    over the ``member`` dim.
+
+    ``"highpass30"`` loses the ends of the record: the first 14 and last 15
+    years of every month are NaN, because a full 30-yr window is unavailable
+    there. This mirrors NCL ``wgt_runave`` with ``kopt=0`` as used by
+    CVDP-ncl, rather than extrapolating (e.g. reflecting) the series. It is
+    intended for long records: a 46-yr record keeps 17 valid years, and one
+    shorter than 30 yr is entirely NaN.
     """
     if method == "ensemble_mean":
         return (da - da.mean("member")).rename(da.name)
     elif method == "linear":
-        deg = 1
+        per_month = lambda month: _remove_polyfit(month, 1)
     elif method == "quadratic":
-        deg = 2
+        per_month = lambda month: _remove_polyfit(month, 2)
+    elif method == "highpass30":
+        per_month = _remove_lowpass30
     else:
         raise ValueError(f"detrend must be one of {DETREND_OPTIONS}")
 
-    def remove_fit(month: xr.DataArray) -> xr.DataArray:
-        year = month["time"].dt.year - month["time"].dt.year[0]
-        by_year = month.assign_coords(time=year.values)
-        fit = xr.polyval(year, by_year.polyfit("time", deg).polyfit_coefficients)
-        return month - fit.assign_coords(time=month["time"]) + month.mean("time")
-
-    return da.groupby("time.month").map(remove_fit).drop_vars("month", errors="ignore").rename(da.name)
+    return da.groupby("time.month").map(per_month).drop_vars("month", errors="ignore").rename(da.name)
 
 _detrend = detrend  # the `detrend` parameter below shadows the function
 

@@ -8,10 +8,10 @@ SAMPLE_START_YEAR = 2000
 SAMPLE_LENGTH_YEARS = 10
 SAMPLE_TIME_CALENDAR = 'standard'
 
-def create_sample_dataarray(name, data=None):
+def create_sample_dataarray(name, data=None, n_years=SAMPLE_LENGTH_YEARS):
     lats = np.arange(-88, 90, SAMPLE_LAT_DEG, dtype=float)
     lons = np.arange(0, 360, SAMPLE_LON_DEG, dtype=float)
-    times = xr.date_range(f"{SAMPLE_START_YEAR}-01", periods=12*SAMPLE_LENGTH_YEARS, freq="MS", calendar=SAMPLE_TIME_CALENDAR, use_cftime=True)
+    times = xr.date_range(f"{SAMPLE_START_YEAR}-01", periods=12*n_years, freq="MS", calendar=SAMPLE_TIME_CALENDAR, use_cftime=True)
 
     data = np.random.default_rng(0).standard_normal((len(times), len(lats), len(lons)))
 

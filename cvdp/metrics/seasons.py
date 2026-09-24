@@ -66,10 +66,11 @@ class Season:
     def annual(self, obj):
         """Day-weighted seasonal mean for each year, on an integer-year
         ``time`` dimension. Cross-year seasons at the record edges are
-        computed from the available (partial) months."""
+        computed from the available (partial) months, as are years with
+        missing months; a year with no valid months is NaN."""
         sel = self.sel(obj)
         years = self.years(sel["time"])
-        weights = sel["time"].dt.days_in_month.assign_coords(season_year=years)
+        weights = sel["time"].dt.days_in_month.where(sel.notnull()).assign_coords(season_year=years)
         sel = sel.assign_coords(season_year=years)
         mean = (sel * weights).groupby("season_year").sum() / weights.groupby("season_year").sum()
         return mean.rename(season_year="time")
