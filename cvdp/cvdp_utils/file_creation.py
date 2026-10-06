@@ -1,11 +1,10 @@
 """
 
 """
-import os
+import os, sys
 import xarray as xr
 import numpy as np
 import pandas as pd
-import os
 import calendar as calendar
 import cftime
 
@@ -124,6 +123,7 @@ def data_read_in_3D(fil0,sy,ey,vari, lsmask=None):
     eydata = int(cpathE[len(cpathE)-9:len(cpathE)-5])    # end year of data
     emdata = int(cpathE[len(cpathE)-5:len(cpathE)-3])    # end month of data
 
+    # Set mapping for vairables to CVDP variable names
     vname = {"sst":'sst',"TS":'sst',"ts":'sst',"t_surf":'sst',"skt":'sst',
              "TREFHT":'tas',"tas":'tas',"temp":'tas',"air":'tas',"temperature_anomaly":'tas',"temperature":'tas',"t2m":'tas',"t_ref":'tas',"T2":'tas',"tempanomaly":'tas',
              "PSL":'psl',"psl":'psl',"slp":'psl',"SLP":'psl',"prmsl":'psl',"msl":'psl',"slp_dyn":'psl',
@@ -135,11 +135,21 @@ def data_read_in_3D(fil0,sy,ey,vari, lsmask=None):
 
     ds = xr.open_mfdataset(fil0,coords="minimal", compat="override", decode_times=True)
     #print(ds['time'].values,type(ds['time'].values[0]),"\n")
-    ds['time'] = convert_to_cftime_no_leap(ds['time'].values,fil0)
+    valid_time_names = ["time", "valid_time",]
+    try:
+        ds['time'] = convert_to_cftime_no_leap(ds['time'].values,fil0)
+    except:
+        try:
+            ds['valid_time'] = convert_to_cftime_no_leap(ds['valid_time'].values,fil0)
+            ds = ds.rename({'valid_time': "time"})
+        except:
+            print("I don't know what you want from me!")
+            sys.exit(0)
     sydata = ds['time'].values[0].year  # start year of data (specified in file name)
     smdata = ds['time'].values[0].month  # start month of data
     eydata = ds['time'].values[-1].year   # end year of data
     emdata = ds['time'].values[-1].month   # end month of data
+
     #Average time dimension over time bounds, if bounds exist:
     if 'time_bnds' in ds:
         print("  Array has 'time_bnds', force time fix (even if this is a new CESM run)")
