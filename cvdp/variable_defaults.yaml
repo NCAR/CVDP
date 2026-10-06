@@ -125,16 +125,23 @@ PSA2:
     #diff_cbar_labels: [-8, -6, -4, -2, 0, 2, 4, 6, 8]
 
 
-ts:
+sst:
   spatialmean:
     sim_cmap: "ncl_default"
     sim_levels_linspace: [0, 36, 19]
   spatialstddev:
     sim_cmap: "ncl_default"
-    sim_levels_linspace: [0.200000, 2.00000, 10]
+    #sim_levels_linspace: [0.200000, 2.00000, 10]
   trends:
     sim_cmap: "ncl_default"
-    sim_levels_linspace: [0.4, 3.2, 8]
+    #sim_levels_linspace: [0.4, 3.2, 8]
+
+
+
+
+
+
+
 
 
 tas:

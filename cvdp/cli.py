@@ -60,10 +60,13 @@ def main():
     sim_names = list(sim_datasets.keys())
     print("\nReference Names:",ref_names)
     print("Simulation Names:",sim_names,"\n")
+    print("sim_datasets:",sim_datasets,"\n\n\n")
 
-    #vns = ["psl","tas"]
-    #vns = ["tas"]
-    vns = ["psl"]
+    # These should be the variable names that the CVDP wants
+    vns = ["psl","tas"]
+    vns = ["sst"]
+    #vns = ["psl"]
+    vns = ["tas"]
     plot_dict = {}
     config_dict["plot_loc"] = plot_loc
     kwargs = {}
@@ -83,7 +86,7 @@ def main():
     from pathlib import Path
     import shutil
 
-    src = Path("cas_cvdp-le.png")
+    src = Path("vis/cas_cvdp-le_banner.png")
     src2 = Path("file_not_found_image.png")
 
     shutil.copy2(src, plot_loc)
