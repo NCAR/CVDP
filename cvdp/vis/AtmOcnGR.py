@@ -125,7 +125,7 @@ def plot_dispatch(plot_type, ptype, map_type, vn, var, sims, refs, diffs, vres, 
             for ref in refs:
                 runs.append(f"{sim.run} - {ref.run}")
         if map_type == "global":
-            print("Plot dispatch diffs",diffs,"\n\n")
+            #print("Plot dispatch diffs",diffs,"\n\n")
             return global_indmemdiff_latlon_plot(vn, diffs, vres, title, ptype)
         if map_type == "polar":
             return polar_indmemdiff_latlon_plot(vn, var, diffs, vres, title, ptype)

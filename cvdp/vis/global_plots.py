@@ -14,12 +14,13 @@ from mpl_toolkits.axes_grid1.inset_locator import inset_axes
 from cartopy.util import add_cyclic_point
 import cartopy.feature as cfeature
 
-from vis import get_NCL_colormap, WinkelTripel
+from vis import WinkelTripel
 #from vis.vis_utils import *
 import vis.vis_utils as vis_utils
 import cvdp_utils.avg_functions as af
 lsmask, ncl_masks = af.land_mask()
 import cvdp_utils.analysis as an
+
 def compute_diff(sim, ref):
     interp = an.interp_diff(sim, ref)
     return sim - (interp if interp is not None else ref)
@@ -54,6 +55,7 @@ def global_ensemble_plot(arrs: list, arr_diffs:list, vn, ptype, plot_dict, title
     else:
         sim_unit = arrs[0][0].units.values
     unit = sim_unit
+    print("sim_unit:",sim_unit)
 
     # Create subplots
     n_cases = len(arrs[0])# + len(arrs[1])
@@ -97,7 +99,7 @@ def global_ensemble_plot(arrs: list, arr_diffs:list, vn, ptype, plot_dict, title
                 cmap = vis_utils.get_cmap(plot_info, prefix)
                 if vn == "tas":
                     norm = mpl.colors.BoundaryNorm(levels, cmap.N)
-                #unit = sim_unit
+                unit = sim_unit
 
                 arr = arr_diffs[row]#compute_diff(arrs[0][row], arrs[1][row])
                 #arr.attrs["units"] = arrs[0][row].attrs["units"]
@@ -114,7 +116,7 @@ def global_ensemble_plot(arrs: list, arr_diffs:list, vn, ptype, plot_dict, title
                 cbarticks = plot_info.get("sim_cbar_labels", levels)
                 ticks = vis_utils.get_ticks(plot_info, prefix, levels)
                 cmap = vis_utils.get_cmap(plot_info, prefix)
-                #unit = sim_unit
+                unit = sim_unit
 
                 arr = arrs[col][row]
                 run = arr.run
@@ -625,8 +627,10 @@ def global_indmemdiff_latlon_plot(vn, arrs, plot_dict, title, ptype):
     plot_info = plot_dict
 
     prefix = "diff"
-    arr_max = max(da.max(skipna=True).item() for da in arrs[0])
-    arr_min = min(da.min(skipna=True).item() for da in arrs[0])
+    arr_max = np.nanmax([da.max(skipna=True).item() for da in arrs[0]])
+    arr_min = np.nanmin([da.min(skipna=True).item() for da in arrs[0]])
+    print("\n\narr_min:",arr_min)
+    print("arr_max:",arr_max,"\n\n")
     levels = vis_utils.get_levels(plot_info, prefix,
                         default_arr_max=arr_max,
                         default_arr_min=arr_min)
@@ -713,6 +717,7 @@ def global_indmemdiff_latlon_plot(vn, arrs, plot_dict, title, ptype):
                 arr.values, coord=arr.lon, axis=lon_idx
         )
         lat = arr.lat
+        #print("levels:",levels,"\n\n")
 
         # Create a dictionary with arguments for contourf
         contourf_args = {

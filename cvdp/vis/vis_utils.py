@@ -4,12 +4,13 @@ import pandas as pd
 import xarray as xr
 from matplotlib.colors import Normalize
 from matplotlib.colors import LinearSegmentedColormap
-import matplotlib as mpl
 import matplotlib.pyplot as plt
-from mpl_toolkits.axes_grid1.inset_locator import inset_axes
 from cartopy.util import add_cyclic_point
+import cartopy.crs as ccrs
+import cartopy.feature as cfeature
 
 from vis import get_NCL_colormap
+import cvdp_utils.avg_functions as af
 
 # Land mask: for TS -> SST masking
 def land_mask():
@@ -293,8 +294,11 @@ def get_levels(plot_dict, prefix, default_arr_max=None, default_arr_min=None):
         levels = np.array(plot_dict[f"{prefix}_levels_list"])
 
     if levels is None:
+        #print("WHELP NO LEVELS FOUND, USING DEFAULTS")
         if (default_arr_max is not None) and (default_arr_min is not None):
             levels = np.linspace(default_arr_min, default_arr_max, 20)
+        #else:
+            #print("WHELP NO LEVELS FOUND, USING DEFAULTS???????????")
 
     return levels
 
