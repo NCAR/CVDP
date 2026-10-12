@@ -22,13 +22,14 @@ Data:
   
   CESM2-LE:
     reference: False
-    variable: PRECC
+    variable: PRECT
     start_yr: 1979
     end_yr: 2013
     #paths: /glade/campaign/cgd/cesm/CESM2-LE/*/proc/tseries/month_1/*/*1251.001.**.PSL.*
-    paths: /glade/campaign/cgd/cesm/CESM2-LE/*/proc/tseries/month_1/*/*1251.**.PRECC.*
+    paths: /glade/campaign/cgd/cesm/CESM2-LE/*/proc/tseries/month_1/*/*1251.**.PRECT.*
     members: ['.001.', '.002.']
 
+  # NOTE: CESM1-LE has no PRECT output; PRECC alone is convective precip only (total = PRECC + PRECL)
   1-CESM1-LENS_1-10:
     reference: False
     variable: PRECC

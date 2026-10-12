@@ -36,12 +36,19 @@ Data:
     end_yr: 2013
     paths: /glade/campaign/cesm/collections/cesmLE/CESM-CAM5-BGC-LE/atm/proc/tseries/monthly/*/b.e11.B*C5CNBDRD.f09_g16.001.cam**.TREFHT.*.nc
   
-  gistempv4:
+  # GISTEMP is an anomaly product, so it can't be used for absolute spatialmean differences
+  #gistempv4:
+  #  reference: True
+  #  variable: tempanomaly
+  #  start_yr: 1950
+  #  end_yr: 2020
+  #  paths: /glade/campaign/cgd/cas/observations/tas/gistempv4.tas.188001-202601.nc
+  NOAA-20CRv3:
     reference: True
-    variable: tempanomaly
-    start_yr: 1950
-    end_yr: 2020
-    paths: /glade/campaign/cgd/cas/observations/tas/gistempv4.tas.188001-202601.nc
+    variable: air
+    start_yr: 1979
+    end_yr: 2013
+    paths: /glade/campaign/cgd/cas/observations/tas/NOAA_20thCRean_v3.tas.183601-201512.nc
 
 
 Paths:
