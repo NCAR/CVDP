@@ -110,7 +110,7 @@ def plot_dispatch(plot_type, ptype, map_type, vn, var, sims, refs, diffs, vres, 
         return timeseries_plot(var, pcs[0], pcs[1])
     if plot_type == "summary":
         if map_type == "global":
-            diffs = [an.compute_diff(s, r) for s in sims_ens for r in refs_ens]
+            # Summary diffs are computed per row inside the plot function
             return global_ensemble_plot([sims_ens, refs_ens], diffs, vn, ptype, vres, title)
         if map_type == "polar":
             return polar_ensemble_plot([sims_ens, refs_ens], diffs, vn, ptype, vres, title, var)
@@ -201,12 +201,10 @@ def graphics(plot_loc, plot_dict, **kwargs):
                     sims, sims_ens = helper_utils.gather_data(sim_names, key, atype, var=var, season=season, **kwargs)
                     refs, refs_ens = helper_utils.gather_data(ref_names, key, atype, var=var, season=season, **kwargs)
 
-                    # Use `refs_ens` and `sims_ens` to compute diffs for summary plot, 
-                    # but use `sims` and `refs` for indmemdiff plot so that we can 
-                    # preserve the individual member differences 
-                    # (instead of just ensemble mean differences)
-                    # CLEAN THIS UP - JR
-                    diffs = [an.compute_diff(s, r) for s in sims_ens for r in refs_ens]
+                    # Use `sims` and `refs` for the indmemdiff plot so that we preserve
+                    # the individual member differences (summary plot computes its own
+                    # ensemble mean differences)
+                    diffs = [an.compute_diff(s, r) for s in sims for r in refs]
 
                     for plot_type in PLOT_TYPES:
 

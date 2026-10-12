@@ -296,7 +296,12 @@ def get_levels(plot_dict, prefix, default_arr_max=None, default_arr_min=None):
     if levels is None:
         #print("WHELP NO LEVELS FOUND, USING DEFAULTS")
         if (default_arr_max is not None) and (default_arr_min is not None):
-            levels = np.linspace(default_arr_min, default_arr_max, 20)
+            if prefix == "diff":
+                # Keep difference levels symmetric so zero sits at the center of the diverging colormap
+                amax = max(abs(default_arr_min), abs(default_arr_max))
+                levels = np.linspace(-amax, amax, 21)
+            else:
+                levels = np.linspace(default_arr_min, default_arr_max, 20)
         #else:
             #print("WHELP NO LEVELS FOUND, USING DEFAULTS???????????")
 
@@ -341,7 +346,7 @@ def get_ticks(plot_dict, prefix, levels):
     if isinstance(ticks,list) and len(ticks)==3:
         ticks = np.arange(*ticks)
 
-    if ticks is not None:
+    if ticks is None:
         ticks = levels
 
     return ticks
