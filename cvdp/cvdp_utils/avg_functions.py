@@ -297,11 +297,11 @@ def seasonal_timeseries(arr, arr_anom, var_name, run_name):
     arr_anom3 = arr_anom.rolling(time=3, center=True).mean()
     arr_anom3 = arr_anom3.ffill(dim='time').bfill(dim='time')
 
-    arrANN_std = weighted_temporal_mean(arr_anom)#.mean(dim='time')
+    # Standard deviation of the annual mean anomalies across years
+    arrANN_std = weighted_temporal_mean(arr_anom).std(dim="time", ddof=0)
     lintrndANN_std = arrANN_std.rename(var_name+'_ann')
     lintrndANN_std.attrs = {'units':units,'long_name':var_name+' (annual)','run':run_name,
                              'yrs':[season_yrs[0],season_yrs[-1]]}
-    lintrndANN_std["time"] = np.arange(season_yrs[0],season_yrs[-1]+1,1)
     trnd_dict[f'{var_name}_{ptype}_ann'] = lintrndANN_std
 
     for s in season_dict:
