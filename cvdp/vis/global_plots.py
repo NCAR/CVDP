@@ -90,6 +90,9 @@ def global_ensemble_plot(arrs: list, arr_diffs:list, vn, ptype, plot_dict, title
             #------------------------
             if col == 2:
                 prefix = "diff"
+                # Compute the difference from this row's sim and ref so the panel always
+                # matches columns 0 and 1, and so default levels come from the diff itself
+                arr = an.compute_diff(arrs[0][row], arrs[1][row])
                 levels = vis_utils.get_levels(plot_info, prefix,
                                         default_arr_max=arr.max().item(),
                                         default_arr_min=arr.min().item())
@@ -101,9 +104,7 @@ def global_ensemble_plot(arrs: list, arr_diffs:list, vn, ptype, plot_dict, title
                     norm = mpl.colors.BoundaryNorm(levels, cmap.N)
                 unit = sim_unit
 
-                arr = arr_diffs[row]#compute_diff(arrs[0][row], arrs[1][row])
-                #arr.attrs["units"] = arrs[0][row].attrs["units"]
-                run = arr.run #f"{arrs[0][row].run} - {arrs[1][row].run}"
+                run = arr.run
                 yrs_text = ''
 
             if col in [0,1]:
