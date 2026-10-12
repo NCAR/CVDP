@@ -235,7 +235,7 @@ def data_read_in_3D(fil0,sy,ey,vari, lsmask=None):
     if (arr.units == 'mb'):
         arr.attrs = {'units':'hPa'}
 
-    if (arr.units == 'K' or arr.units == 'Kelvin' or arr.units == 'deg_K' or arr.units == 'deg_K'):
+    if (arr.units == 'K' or arr.units == 'Kelvin' or arr.units == 'deg_K' or arr.units == 'deg_k' or arr.units == 'degK'):
         if arr.max() > 100:    # data sets can be anomalies with units of K, so check for range before subtracting
             arr = arr-273.15
         arr.attrs = {'units':'C'}
@@ -261,6 +261,9 @@ def data_read_in_3D(fil0,sy,ey,vari, lsmask=None):
         if (arr.units == 'm' or arr.units == 'm/month'):
             arr = arr*1000.
         arr.attrs = {'units':'mm/day'}
+
+    if cvdp_v == "sst":   # TS includes sea ice/land skin temperature; set all values below -1.8 to -1.8 (as in NCL CVDP)
+        arr = arr.where(~(arr < -1.8), -1.8).assign_attrs(arr.attrs)
 
     if 'units' not in arr.attrs:   # assign units attribute if one is not present
         arr.attrs['units'] = 'undefined'
