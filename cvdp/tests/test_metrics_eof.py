@@ -59,6 +59,21 @@ def test_eof_weights_by_area(sample_ts):
     assert abs(_corr(pcs.sel(mode=1), pc_trop)) > 0.99
 
 
+def test_eof_custom_weights_over_any_dims():
+    # AMOC (amoc.ncl:240-245): a (time, lev, lat) field with caller weights in
+    # place of sqrt(cos(lat)). The heavily weighted signal leads although the
+    # other is stronger per gridpoint.
+    t = xr.date_range("2000-01", periods=60, freq="YS", calendar="noleap", use_cftime=True)
+    rng = np.random.default_rng(0)
+    a, b = (xr.DataArray(rng.standard_normal(60), coords={"time": t}, dims="time") for _ in range(2))
+    lev, lat = xr.DataArray([0.0, 1.0], dims="lev"), xr.DataArray([0.0, 10.0], dims="lat")
+    field = (2 * a * (lev == 0) + b * (lev == 1)).broadcast_like(lat).transpose("time", "lev", "lat")
+    field = (field + 0.01 * rng.standard_normal((60, 2, 2))).assign_coords(lev=lev, lat=lat)
+    weights = xr.DataArray([[1.0, 1.0], [100.0, 100.0]], coords={"lev": lev, "lat": lat}, dims=("lev", "lat"))
+    assert abs(_corr(eof(field, weights=weights).sel(mode=1), b)) > 0.99
+    assert abs(_corr(eof(field.rename(lev="lon")).sel(mode=1), a)) > 0.99  # default weights
+
+
 def test_eof_ignores_missing_gridpoints(sample_ts):
     signal, pc = _signal(sample_ts, 5.0, (-20, 20), (150, 250), seed=1)
     field = (signal + 0.01 * sample_ts).where(sample_ts["lon"] < 300)  # "land"

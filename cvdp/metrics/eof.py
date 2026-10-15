@@ -9,12 +9,14 @@ import numpy as np
 import xarray as xr
 
 
-def eof(da: xr.DataArray, n: int = 1) -> xr.DataArray:
+def eof(da: xr.DataArray, n: int = 1, weights: xr.DataArray = None) -> xr.DataArray:
     """
-    Leading principal components of a (time, lat, lon) field.
+    Leading principal components of a (time, ...) field, decomposed over all
+    non-time dims (e.g. lat, lon; or lev, lat for the AMOC).
 
-    The field is centred in time and weighted by √cos(lat) before an SVD, so
-    each gridpoint contributes in proportion to its area. Time steps missing
+    The field is centred in time and multiplied by ``weights`` before an SVD;
+    by default √cos(lat), so each gridpoint contributes in proportion to its
+    area. Time steps missing
     everywhere (e.g. the ends of a ``highpass30`` record) are dropped, then
     gridpoints with any missing value (e.g. land in SST) are excluded. The
     sign of each PC is arbitrary; callers apply any sign convention, then
@@ -27,6 +29,8 @@ def eof(da: xr.DataArray, n: int = 1) -> xr.DataArray:
         anomalies; the time mean is removed here.
     n : int, optional
         Number of modes to return. Default 1.
+    weights : xr.DataArray, optional
+        Weights broadcast against ``da``. Default √cos(lat).
 
     Returns
     -------
@@ -36,10 +40,12 @@ def eof(da: xr.DataArray, n: int = 1) -> xr.DataArray:
         ``variance_fraction`` coordinate on ``mode`` holds the fraction of
         weighted variance each mode explains.
     """
-    weights = np.sqrt(np.cos(np.deg2rad(da["lat"])))
+    if weights is None:
+        weights = np.sqrt(np.cos(np.deg2rad(da["lat"])))
     da = da.dropna("time", how="all")
     anom = (da - da.mean("time")) * weights
-    X = anom.stack(space=("lat", "lon")).dropna("space", how="any").transpose("time", "space")
+    space = [d for d in da.dims if d != "time"]
+    X = anom.stack(space=space).dropna("space", how="any").transpose("time", "space")
     u, s, _ = np.linalg.svd(X.values, full_matrices=False)
     pcs = u[:, :n] * s[:n]
     return xr.DataArray(
