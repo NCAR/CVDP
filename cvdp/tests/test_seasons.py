@@ -112,12 +112,15 @@ def test_ncl_annual_missing_month_gives_missing_season(sample_ts):
     assert got.isel(time=2).notnull().all()
 
 
-def test_ncl_annual_longer_season_without_full_window_is_missing(sample_ts):
-    # NDJFM (centre month January) has no Nov/Dec before the first January.
+def test_ncl_annual_ndjfm_first_year_is_jan_to_mar(sample_ts):
+    # NCL NPI (psl.trends_timeseries.ncl:89): the first NDJFM, centred on the
+    # first January, averages the in-record months Jan-Mar (5-month analogue
+    # of the first DJF = mean(Jan, Feb)).
     got = NDJFM.ncl_annual(sample_ts)
     year, month = _year_month(sample_ts)
     assert got.time.size == SAMPLE_LENGTH_YEARS
-    assert got.isel(time=0).isnull().all()
+    first = sample_ts.sel(time=(year == 0) & (month <= 3)).mean("time")
+    assert np.allclose(got.isel(time=0), first)
     window = sample_ts.sel(time=((year == 0) & (month >= 11)) | ((year == 1) & (month <= 3)))
     assert np.allclose(got.isel(time=1), window.mean("time"))
 

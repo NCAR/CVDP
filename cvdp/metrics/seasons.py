@@ -81,14 +81,16 @@ class Season:
         ``calculate_eofs``: an NCL ``runave`` (kopt=0) over the season's
         months, sampled at the centre month, on an integer-year ``time``
         dimension (the centre month's year). A season-year with any missing
-        month, or whose window runs off the record, is NaN. As in NCL, a
-        3-month season centred on the first time step averages the first
-        two months instead."""
+        month, or whose window runs off the record, is NaN. As in NCL, an
+        odd-length season centred on the first time step averages the
+        in-record part of its window instead: first DJF = mean(Jan, Feb)
+        (``calculate_eofs``), first NDJFM = mean(Jan, Feb, Mar) (NPI,
+        ``psl.trends_timeseries.ncl:89``)."""
         n = len(self.months)
         # NCL runave alignment: step i averages steps i-(n-1)//2 .. i+n//2.
         running = obj.rolling(time=n).mean().shift(time=-(n // 2))
-        if n == 3:
-            first = obj.isel(time=slice(0, 2)).mean("time")
+        if n % 2:
+            first = obj.isel(time=slice(0, n // 2 + 1)).mean("time")
             running = running.where(running["time"] != obj["time"][0], first)
         centre = running.sel(time=running["time"].dt.month == self.months[(n - 1) // 2])
         return centre.assign_coords(time=centre["time"].dt.year.values)

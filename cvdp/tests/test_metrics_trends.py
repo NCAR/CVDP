@@ -221,7 +221,7 @@ def test_seasonal_timeseries_has_no_years_past_record():
     last = SAMPLE_START_YEAR + 9
     assert int(out["time"].max()) == last
     assert out["ts_ts_DJF"].sel(time=last).notnull()
-    assert out["ts_ts_NDJFM"].sel(time=SAMPLE_START_YEAR).isnull()
+    assert out["ts_ts_NDJFM"].sel(time=SAMPLE_START_YEAR).notnull()  # Jan-Mar, as NCL NPI
 
 
 def test_seasonal_timeseries_values():

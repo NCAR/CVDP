@@ -277,9 +277,7 @@ def test_pacific_meridional_modes(ncl, sst, name, theirs):
 
 def test_north_pacific_index(ncl, psl):
     npi = regional_timeseries(psl, ["north_pacific"], detrend="none", seasons=NDJFM)["psl_north_pacific_NDJFM"]
-    # NCL's first NDJFM is mean(Jan-Mar) of the first year (psl.trends_timeseries.ncl:89);
-    # ncl_annual leaves it NaN (decisions.md O19), so compare from the second year.
-    assert_ncl_close(npi.isel(time=slice(1, None)), ncl["ERA5"]["north_pacific_index_ndjfm"][1:])
+    assert_ncl_close(npi, ncl["ERA5"]["north_pacific_index_ndjfm"])
 
 
 def test_pr_global_land_mean(ncl, pr):

@@ -34,10 +34,10 @@ def test_seasonal_eof_mode_output_names_and_dims(sample_psl):
     assert patterns["nao_pattern_JJA"].shape == sample_psl.isel(time=0).shape
     assert pcs["nao_pc_JJA"].dims == ("time",)
     # Seasonal means follow CVDP-ncl (Season.ncl_annual): one value per
-    # calendar year, no trailing partial DJF year; NDJFM lacks its first year.
+    # calendar year, no trailing partial DJF year.
     assert pcs["nao_pc_JJA"].count() == 10
     assert pcs["nao_pc_DJF"].count() == 10
-    assert pcs["nao_pc_NDJFM"].count() == 9
+    assert pcs["nao_pc_NDJFM"].count() == 10
 
 
 def test_seasonal_eof_mode_recovers_planted_mode(sample_psl):
