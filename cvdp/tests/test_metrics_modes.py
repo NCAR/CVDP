@@ -1,5 +1,6 @@
 from cvdp.metrics.modes import seasonal_eof_mode
-from cvdp.metrics.trends import monthly_anomalies
+from cvdp.metrics.trends import monthly_anomalies, detrended_anomalies
+from cvdp.metrics.filters import wgt_runave
 from cvdp.metrics.seasons import CVDP_SEASONS, NDJFM
 from cvdp.tests.test_inputdata import *
 import numpy as np
@@ -296,6 +297,22 @@ def test_meridional_modes_remove_enso_then_eof(func, name, mode_box, sign_point)
     neg_index, neg_maps = func(-ts, detrend="none")
     xr.testing.assert_allclose(neg_index, -index)
     xr.testing.assert_allclose(neg_maps, maps)
+
+
+@pytest.mark.parametrize("func", [pdo, ipv_eof, ipv_henley, amv])
+def test_sst_modes_regress_zos(func):
+    # NCL pdv.ncl:286, ipv.ncl:341/343, amv.ncl:296-297: detrended zos
+    # anomalies regressed onto the index, unmasked; AMV adds the low-pass map.
+    ts = create_sample_dataarray("ts", n_years=40)
+    zos = create_sample_dataarray("zos", n_years=40)
+    index, maps = func(ts, zos=zos, detrend="linear")
+    anom = detrended_anomalies(zos, "linear")
+    assert np.allclose(maps["zos_regr"], regress(anom, index), equal_nan=True)
+    if func is amv:
+        expected_lp = regress(wgt_runave(anom, [1.0] * 121), index["low_pass"])
+        assert np.allclose(maps["zos_regr_lp"], expected_lp, equal_nan=True)
+    else:
+        assert "zos_regr_lp" not in maps
 
 
 # --- domains pinned to CVDP-ncl (random field, so every gridpoint counts) --

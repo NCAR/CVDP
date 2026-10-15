@@ -19,9 +19,11 @@ Bounds are ``(lat_south, lat_north, lon_west, lon_east)``, lon 0–360.
 
 Common parameters
 -----------------
-psl, ts, pr, tas : xr.DataArray
+psl, ts, pr, tas, zos : xr.DataArray
     Monthly fields, dims (time, lat, lon), cftime ``time``. In sections 2–3,
-    ``psl``/``pr``/``tas`` are optional; each one supplied adds a regression map.
+    ``psl``/``pr``/``tas``/``zos`` are optional; each one supplied adds a
+    regression map. CVDP-ncl regresses tas, pr and zos; ``psl`` maps are an
+    extra (omit ``psl`` for NCL's output set).
     As CVDP-ncl (e.g. ``pdv.ncl:200``), the caller passes ``tas`` masked to
     land (LSMASK != 0) for the section 2–3 modes; ENSO composites take it
     unmasked.
@@ -197,6 +199,7 @@ def ipv_henley(
     psl: xr.DataArray = None,
     pr: xr.DataArray = None,
     tas: xr.DataArray = None,
+    zos: xr.DataArray = None,
     detrend: str = "linear",
 ) -> tuple[xr.DataArray, xr.Dataset]:
     """Interdecadal Pacific Variability, Henley et al. (2015) tripole: SST
@@ -208,7 +211,7 @@ def ipv_henley(
     anom = _anomalies(ts, detrend)
     north, south = box_mean(anom, (25, 45, 140, 215)), box_mean(anom, (-50, -15, 150, 200))
     index = (box_mean(anom, (-10, 10, 170, 270)) - (north + south) / 2).rename("ipv_henley")
-    return index, _regression_maps(index, detrend, ts=ts, psl=psl, pr=pr, tas=tas)
+    return index, _regression_maps(index, detrend, ts=ts, psl=psl, pr=pr, tas=tas, zos=zos)
 
 
 def amv(
@@ -216,6 +219,7 @@ def amv(
     psl: xr.DataArray = None,
     pr: xr.DataArray = None,
     tas: xr.DataArray = None,
+    zos: xr.DataArray = None,
     detrend: str = "linear",
     lowpass_window: int = 121,
 ) -> tuple[xr.DataArray, xr.Dataset]:
@@ -234,7 +238,7 @@ def amv(
     runave = [1.0] * lowpass_window  # equal weights = NCL runave
     low_pass = wgt_runave(index, runave)
     maps = {}
-    for var, field in {"ts": ts, "psl": psl, "pr": pr, "tas": tas}.items():
+    for var, field in {"ts": ts, "psl": psl, "pr": pr, "tas": tas, "zos": zos}.items():
         if field is None:
             continue
         field_anom = anom if var == "ts" else _anomalies(field, detrend)
@@ -254,6 +258,7 @@ def pdo(
     psl: xr.DataArray = None,
     pr: xr.DataArray = None,
     tas: xr.DataArray = None,
+    zos: xr.DataArray = None,
     detrend: str = "linear",
 ) -> tuple[xr.DataArray, xr.Dataset]:
     """Pacific Decadal Oscillation (CVDP-ncl ``pdv.ncl``): PC 1 of monthly
@@ -263,7 +268,7 @@ def pdo(
     (``variance_fraction`` in attrs), and ``{var}_regr`` per supplied field
     (``ts_regr`` is the PDO pattern, °C per std dev)."""
     index = _pc(_anomalies(ts, detrend), (20, 70, 110, 260), sign_point=(57, 220), positive=True).rename("pdo")
-    return index, _regression_maps(index, detrend, ts=ts, psl=psl, pr=pr, tas=tas)
+    return index, _regression_maps(index, detrend, ts=ts, psl=psl, pr=pr, tas=tas, zos=zos)
 
 
 def ipv_eof(
@@ -271,6 +276,7 @@ def ipv_eof(
     psl: xr.DataArray = None,
     pr: xr.DataArray = None,
     tas: xr.DataArray = None,
+    zos: xr.DataArray = None,
     detrend: str = "linear",
     min_years: int = 40,
 ) -> tuple[xr.DataArray, xr.Dataset]:
@@ -286,7 +292,7 @@ def ipv_eof(
         raise ValueError(f"ipv_eof needs at least {min_years} years of data")
     filtered = wgt_runave(_anomalies(ts, detrend), lanczos_weights(217, 1 / 157), kopt=1)
     index = _pc(filtered, (-40, 60, 110, 290), sign_point=(40, 165)).rename("ipv")
-    maps = _regression_maps(index, detrend, psl=psl, pr=pr, tas=tas)
+    maps = _regression_maps(index, detrend, psl=psl, pr=pr, tas=tas, zos=zos)
     return index, maps.assign(ts_regr=regress(filtered, index))
 
 
