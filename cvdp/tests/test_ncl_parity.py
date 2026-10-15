@@ -14,7 +14,7 @@ import pytest
 import xarray as xr
 
 from cvdp.metrics import modes
-from cvdp.metrics.enso import (nino34_index, nino34_monthly_stddev, nino34_autocorrelation, nino34_power_spectrum, nino34_wavelet,
+from cvdp.metrics.enso import (nino34_index, nino34_monthly_stddev, nino34_autocorrelation, power_spectrum, nino34_wavelet, nino34_running_stddev,
                                enso_composites, enso_hovmoller)
 from cvdp.metrics.seasons import CVDP_SEASONS
 
@@ -168,14 +168,28 @@ def test_nino34_autocorrelation(ncl, ersst):
     assert_ncl_close(acf.sel(lag=slice(0, None)), ncl["ERSSTv5"]["nino34_autocorrelation"])
 
 
-def test_power_spectrum(ncl):
-    spec = nino34_power_spectrum(_monthly(ncl["ERSSTv5"]["nino34"].values))
-    ref = ncl["ERSSTv5"]["nino34_spectra"]
+@pytest.mark.parametrize("index, spectra", [
+    ("nino34", "nino34_spectra"), ("pdv_timeseries_mon", "pdv_spectra"), ("ipv_timeseries_mon", "ipv_spectra"),
+    ("ipv_henley_timeseries_mon", "ipv_henley_spectra"), ("amv_timeseries_mon", "amv_spectra"),
+])
+def test_power_spectrum(ncl, index, spectra):
+    # One routine for every index (NCL specx_anal/specx_ci, create_power_spectra);
+    # applied to each mode index at runtime.
+    spec = power_spectrum(_monthly(ncl["ERSSTv5"][index].values))
+    ref = ncl["ERSSTv5"][spectra]
     assert np.allclose(spec["frequency"], ref["frequency"], rtol=1e-6)
     assert np.allclose(spec.values[0], ref.values[0], rtol=1e-6)  # NCL computes the spectrum in double
     # specx_ci is NCL script code: float32 arithmetic on CVDP's float input
-    # (emulating that gives 3e-7); we keep float64 (decisions D25).
-    assert np.allclose(spec.values[1:], ref.values[1:], rtol=1e-4)
+    # (emulating that gives 3e-7); we keep float64 (decisions D25). The low-pass
+    # IPV index has xlag1 = 1.0015, where the Markov curve 1/(1+r^2-2r cos)
+    # amplifies that float32 rounding to 8e-4 (float32 emulation: 4.5e-7).
+    rtol = 1e-3 if index == "ipv_timeseries_mon" else 1e-4
+    assert np.allclose(spec.values[1:], ref.values[1:], rtol=rtol)
+
+
+def test_nino34_running_stddev(ncl, ersst):
+    sd = nino34_running_stddev(nino34_index(ersst, smooth=False))
+    assert_ncl_close(sd, ncl["ERSSTv5"]["nino34_runstddev"])
 
 
 def test_wavelet(ncl):

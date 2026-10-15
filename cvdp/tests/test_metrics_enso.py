@@ -215,7 +215,7 @@ def test_enso_hovmoller_requires_15_years(sample_ts):
 
 # --- power spectrum and wavelet --------------------------------------------
 
-from cvdp.metrics.enso import nino34_power_spectrum, nino34_wavelet
+from cvdp.metrics.enso import power_spectrum, nino34_wavelet, nino34_running_stddev
 
 
 def _monthly(values, start="1979-01"):
@@ -226,7 +226,7 @@ def _monthly(values, start="1979-01"):
 def test_power_spectrum_peaks_at_planted_period_and_integrates_to_variance():
     months = np.arange(480)
     x = np.sin(2 * np.pi * months / 48) + 0.1 * np.random.default_rng(0).standard_normal(480)
-    spec = nino34_power_spectrum(_monthly(x))
+    spec = power_spectrum(_monthly(x))
     assert list(spec["curve"].values) == ["spectrum", "red_noise", "red_noise_95", "red_noise_99"]
     freq = spec["frequency"]
     assert np.isclose(float(freq[0]), 1 / 480) and np.isclose(float(freq[-1]), 0.5)
@@ -247,3 +247,22 @@ def test_wavelet_power_peaks_at_planted_period():
     assert np.isclose(float(power["period"][int(np.argmax(mean_power.values))]), 4.0, rtol=0.05)  # years
     assert float(coi[0]) == 0.0 and float(coi[-1]) == 0.0
     assert bool((significance.sel(period=4.0, method="nearest").isel(time=240) > 1))
+
+
+def test_nino34_running_stddev():
+    # sst.indices.ncl:430, 636-649: [1,2,1]/4 smoothing with reflected ends
+    # (kopt=1), then sample std over the centred 360-month window gg-180..gg+179.
+    from cvdp.metrics.filters import wgt_runave
+    nino34 = _monthly(np.random.default_rng(1).standard_normal(40 * 12))
+    sd = nino34_running_stddev(nino34)
+    smoothed = wgt_runave(nino34, [1.0, 2.0, 1.0], kopt=1).values
+    valid = np.flatnonzero(sd.notnull().values)
+    assert valid[0] == 180 and valid[-1] == nino34.size - 180
+    for gg in (180, 250, nino34.size - 180):
+        assert np.isclose(sd.values[gg], np.std(smoothed[gg - 180:gg + 180], ddof=1))
+    assert sd.name == "nino34_running_stddev"
+
+
+def test_nino34_running_stddev_requires_35_years():
+    with pytest.raises(ValueError):
+        nino34_running_stddev(_monthly(np.zeros(34 * 12)))

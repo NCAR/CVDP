@@ -113,9 +113,27 @@ def nino34_autocorrelation(
     return acf
 
 
-def nino34_power_spectrum(nino34: xr.DataArray) -> xr.DataArray:
-    """Power spectrum with Markov red-noise confidence curves, as CVDP-ncl
-    ``specx_anal(x, 0, (7*nyr)/100, 0.1)`` + ``specx_ci(sdof, 0.95, 0.99)``.
+def nino34_running_stddev(nino34: xr.DataArray, min_years: int = 35) -> xr.DataArray:
+    """30-yr running standard deviation of Niño3.4, as CVDP-ncl
+    ``sst.indices.ncl:636–649``: [1,2,1]/4 smoothing with reflected ends
+    (``wgt_runave`` kopt=1), then the sample std (n-1) over the centred
+    360-month window (steps i-180 .. i+179); NaN where the window does not
+    fit. Raises ``ValueError`` for records shorter than ``min_years``.
+
+    ``nino34`` is the unsmoothed monthly index (``nino34_index(ts, smooth=False)``)."""
+    if nino34.sizes["time"] < 12 * min_years:
+        raise ValueError(f"nino34_running_stddev needs at least {min_years} years of data")
+    smoothed = wgt_runave(nino34, [1.0, 2.0, 1.0], kopt=1)
+    windows = smoothed.rolling(time=360).construct("window").shift(time=-179)
+    return windows.std("window", ddof=1, skipna=False).rename("nino34_running_stddev")
+
+
+def power_spectrum(index: xr.DataArray) -> xr.DataArray:
+    """Power spectrum of a monthly index with Markov red-noise confidence
+    curves, as CVDP-ncl ``specx_anal(x, 0, (7*nyr)/100, 0.1)`` +
+    ``specx_ci(sdof, 0.95, 0.99)``. The same routine and settings serve
+    Niño3.4 (``sst.indices.ncl:931``) and the mode indices (PDO, IPV,
+    IPV-Henley, AMV via ``create_power_spectra``, e.g. ``pdv.ncl:323``).
 
     Mean removed, 10% split-cosine-bell taper, periodogram smoothed with a
     modified Daniell filter (none for records under 43 yr), scaled so its
@@ -124,7 +142,7 @@ def nino34_power_spectrum(nino34: xr.DataArray) -> xr.DataArray:
     Returns DataArray dims (curve, frequency): curves ``spectrum``,
     ``red_noise``, ``red_noise_95``, ``red_noise_99``; frequency in cycles
     per month (f=0 excluded); attrs ``dof``, ``bandwidth``, ``xlag1``."""
-    x = nino34.values.astype(float)
+    x = index.values.astype(float)
     n = x.size
     xvaro = (np.sum(x**2) - np.sum(x) ** 2 / n) / n
     x = x - x.mean()
@@ -162,7 +180,7 @@ def nino34_power_spectrum(nino34: xr.DataArray) -> xr.DataArray:
         np.array(curves),
         coords={"curve": ["spectrum", "red_noise", "red_noise_95", "red_noise_99"], "frequency": frequency},
         dims=("curve", "frequency"),
-        name="nino34_power_spectrum",
+        name="power_spectrum",
         attrs={"dof": dof, "bandwidth": dof / n * 0.5, "xlag1": xlag1},
     )
 
