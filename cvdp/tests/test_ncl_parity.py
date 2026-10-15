@@ -178,7 +178,7 @@ def test_wavelet(ncl):
 
 def test_enso_composites(ncl, sst, tas, pr):
     comp = enso_composites(sst, tas=tas, pr=pr, detrend="none")  # composites use unmasked TAS
-    assert comp.attrs["elnino_events"] == ncl["ERSSTv5"]["nino34_elnino_spacomp_sst_djf1"].attrs["number_of_elnino_events"]
+    assert comp["ts_elnino"].attrs["elnino_events"] == ncl["ERSSTv5"]["nino34_elnino_spacomp_sst_djf1"].attrs["number_of_elnino_events"]
     for var, key in (("ts", "ERSSTv5"), ("tas", "GISTEMPv4"), ("pr", "GPCP")):
         nvar = "sst" if var == "ts" else var
         for season in ("jja0", "son0", "djf1", "mam1"):

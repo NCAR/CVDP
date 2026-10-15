@@ -149,9 +149,10 @@ def test_enso_composites_average_event_seasons():
     ts = _enso_ts()
     tas = create_sample_dataarray("tas", n_years=30)
     out = enso_composites(ts, tas=tas, detrend="none")
-    assert set(out.data_vars) == {f"{v}_{k}" for v in ("ts", "tas") for k in ("elnino", "lanina", "elnino_minus_lanina")}
-    assert list(out["season"].values) == ["JJA0", "SON0", "DJF1", "MAM1"]
-    assert out.attrs["elnino_events"] == 3 and out.attrs["lanina_events"] == 3
+    assert set(out) == {f"{v}_{k}" for v in ("ts", "tas") for k in ("elnino", "lanina", "elnino_minus_lanina")}
+    for comp in out.values():
+        assert list(comp["season"].values) == ["JJA0", "SON0", "DJF1", "MAM1"]
+        assert comp.attrs["elnino_events"] == 3 and comp.attrs["lanina_events"] == 3
     anom = monthly_anomalies(tas)
     seasons = {"JJA0": [(0, 6), (0, 7), (0, 8)], "SON0": [(0, 9), (0, 10), (0, 11)],
                "DJF1": [(0, 12), (1, 1), (1, 2)], "MAM1": [(1, 3), (1, 4), (1, 5)]}
@@ -168,8 +169,20 @@ def test_enso_composites_need_two_events():
     year = ts["time"].dt.year - SAMPLE_START_YEAR
     ts = ts.where(year < 10, 0.01 * create_sample_dataarray("ts", n_years=30))  # keeps 1 El Niño, 1 La Niña
     out = enso_composites(ts, detrend="none")
-    assert out.attrs["elnino_events"] == 1
+    assert out["ts_elnino"].attrs["elnino_events"] == 1
     assert out["ts_elnino"].isnull().all()
+
+
+def test_enso_composites_keep_native_grids():
+    # D46: one map per field on its own grid (a Dataset would merge onto the union grid).
+    ts = _enso_ts()
+    pr = create_sample_dataarray("pr", n_years=30)
+    pr = pr.assign_coords(lat=pr["lat"] + 1, lon=pr["lon"] + 1)  # offset grid
+    out = enso_composites(ts, pr=pr, detrend="none")
+    assert isinstance(out, dict)
+    assert out["ts_elnino"].shape[1:] == ts.isel(time=0).shape
+    assert out["pr_elnino"].shape[1:] == pr.isel(time=0).shape
+    assert out["pr_elnino"].notnull().all()
 
 
 def test_enso_hovmoller_composites_equatorial_band():

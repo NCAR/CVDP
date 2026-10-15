@@ -242,16 +242,16 @@ def enso_composites(
     tas: xr.DataArray = None,
     detrend: str = "linear",
     threshold: float = 1.0,
-) -> xr.Dataset:
+) -> dict[str, xr.DataArray]:
     """Seasonal El Niño / La Niña composites, as CVDP-ncl ``sst.indices.ncl``.
 
     Each supplied field's anomalies (then ``detrend``) get a 3-month running
     mean, averaged over the :func:`enso_events` years at JJA0, SON0, DJF1,
     MAM1. Fewer than 2 events gives NaN.
 
-    Returns Dataset with ``{var}_elnino``, ``{var}_lanina``,
-    ``{var}_elnino_minus_lanina``, dims (season, lat, lon); attrs
-    ``elnino_events``, ``lanina_events``."""
+    Returns a dict of ``{var}_elnino``, ``{var}_lanina``,
+    ``{var}_elnino_minus_lanina``, dims (season, lat, lon), each on its
+    field's own grid, with attrs ``elnino_events``, ``lanina_events``."""
     elnino, lanina = enso_events(ts, detrend, threshold)
 
     def composite(field, years):
@@ -263,14 +263,16 @@ def enso_composites(
         ).assign_coords(season=list(COMPOSITE_SEASONS))
         return comp if len(years) >= 2 else comp * np.nan
 
+    events = {"elnino_events": len(elnino), "lanina_events": len(lanina)}
     out = {}
     for var, field in {"ts": ts, "psl": psl, "pr": pr, "tas": tas}.items():
         if field is None:
             continue
-        out[f"{var}_elnino"] = composite(field, elnino)
-        out[f"{var}_lanina"] = composite(field, lanina)
-        out[f"{var}_elnino_minus_lanina"] = out[f"{var}_elnino"] - out[f"{var}_lanina"]
-    return xr.Dataset(out, attrs={"elnino_events": len(elnino), "lanina_events": len(lanina)})
+        en, ln = composite(field, elnino), composite(field, lanina)
+        out[f"{var}_elnino"] = en.assign_attrs(events)
+        out[f"{var}_lanina"] = ln.assign_attrs(events)
+        out[f"{var}_elnino_minus_lanina"] = (en - ln).assign_attrs(events)
+    return out
 
 
 def enso_hovmoller(
