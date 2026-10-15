@@ -10,19 +10,20 @@
 #
 #
 
-pr:
+prect:
   spatialmean:
-    cmap: "ncl_default"
+    cmap: "precip3_16lev"
     sim_levels_list: [0.5,1,2,3,4,5,6,7,8,9,10,12,14,16,18]
     sim_ticks_range: [0.5, 2, 4, 6, 8, 10, 14, 18]
     sim_cbar_labels: [0.5, 2, 4, 6, 8, 10, 14, 18]
     diff_levels_range: [-9,10,1]
     diff_cbar_labels: [-8, -4, -1, 0, 1, 4, 8]
+    diff_cmap: "MPL_RdYlGn"
   spatialstddev:
-    cmap: "ncl_default"
+    cmap: "precip3_16lev"
     sim_levels_list: [0.2,0.4,0.6,1,1.5,2,2.5,3.5]
   trends:
-    cmap: "ncl_default"
+    cmap: "precip3_16lev"
     sim_levels_linspace: [0.4, 3.2, 8]
 
 
@@ -125,16 +126,23 @@ PSA2:
     #diff_cbar_labels: [-8, -6, -4, -2, 0, 2, 4, 6, 8]
 
 
-ts:
+sst:
   spatialmean:
     sim_cmap: "ncl_default"
     sim_levels_linspace: [0, 36, 19]
   spatialstddev:
     sim_cmap: "ncl_default"
-    sim_levels_linspace: [0.200000, 2.00000, 10]
+    #sim_levels_linspace: [0.200000, 2.00000, 10]
   trends:
     sim_cmap: "ncl_default"
-    sim_levels_linspace: [0.4, 3.2, 8]
+    #sim_levels_linspace: [0.4, 3.2, 8]
+
+
+
+
+
+
+
 
 
 tas:

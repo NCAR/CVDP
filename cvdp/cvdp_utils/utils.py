@@ -24,7 +24,7 @@ def get_version():
     return version('cvdp')
 
 
-season_list = ["DJF","JFM","MAM","JJA","JAS","SON"]#"ANN"
+season_list = ["DJF","JFM","MAM","JJA","JAS","SON","ANN"]
 var_seasons = {"psl": season_list+["NDJFM"],
                "sst": season_list,
                "tas": season_list,
@@ -157,14 +157,20 @@ def gather_data(run_names, key, ptype, var, season, **kwargs):
                         dont_save = True
                         run_ug = xr.open_dataset(nc_file)
                     else:
-                        run_ug = an.compute_npi(mean)
+                        # Regression patterns are not linear in the input data, so the
+                        # ensemble mean pattern is the mean of the member patterns
+                        # (regressing the ensemble mean would isolate the forced signal)
+                        run_ug = xr.concat(run_ens, dim="ensemble").mean("ensemble")
                 elif var in EOF_VARS:
                     #if nc_file.is_file():
                     if 2==1:
                         dont_save = True
                         run_ug = xr.open_dataset(nc_file)
                     else:
-                        run_ug, sim_pc = an.compute_eof(var, run_trnd_data.mean(dim="member"), season, run_name)
+                        # Mean of the member patterns (see NPI note above); the PC of the
+                        # ensemble mean is still kept for the timeseries plots
+                        run_ug = xr.concat(run_ens, dim="ensemble").mean("ensemble")
+                        _, sim_pc = an.compute_eof(var, run_trnd_data.mean(dim="member"), season, run_name)
                         runs_pcs.append(sim_pc)
                 else:
                     #if nc_file.is_file():

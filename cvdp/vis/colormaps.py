@@ -40,23 +40,24 @@ def get_NCL_colormap(cmap_name, extend='None'):
 
     if os.path.isfile(colormap_file) == False:
         #-- if NCL is already installed
+        ncl_file = None
         if 'NCARG_ROOT' in os.environ:
             cpath = os.environ['NCARG_ROOT']+'/lib/ncarg/colormaps/'
             if os.path.isfile(cpath + cfile):
-                colormap_file = cpath + cfile
-                with open(colormap_file) as f:
-                    lines = [re.sub('\s+',' ',l)  for l in f.read().splitlines() if not (l.startswith('#') or l.startswith('n'))]
-        #-- use URL to read colormap
-        elif not 'NCARG_ROOT' in os.environ:
+                ncl_file = cpath + cfile
+        if ncl_file is not None:
+            with open(ncl_file) as f:
+                lines = [re.sub('\s+',' ',l)  for l in f.read().splitlines() if not (l.startswith('#') or l.startswith('n'))]
+        #-- otherwise use URL to read colormap
+        else:
             url_file = NCARG_URL+'/'+cmap_name+'.rgb'
             res = requests.head(url_file)
             if not res.status_code == 200:
-                print(f'{cmap_name} does not exist!')
-                raise FileNotFoundError(errno.ENOENT, os.strerror(errno.ENOENT), cmap_name)
+                raise FileNotFoundError(errno.ENOENT,
+                    f"Colormap '{cmap_name}' is not a Matplotlib colormap and was not found in "
+                    f"{PATH_COLORMAPS_DIR}, $NCARG_ROOT, or {NCARG_URL}", cmap_name)
             content = requests.get(url_file, stream=True).content
             lines = [re.sub('\s+',' ',l)  for l in content.decode('UTF-8').splitlines() if not (l.startswith('#') or l.startswith('n'))]
-        else:
-            raise FileNotFoundError(errno.ENOENT, os.strerror(errno.ENOENT), colormap_file)
     #-- use local colormap file
     else:
         with open(colormap_file) as f:
