@@ -16,6 +16,7 @@ Pipelines define their seasons once, upstream::
     trend_maps(psl, seasons=CVDP_SEASONS + NDJFM)
 """
 from dataclasses import dataclass
+import numpy as np
 import xarray as xr
 
 
@@ -87,13 +88,18 @@ class Season:
         (``calculate_eofs``), first NDJFM = mean(Jan, Feb, Mar) (NPI,
         ``psl.trends_timeseries.ncl:89``)."""
         n = len(self.months)
+        size = obj.sizes["time"]
+        centre = np.flatnonzero(obj["time"].dt.month.values == self.months[(n - 1) // 2])
         # NCL runave alignment: step i averages steps i-(n-1)//2 .. i+n//2.
-        running = obj.rolling(time=n).mean().shift(time=-(n // 2))
-        if n % 2:
-            first = obj.isel(time=slice(0, n // 2 + 1)).mean("time")
-            running = running.where(running["time"] != obj["time"][0], first)
-        centre = running.sel(time=running["time"].dt.month == self.months[(n - 1) // 2])
-        return centre.assign_coords(time=centre["time"].dt.year.values)
+        # Only the windows at centre-month steps are gathered (not every month).
+        steps = centre[:, None] + np.arange(-((n - 1) // 2), n // 2 + 1)
+        inside = xr.DataArray((steps >= 0) & (steps < size), dims=("time", "window"))
+        window = obj.isel(time=xr.DataArray(steps.clip(0, size - 1), dims=("time", "window"))).where(inside)
+        means = window.mean("window", skipna=False)
+        if n % 2 and centre.size and centre[0] == 0:
+            first = xr.DataArray(np.arange(centre.size) == 0, dims="time")
+            means = means.where(~first, window.isel(time=0).mean("window"))
+        return means.assign_coords(time=obj["time"].dt.year.values[centre])
 
 
 class SeasonalDefinition:

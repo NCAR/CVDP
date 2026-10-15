@@ -76,6 +76,27 @@ def _year_month(da):
     return da["time"].dt.year - SAMPLE_START_YEAR, da["time"].dt.month
 
 
+def _rolling_ncl_annual(season, obj):
+    """Reference: the original rolling-window ncl_annual (NCL runave over every
+    month, sampled at the centre month). Pins results across speed-ups (O20)."""
+    n = len(season.months)
+    running = obj.rolling(time=n).mean().shift(time=-(n // 2))
+    if n % 2:
+        first = obj.isel(time=slice(0, n // 2 + 1)).mean("time")
+        running = running.where(running["time"] != obj["time"][0], first)
+    centre = running.sel(time=running["time"].dt.month == season.months[(n - 1) // 2])
+    return centre.assign_coords(time=centre["time"].dt.year.values)
+
+
+@pytest.mark.parametrize("start, stop", [(0, None), (6, -5), (1, None)])  # Jan-Dec, Jul..Jul, Feb start
+def test_ncl_annual_matches_rolling_reference(sample_ts, start, stop):
+    rng = np.random.default_rng(0)
+    gappy = sample_ts.where(rng.random(sample_ts.shape) > 0.02)  # scattered missing months
+    gappy = gappy.isel(time=slice(start, stop))
+    for season in CVDP_SEASONS + NDJFM:
+        xr.testing.assert_allclose(season.ncl_annual(gappy), _rolling_ncl_annual(season, gappy))
+
+
 def test_ncl_annual_equal_month_weights(sample_ts):
     jja = CVDP_SEASONS["JJA"]
     got = jja.ncl_annual(sample_ts)
