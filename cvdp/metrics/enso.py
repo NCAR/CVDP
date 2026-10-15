@@ -128,12 +128,16 @@ def nino34_running_stddev(nino34: xr.DataArray, min_years: int = 35) -> xr.DataA
     return windows.std("window", ddof=1, skipna=False).rename("nino34_running_stddev")
 
 
-def power_spectrum(index: xr.DataArray) -> xr.DataArray:
+def power_spectrum(index: xr.DataArray, jave: int = None) -> xr.DataArray:
     """Power spectrum of a monthly index with Markov red-noise confidence
     curves, as CVDP-ncl ``specx_anal(x, 0, (7*nyr)/100, 0.1)`` +
     ``specx_ci(sdof, 0.95, 0.99)``. The same routine and settings serve
     Niño3.4 (``sst.indices.ncl:931``) and the mode indices (PDO, IPV,
     IPV-Henley, AMV via ``create_power_spectra``, e.g. ``pdv.ncl:323``).
+    ``jave`` (periodogram smoothing) defaults to NCL's monthly ``7*nyr/100``;
+    the annual AMOC index uses ``max(1, nyr // 100)`` (``amoc.ncl:412``).
+    Frequency is in cycles per time step (per month, or per year for an
+    annual index).
 
     Mean removed, 10% split-cosine-bell taper, periodogram smoothed with a
     modified Daniell filter (none for records under 43 yr), scaled so its
@@ -141,7 +145,7 @@ def power_spectrum(index: xr.DataArray) -> xr.DataArray:
 
     Returns DataArray dims (curve, frequency): curves ``spectrum``,
     ``red_noise``, ``red_noise_95``, ``red_noise_99``; frequency in cycles
-    per month (f=0 excluded); attrs ``dof``, ``bandwidth``, ``xlag1``."""
+    per time step (f=0 excluded); attrs ``dof``, ``bandwidth``, ``xlag1``."""
     x = index.values.astype(float)
     n = x.size
     xvaro = (np.sum(x**2) - np.sum(x) ** 2 / n) / n
@@ -161,7 +165,8 @@ def power_spectrum(index: xr.DataArray) -> xr.DataArray:
     power = np.abs(2 * np.fft.rfft(x)[1:n // 2 + 1] / n) ** 2
     if n % 2 == 0:
         power[-1] /= 4
-    jave = 7 * (n // 12) // 100
+    if jave is None:
+        jave = 7 * (n // 12) // 100
     wgtsq = 1.0
     if abs(jave) > 2:
         nj = 2 * (abs(jave) // 2) + 1

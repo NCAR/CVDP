@@ -266,3 +266,14 @@ def test_nino34_running_stddev():
 def test_nino34_running_stddev_requires_35_years():
     with pytest.raises(ValueError):
         nino34_running_stddev(_monthly(np.zeros(34 * 12)))
+
+
+def test_power_spectrum_annual_series_with_jave():
+    # amoc.ncl:412: annual PC, jave = nyr/100 (no smoothing under 300 yr);
+    # frequency is then per time step (cycles per year).
+    years = xr.date_range("0001-01", periods=200, freq="YS", calendar="noleap", use_cftime=True)
+    x = np.sin(2 * np.pi * np.arange(200) / 20) + 0.1 * np.random.default_rng(0).standard_normal(200)
+    spec = power_spectrum(xr.DataArray(x, coords={"time": years}, dims="time"), jave=1)
+    freq = spec["frequency"]
+    assert np.isclose(float(freq[0]), 1 / 200) and np.isclose(float(freq[-1]), 0.5)
+    assert np.isclose(float(freq[int(np.argmax(spec.sel(curve="spectrum").values))]), 1 / 20)
