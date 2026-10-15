@@ -3,76 +3,91 @@ cvdp.metrics.ocean_circulation
 
 Ocean circulation diagnostics.
 
-AMOC — maximum of the zonally-integrated Atlantic meridional overturning
-       streamfunction, reported in Sverdrups (Sv).
+AMOC — leading EOF of the annual Atlantic meridional overturning
+       streamfunction (depth x latitude), as CVDP-ncl ``amoc.ncl``.
 """
+import numpy as np
 import xarray as xr
 
-from cvdp.metrics.trends import detrend as apply_detrend
+from cvdp.metrics.eof import eof, regress
 from cvdp.metrics.seasons import CVDP_SEASONS
+from cvdp.metrics.trends import detrended_anomalies
 
 
-ATLANTIC_BASIN = "atlantic_arctic_ocean"
+def _half_spacing(x, ends: float) -> np.ndarray:
+    """Cell widths from half-distances to neighbours (amoc.ncl:195-240); end
+    cells get ``ends`` x their one half-distance (2 for lat, 1 for lev)."""
+    half = np.diff(x) / 2
+    return np.r_[ends * half[0], half[:-1] + half[1:], ends * half[-1]]
 
 
 def amoc(
     moc: xr.DataArray,
-    lat_bound: float = 26.5,
-    depth_min: float = 500.0,
-    basin: str = ATLANTIC_BASIN,
+    sst: xr.DataArray = None,
+    tas: xr.DataArray = None,
+    zos: xr.DataArray = None,
     detrend: str = "none",
-) -> tuple[xr.DataArray, xr.DataArray]:
+) -> tuple[xr.DataArray, dict[str, xr.DataArray]]:
     """
-    Atlantic Meridional Overturning Circulation (AMOC) index.
+    Atlantic Meridional Overturning Circulation, as CVDP-ncl ``amoc.ncl``:
+    PC 1 of annual-mean MOC anomalies over depth and latitude.
 
-    The AMOC index is the maximum value of the Atlantic meridional
-    overturning streamfunction at a fixed latitude (``lat_bound``) over all
-    depths below ``depth_min``. The streamfunction is the zonally-integrated
-    and vertically-accumulated meridional volume transport.
+    Annual means are NCL's (:meth:`~cvdp.metrics.seasons.Season.ncl_annual`
+    ANN). Anomalies (then ``detrend``) are masked south of the latitude
+    nearest 33°S and where their variance is below 1e-6, weighted by
+    latitude spacing x layer thickness (not √cos(lat)), and decomposed; the PC
+    is standardised. The pattern is the unweighted, masked anomalies
+    regressed onto it, made positive at (2000 m, 38°N) when the levels reach
+    2000 m (a missing value there leaves the sign arbitrary).
 
     Parameters
     ----------
     moc : xr.DataArray
-        Ocean meridional overturning streamfunction (msftmz / MOC),
-        dims (time, lev, lat) or (time, basin, lev, lat) in Sverdrups (Sv).
-        If a ``basin`` dimension is present, it is selected by CF/CMIP6
-        string label (``basin``); a label not present in the coordinate
-        raises ``KeyError``.
-        The time coordinate must use cftime objects.
-    lat_bound : float, optional
-        Latitude at which to evaluate the maximum overturning in degrees North.
-        Default 26.5 (RAPID array latitude).
-    depth_min : float, optional
-        Minimum depth (m) below which the maximum streamfunction is sought.
-        Excludes the wind-driven surface cell. Default 500.0.
-    basin : str, optional
-        CF/CMIP6 basin coordinate label to select when ``moc`` has a
-        ``basin`` dimension. Default ``"atlantic_arctic_ocean"``.
+        Monthly Atlantic MOC, dims (time, lev, lat), Sv; ``lev`` in m,
+        positive down, ascending; ``lat`` ascending. Basin selection and unit
+        handling are the caller's (runtime) job.
+    sst, tas, zos : xr.DataArray, optional
+        Monthly fields (time, lat, lon); each adds ``{var}_regr``: annual
+        means of its detrended anomalies regressed onto the index. NCL masks
+        SST (clip, ocean only) but not TAS.
     detrend : str, optional
-        Detrending applied to the index timeseries before returning.
-        One of ``"none"``, ``"linear"``, ``"quadratic"``, ``"highpass30"``. Default ``"none"``.
+        ``"none"`` or a :func:`~cvdp.metrics.trends.detrend` method, applied
+        to the monthly anomalies. Default ``"none"``.
 
     Returns
     -------
     index : xr.DataArray
-        Monthly AMOC index timeseries, dim (time). Units: Sv.
-    annual_index : xr.DataArray
-        Annual-mean AMOC index, dim (time) with one value per year.
-        Units: Sv.
+        ``amoc``: standardised annual PC 1 on integer years;
+        ``variance_fraction`` in attrs.
+    maps : dict[str, xr.DataArray]
+        ``moc_regr`` (Sv per std dev), ``moc_mean`` (annual-mean MOC),
+        ``moc_std`` (std of annual anomalies; with ``moc_mean`` missing where
+        it is below 0.001 Sv), and ``{var}_regr`` per supplied field, each on
+        its own grid.
     """
-    # Select the requested basin by CF name when the dimension is present; a
-    # missing label raises KeyError (loud failure). Otherwise assume Atlantic-only.
-    if "basin" in moc.dims:
-        moc = moc.sel(basin=basin)
-    # Fixed latitude, then keep only depths below the wind-driven surface cell.
-    moc = moc.sel(lat=lat_bound, method="nearest")
-    moc = moc.where(moc["lev"] >= depth_min, drop=True)
-    # Maximum overturning over depth -> monthly index.
-    index = moc.max("lev")
-    if detrend != "none":
-        index = apply_detrend(index, detrend)
-    index.name = "amoc"
-    # NCL annual mean (amoc.ncl: 12-month runave sampled at June).
-    annual_index = CVDP_SEASONS["ANN"].ncl_annual(index)
-    annual_index.name = "amoc_annual"
-    return index, annual_index
+    ann = CVDP_SEASONS["ANN"]
+    anom = ann.ncl_annual(detrended_anomalies(moc, detrend))
+    std = anom.std("time", ddof=1)
+    std = std.where(std >= 0.001)
+    mean = ann.ncl_annual(moc).mean("time").where(std.notnull())
+
+    south = moc["lat"] < moc["lat"].sel(lat=-33.0, method="nearest")
+    field = anom.where(~south).where(anom.var("time", ddof=1) >= 1e-6)
+    weights = xr.DataArray(
+        np.outer(_half_spacing(moc["lev"].values, 1), _half_spacing(moc["lat"].values, 2)),
+        coords={"lev": moc["lev"], "lat": moc["lat"]}, dims=("lev", "lat"),
+    )
+    pcs = eof(field, n=1, weights=weights)
+    pc = pcs.sel(mode=1).drop_vars(["mode", "variance_fraction"])
+    if float(moc["lev"].max()) >= 2000:
+        slope = float(regress(field.sel(lev=2000.0, lat=38.0, method="nearest"), pc))
+        if slope < 0:  # NCL .lt.0 flip; NaN: no flip
+            pc = -pc
+    index = (pc / pc.std("time", ddof=1)).rename("amoc").assign_attrs(
+        variance_fraction=float(pcs["variance_fraction"].sel(mode=1))
+    )
+    maps = {"moc_regr": regress(field, index), "moc_mean": mean, "moc_std": std}
+    for var, f in {"sst": sst, "tas": tas, "zos": zos}.items():
+        if f is not None:
+            maps[f"{var}_regr"] = regress(ann.ncl_annual(detrended_anomalies(f, detrend)), index)
+    return index, maps
