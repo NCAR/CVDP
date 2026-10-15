@@ -32,8 +32,8 @@ import cvdp_utils.file_creation as fc
 logger = logging.getLogger(__name__)
 
 # Map many possible variable names to canonical CVDP variable names
-# (Lookup is case-insensitive)
-VARNAME_MAP = {"sst":'sst',"TS":'sst',"ts":'sst',"t_surf":'sst',"skt":'sst',
+# (Lookup is case-insensitive). Each key is the dataset raw variable name and the values are the CVDP naming conventions
+VARNAME_MAP = {"SST":"sst","sst":'sst',"TS":'sst',"ts":'sst',"t_surf":'sst',"skt":'sst',
              "TREFHT":'tas',"tas":'tas',"temp":'tas',"air":'tas',"temperature_anomaly":'tas',"temperature":'tas',"t2m":'tas',"t_ref":'tas',"T2":'tas',"tempanomaly":'tas',
              "PSL":'psl',"psl":'psl',"slp":'psl',"SLP":'psl',"prmsl":'psl',"msl":'psl',"slp_dyn":'psl',
              "PRECC":'prect',"PRECL":'prect',"PRECT":'prect',"pr":'prect',"PPT":'prect',"ppt":'prect',"p":'prect',"P":'prect',"precip":'prect',"PRECIP":'prect',"tp":'prect',"prcp":'prect',"prate":'prect'

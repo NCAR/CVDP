@@ -20,6 +20,8 @@ def generate_webpages(config_dict):
     def img(plot_file):
         path = plot_loc / plot_file
         return plot_file if os.path.exists(path) else "file_not_found_image.png"
+    def has_img(plot_file):
+        return os.path.exists(plot_loc / plot_file)
 
     # Get the current time as a timezone-aware datetime object in UTC
     utc_time_aware = datetime.now(timezone.utc)
@@ -32,6 +34,7 @@ def generate_webpages(config_dict):
 
     tmp_rnd_dict = {"title":"Diagnostics Plots",
                     "img":lambda f: img(f),
+                    "has_img":has_img,
                     "create_time":utc_time_aware
                     }
 
@@ -48,9 +51,10 @@ def generate_webpages(config_dict):
         with open(html_out, "w") as f:
             f.write(html)
 
-    _make_html("template_main.html", "index.html", tmp_rnd_dict)
+    _make_html("template_main.html", plot_loc / "index.html", tmp_rnd_dict)
     # Individual members index html file if applicable
-    _make_html("template_indmem.html", "index_indmem.html", tmp_rnd_dict)
+    #TODO: double check that this is not needed if no ensemble? - JR
+    _make_html("template_indmem.html", plot_loc / "index_indmem.html", tmp_rnd_dict)
 
     # Comaprison to NCL Plots if applicable
     if "ncl_plot_loc" in config_dict:
