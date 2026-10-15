@@ -184,7 +184,7 @@ def test_ipv_henley_is_tripole_index(sample_ts, sample_pr):
     # centre - (north + south)/2 = s - (-s - s)/2
     assert np.allclose(index, 2 * monthly_anomalies(s))
     assert index.name == "ipv_henley"
-    assert set(maps.data_vars) == {"ts_regr", "pr_regr"}
+    assert set(maps) == {"ts_regr", "pr_regr"}
     assert np.allclose(maps["ts_regr"].sel(lat=0, lon=200), 0.5)
 
 
@@ -201,7 +201,7 @@ def test_amv_index_low_pass_and_maps():
     expected_lp = index.rolling(time=121, center=True).mean()
     assert np.allclose(index["low_pass"], expected_lp, equal_nan=True)
     assert int(index["low_pass"].isnull().sum()) == 120
-    assert set(maps.data_vars) == {"ts_regr", "ts_regr_lp", "pr_regr", "pr_regr_lp"}
+    assert set(maps) == {"ts_regr", "ts_regr_lp", "pr_regr", "pr_regr_lp"}
     # ts map smoothed with exactly 3 smth9 passes: interior of the box stays 1, its edge is blurred
     raw = regress(monthly_anomalies(ts), index)
     xr.testing.assert_allclose(maps["ts_regr"], smth9(smth9(smth9(raw))).drop_vars("low_pass", errors="ignore"))
@@ -223,7 +223,7 @@ def test_pdo_recovers_planted_mode(sample_ts, sample_tas):
     assert abs(float(xr.corr(index, monthly_anomalies(s)))) > 0.99
     assert np.isclose(float(index.std(ddof=1)), 1.0)
     assert 0 < index.attrs["variance_fraction"] <= 1
-    assert set(maps.data_vars) == {"ts_regr", "tas_regr"}
+    assert set(maps) == {"ts_regr", "tas_regr"}
     inside = abs(float(maps["ts_regr"].sel(lat=48, lon=200)))
     assert inside > 10 * float(abs(maps["ts_regr"].sel(lat=-48)).max())
 
@@ -267,7 +267,7 @@ def test_ipv_eof_tracks_low_frequency_signal():
     # reflected data there) the index follows the slow signal, not the noise.
     interior = slice(108, -108)
     assert abs(float(xr.corr(index.isel(time=interior), slow.isel(time=interior)))) > 0.99
-    assert set(maps.data_vars) == {"ts_regr", "pr_regr"}
+    assert set(maps) == {"ts_regr", "pr_regr"}
 
 
 def _meridional_mode_field(mode_box, seed):
@@ -291,12 +291,12 @@ def test_meridional_modes_remove_enso_then_eof(func, name, mode_box, sign_point)
     assert index.name == name
     assert abs(float(xr.corr(index, mode))) > 0.95
     assert np.isclose(float(index.std(ddof=1)), 1.0)
-    assert set(maps.data_vars) == {"ts_regr"}
+    assert set(maps) == {"ts_regr"}
     lat, lon = sign_point
     assert float(maps["ts_regr"].sel(lat=lat, lon=lon, method="nearest")) >= 0
     neg_index, neg_maps = func(-ts, detrend="none")
     xr.testing.assert_allclose(neg_index, -index)
-    xr.testing.assert_allclose(neg_maps, maps)
+    xr.testing.assert_allclose(neg_maps["ts_regr"], maps["ts_regr"])
 
 
 @pytest.mark.parametrize("func", [pdo, ipv_eof, ipv_henley, amv])
@@ -313,6 +313,22 @@ def test_sst_modes_regress_zos(func):
         assert np.allclose(maps["zos_regr_lp"], expected_lp, equal_nan=True)
     else:
         assert "zos_regr_lp" not in maps
+
+
+
+@pytest.mark.parametrize("func", [pdo, ipv_eof, ipv_henley, amv, npmm, spmm])
+def test_sst_mode_maps_keep_native_grids(func):
+    # As NCL (one grid per variable): maps are a dict, not merged onto a union grid.
+    ts = create_sample_dataarray("ts", n_years=40)
+    pr = create_sample_dataarray("pr", n_years=40)
+    pr = pr.assign_coords(lat=pr["lat"] + 1, lon=pr["lon"] + 1)  # offset grid
+    kwargs = {} if func in (npmm, spmm) else {"pr": pr}
+    _, maps = func(ts, detrend="none", **kwargs)
+    assert isinstance(maps, dict)
+    assert maps["ts_regr"].shape == ts.isel(time=0).shape
+    if kwargs:
+        assert maps["pr_regr"].shape == pr.isel(time=0).shape
+        assert maps["pr_regr"].notnull().all()
 
 
 # --- domains pinned to CVDP-ncl (random field, so every gridpoint counts) --

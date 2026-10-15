@@ -24,6 +24,8 @@ psl, ts, pr, tas, zos : xr.DataArray
     ``psl``/``pr``/``tas``/``zos`` are optional; each one supplied adds a
     regression map. CVDP-ncl regresses tas, pr and zos; ``psl`` maps are an
     extra (omit ``psl`` for NCL's output set).
+    Regression maps are returned as ``dict[str, DataArray]``, each on its
+    field's own grid (as NCL; a Dataset would merge grids onto their union).
     As CVDP-ncl (e.g. ``pdv.ncl:200``), the caller passes ``tas`` masked to
     land (LSMASK != 0) for the section 2–3 modes; ENSO composites take it
     unmasked.
@@ -45,12 +47,13 @@ from cvdp.metrics.seasons import SeasonalDefinition, CVDP_SEASONS, NDJFM
 NH_SEASONS = CVDP_SEASONS + NDJFM
 
 
-def _regression_maps(index: xr.DataArray, detrend: str, **fields) -> xr.Dataset:
-    """``{var}_regr``: anomalies of each supplied field regressed onto ``index``."""
-    return xr.Dataset({
+def _regression_maps(index: xr.DataArray, detrend: str, **fields) -> dict[str, xr.DataArray]:
+    """``{var}_regr``: anomalies of each supplied field regressed onto ``index``,
+    each on its own grid."""
+    return {
         f"{var}_regr": regress(_anomalies(field, detrend), index)
         for var, field in fields.items() if field is not None
-    })
+    }
 
 
 def _pc(anom: xr.DataArray, bounds, number: int = 1, sign_point=None, positive: bool = False) -> xr.DataArray:
@@ -201,7 +204,7 @@ def ipv_henley(
     tas: xr.DataArray = None,
     zos: xr.DataArray = None,
     detrend: str = "linear",
-) -> tuple[xr.DataArray, xr.Dataset]:
+) -> tuple[xr.DataArray, dict[str, xr.DataArray]]:
     """Interdecadal Pacific Variability, Henley et al. (2015) tripole: SST
     anomaly mean over (-10, 10, 170, 270) minus the average of the means over
     (25, 45, 140, 215) and (-50, -15, 150, 200). No EOF.
@@ -222,7 +225,7 @@ def amv(
     zos: xr.DataArray = None,
     detrend: str = "linear",
     lowpass_window: int = 121,
-) -> tuple[xr.DataArray, xr.Dataset]:
+) -> tuple[xr.DataArray, dict[str, xr.DataArray]]:
     """Atlantic Multidecadal Variability (CVDP-ncl ``amv.ncl``): SST anomaly
     mean over (0, 60, 280, 360).
 
@@ -248,7 +251,7 @@ def amv(
                 regr = smth9(regr)
         maps[f"{var}_regr"] = regr
         maps[f"{var}_regr_lp"] = regress(wgt_runave(field_anom, runave), low_pass)
-    return index.assign_coords(low_pass=low_pass), xr.Dataset(maps)
+    return index.assign_coords(low_pass=low_pass), maps
 
 
 # --- 3. Monthly SST EOF modes -----------------------------------------------
@@ -260,7 +263,7 @@ def pdo(
     tas: xr.DataArray = None,
     zos: xr.DataArray = None,
     detrend: str = "linear",
-) -> tuple[xr.DataArray, xr.Dataset]:
+) -> tuple[xr.DataArray, dict[str, xr.DataArray]]:
     """Pacific Decadal Oscillation (CVDP-ncl ``pdv.ncl``): PC 1 of monthly
     SST anomalies over (20, 70, 110, 260). Pattern positive at (57, 220).
 
@@ -279,7 +282,7 @@ def ipv_eof(
     zos: xr.DataArray = None,
     detrend: str = "linear",
     min_years: int = 40,
-) -> tuple[xr.DataArray, xr.Dataset]:
+) -> tuple[xr.DataArray, dict[str, xr.DataArray]]:
     """Interdecadal Pacific Variability, EOF method (CVDP-ncl ``ipv.ncl``):
     PC 1 over (-40, 60, 110, 290) of SST anomalies low-pass filtered with
     217 Lanczos weights, cut-off 1/157 per month (~13 yr), reflected ends.
@@ -293,7 +296,7 @@ def ipv_eof(
     filtered = wgt_runave(_anomalies(ts, detrend), lanczos_weights(217, 1 / 157), kopt=1)
     index = _pc(filtered, (-40, 60, 110, 290), sign_point=(40, 165)).rename("ipv")
     maps = _regression_maps(index, detrend, psl=psl, pr=pr, tas=tas, zos=zos)
-    return index, maps.assign(ts_regr=regress(filtered, index))
+    return index, maps | {"ts_regr": regress(filtered, index)}
 
 
 def _remove_enso(anom: xr.DataArray) -> xr.DataArray:
@@ -304,7 +307,7 @@ def _remove_enso(anom: xr.DataArray) -> xr.DataArray:
     return anom - regress(anom, pc) * pc
 
 
-def npmm(ts: xr.DataArray, detrend: str = "linear") -> tuple[xr.DataArray, xr.Dataset]:
+def npmm(ts: xr.DataArray, detrend: str = "linear") -> tuple[xr.DataArray, dict[str, xr.DataArray]]:
     """North Pacific Meridional Mode (CVDP-ncl ``sst.indices.ncl``): PC 1
     over (-20, 30, 175, 265) of SST anomalies with ENSO regressed out.
     Pattern positive at (22, 240).
@@ -313,10 +316,10 @@ def npmm(ts: xr.DataArray, detrend: str = "linear") -> tuple[xr.DataArray, xr.Da
     the ENSO-removed SST regressed onto it."""
     resid = _remove_enso(_anomalies(ts, detrend))
     index = _pc(resid, (-20, 30, 175, 265), sign_point=(22, 240), positive=True).rename("npmm")
-    return index, xr.Dataset({"ts_regr": regress(resid, index)})
+    return index, {"ts_regr": regress(resid, index)}
 
 
-def spmm(ts: xr.DataArray, detrend: str = "linear") -> tuple[xr.DataArray, xr.Dataset]:
+def spmm(ts: xr.DataArray, detrend: str = "linear") -> tuple[xr.DataArray, dict[str, xr.DataArray]]:
     """South Pacific Meridional Mode (CVDP-ncl ``sst.indices.ncl``): PC 1
     over (-35, -20, 180, 290) of SST anomalies with ENSO regressed out.
     Pattern positive at (-25, 280).
@@ -324,4 +327,4 @@ def spmm(ts: xr.DataArray, detrend: str = "linear") -> tuple[xr.DataArray, xr.Da
     Returns ``(index, regr_maps)`` as :func:`npmm`."""
     resid = _remove_enso(_anomalies(ts, detrend))
     index = _pc(resid, (-35, -20, 180, 290), sign_point=(-25, 280), positive=True).rename("spmm")
-    return index, xr.Dataset({"ts_regr": regress(resid, index)})
+    return index, {"ts_regr": regress(resid, index)}
