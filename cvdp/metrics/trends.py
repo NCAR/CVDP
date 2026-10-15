@@ -17,7 +17,7 @@ from cvdp.metrics.filters import wgt_runave
 from cvdp.metrics.seasons import SeasonalDefinition, CVDP_SEASONS
 
 
-DETREND_OPTIONS = ("linear", "quadratic", "highpass30", "ensemble_mean")
+DETREND_OPTIONS = ("linear", "quadratic", "highpass30")
 
 # IPCC AR4 30-yr low-pass weights, from CVDP-ncl functions.ncl:remove_trend.
 HIGHPASS30_WEIGHTS = np.array([
@@ -48,8 +48,8 @@ def detrend(da: xr.DataArray, method: str) -> xr.DataArray:
     Each calendar month's yearly series is treated separately:
     ``"linear"`` / ``"quadratic"`` subtract a polynomial fit in year, keeping
     the mean; ``"highpass30"`` subtracts a 30-yr weighted running mean
-    (CVDP-ncl ``"30yrRunningMean"``). ``"ensemble_mean"`` subtracts the mean
-    over the ``member`` dim.
+    (CVDP-ncl ``"30yrRunningMean"``). The ensemble options (``rmEM``,
+    ``rmGMST_EM``) need other members and are applied by the runtime script.
 
     ``"highpass30"`` reflects each month's series about its end points to
     fill the 30-yr window near the record ends (NCL ``wgt_runave`` with
@@ -57,9 +57,7 @@ def detrend(da: xr.DataArray, method: str) -> xr.DataArray:
     ~15 yr of either end rely on the reflected data. Records need at least
     30 years.
     """
-    if method == "ensemble_mean":
-        return (da - da.mean("member")).rename(da.name)
-    elif method == "linear":
+    if method == "linear":
         per_month = lambda month: _remove_polyfit(month, 1)
     elif method == "quadratic":
         per_month = lambda month: _remove_polyfit(month, 2)

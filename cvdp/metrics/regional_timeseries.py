@@ -92,7 +92,7 @@ def regional_timeseries(
     detrend : str, optional
         Detrending applied before anomalies. ``"none"`` or one of the
         ``cvdp.metrics.trends`` options (``"linear"``, ``"quadratic"``,
-        ``"ensemble_mean"``). Default ``"linear"``.
+        ``"highpass30"``). Default ``"linear"``.
     seasons : SeasonalDefinition or Season, optional
         If given, the monthly index is aggregated into per-year seasonal means
         and one output variable is produced per (region, season). If omitted,

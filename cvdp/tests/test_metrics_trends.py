@@ -125,15 +125,6 @@ def test_detrend_ignores_missing_gridpoints():
     assert residual.sel(lon=4).notnull().all()
 
 
-def test_detrend_ensemble_mean():
-    da = linear_field()
-    members = xr.concat([da, da + 5.0], dim="member")
-    residual = detrend(members, "ensemble_mean")
-    # Each member becomes its deviation from the cross-member mean: -2.5 and +2.5.
-    assert np.allclose(residual.isel(member=0), -2.5)
-    assert np.allclose(residual.isel(member=1), 2.5)
-
-
 def test_detrend_invalid_raises():
     da = linear_field()
     with pytest.raises(ValueError):

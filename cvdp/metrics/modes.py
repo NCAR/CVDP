@@ -21,6 +21,9 @@ Common parameters
 psl, ts, pr, tas : xr.DataArray
     Monthly fields, dims (time, lat, lon), cftime ``time``. In sections 2–3,
     ``psl``/``pr``/``tas`` are optional; each one supplied adds a regression map.
+    As CVDP-ncl (e.g. ``pdv.ncl:200``), the caller passes ``tas`` masked to
+    land (LSMASK != 0) for the section 2–3 modes; ENSO composites take it
+    unmasked.
 detrend : str
     ``"none"`` or a :data:`cvdp.metrics.trends.DETREND_OPTIONS` value.
 seasons : SeasonalDefinition
