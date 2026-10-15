@@ -1,11 +1,16 @@
 """
-Parity with real CVDP-ncl v6.1.0 output.
+Parity with real CVDP-ncl v6.1.0 output, for two sources (every test runs
+on both):
 
-Inputs: cvdp/test-data/observations (1979-2024). Reference: the matching
-cvdp/test-data/validation/*.cvdp_data.1979-2024.nc files (detrend "none").
-Inputs are prepared as NCL's data_read_in + per-script steps do (units,
-SST clip/land mask, TAS land mask for mode regressions). NCL writes float32,
-so tolerances are relative to the field's maximum, ~1e-5.
+- obs: cvdp/test-data/observations (ERSSTv5, ERA5, GISTEMPv4, GPCP; 1979-2024)
+  against validation/{dataset}.cvdp_data.1979-2024.nc.
+- cesm: CESM2 piControl CAM h0 (TS, PSL, TREFHT, PRECC+PRECL; 451-500) against
+  validation/CESM2_2deg_piControl.cvdp_data.451-500.nc.
+
+Detrend "none". Inputs are prepared as NCL's data_read_in + per-script steps
+do (units, SST clip/land mask, TAS land mask for mode regressions); that is
+the runtime script's job (decisions.md D32, D33). NCL writes float32, so
+tolerances are relative to the field's maximum, ~1e-5.
 EOF-based outputs are compared with their sign: both follow NCL's per-mode
 convention.
 """
@@ -53,15 +58,52 @@ def assert_ncl_close(ours, theirs, rtol=1e-5):
     assert np.nanmax(np.abs(a - b)) <= rtol * np.nanmax(np.abs(b))
 
 
-@pytest.fixture(scope="module")
-def ncl():
-    return {k: xr.open_dataset(f"{VAL}{k}.cvdp_data.1979-2024.nc", decode_times=False)
-            for k in ("ERSSTv5", "ERA5", "GISTEMPv4", "GPCP")}
+CESM = ("cvdp/test-data/b.e21.B1850.f19_g17.CMIP6-piControl-2deg/"
+        "b.e21.B1850.f19_g17.CMIP6-piControl-2deg.001.cam.h0.{}.045101-050012.nc")
+
+
+def _cesm(var, name, scale=1.0, offset=0.0):
+    """CAM h0 as NCL data_read_in (K -> C, Pa -> hPa, m/s -> mm/day). CAM stamps
+    each month at its end (January at 1 Feb), so time is rebuilt as month starts."""
+    da = xr.open_dataset(CESM.format(var), decode_times=False)[var].astype(float)
+    t = xr.date_range("0451-01", periods=da.sizes["time"], freq="MS", calendar="noleap", use_cftime=True)
+    return ((da + offset) * scale).assign_coords(time=t).rename(name)
+
+
+INPUTS = {  # source -> loaders for ts (deg C, unmasked), psl (hPa), tas (deg C), pr (mm/day)
+    "obs": {
+        "ts": lambda: _obs("ersstv5.197901-202412.nc", "sst", "ts"),
+        "psl": lambda: _obs("era5.msl.rg2x2.197901-202412.nc", "msl", "psl", scale=0.01),  # Pa -> hPa
+        "tas": lambda: _obs("gistempv4.tas.197901-202412.nc", "tempanomaly", "tas"),
+        "pr": lambda: _obs("gpcp.mon.mean.197901-202412.nc", "precip", "pr"),
+    },
+    "cesm": {
+        "ts": lambda: _cesm("TS", "ts", offset=-273.15),
+        "psl": lambda: _cesm("PSL", "psl", scale=0.01),
+        "tas": lambda: _cesm("TREFHT", "tas", offset=-273.15),
+        "pr": lambda: (_cesm("PRECC", "pr") + _cesm("PRECL", "pr")).rename("pr") * 86400000.0,
+    },
+}
+REFERENCE_KEYS = ("ERSSTv5", "ERA5", "GISTEMPv4", "GPCP")  # obs file per variable
+
+
+@pytest.fixture(scope="module", params=list(INPUTS))
+def source(request):
+    return request.param
 
 
 @pytest.fixture(scope="module")
-def ersst():
-    return _obs("ersstv5.197901-202412.nc", "sst", "ts")
+def ncl(source):
+    """Reference datasets by obs key; for cesm every key is the one CESM2 file."""
+    if source == "cesm":
+        ds = xr.open_dataset(f"{VAL}CESM2_2deg_piControl.cvdp_data.451-500.nc", decode_times=False)
+        return dict.fromkeys(REFERENCE_KEYS, ds)
+    return {k: xr.open_dataset(f"{VAL}{k}.cvdp_data.1979-2024.nc", decode_times=False) for k in REFERENCE_KEYS}
+
+
+@pytest.fixture(scope="module")
+def ersst(source):
+    return INPUTS[source]["ts"]()
 
 
 @pytest.fixture(scope="module")
@@ -70,13 +112,13 @@ def sst(ersst):
 
 
 @pytest.fixture(scope="module")
-def psl():
-    return _obs("era5.msl.rg2x2.197901-202412.nc", "msl", "psl", scale=0.01)  # Pa -> hPa
+def psl(source):
+    return INPUTS[source]["psl"]()
 
 
 @pytest.fixture(scope="module")
-def tas():
-    return _obs("gistempv4.tas.197901-202412.nc", "tempanomaly", "tas")
+def tas(source):
+    return INPUTS[source]["tas"]()
 
 
 @pytest.fixture(scope="module")
@@ -85,8 +127,8 @@ def tas_land(tas):
 
 
 @pytest.fixture(scope="module")
-def pr():
-    return _obs("gpcp.mon.mean.197901-202412.nc", "precip", "pr")
+def pr(source):
+    return INPUTS[source]["pr"]()
 
 
 def _monthly(values):
@@ -130,12 +172,16 @@ def test_ipv_henley(ncl, sst, tas_land, pr):
     assert_ncl_close(maps["pr_regr"], ncl["GPCP"]["ipv_henley_pr_regression_mon"])
 
 
-def test_ipv_eof(ncl, sst):
-    # Residual ~1e-3 (corr 0.9999999 with NCL): a slight PC1/PC2 mix, not the
-    # filter weights, ends or missing-value rule; likely NCL's eigen-solver.
+def test_ipv_eof(ncl, sst, source):
+    # Residual ~1e-3 obs, ~2e-3 CESM2 (corr 0.999998): a slight PC1/PC2 mix, not
+    # the filter weights, ends, missing-value rule or float32 field (rounding the
+    # filtered field changes nothing). EOF 1 and 2 are nearly tied after the
+    # 13-yr low-pass (CESM2: 35 % vs 30 %), so NCL's eigen-solver details shift
+    # the split (decisions.md O28).
+    rtol = 3e-3 if source == "cesm" else 1e-3
     index, maps = modes.ipv_eof(sst, detrend="none")
-    assert_ncl_close(index, ncl["ERSSTv5"]["ipv_timeseries_mon"], rtol=1e-3)
-    assert_ncl_close(maps["ts_regr"], ncl["ERSSTv5"]["ipv_pattern_mon"], rtol=1e-3)
+    assert_ncl_close(index, ncl["ERSSTv5"]["ipv_timeseries_mon"], rtol=rtol)
+    assert_ncl_close(maps["ts_regr"], ncl["ERSSTv5"]["ipv_pattern_mon"], rtol=rtol)
 
 
 def test_amv(ncl, sst, tas_land, pr):
