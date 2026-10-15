@@ -7,7 +7,6 @@ ENSO diagnostics derived from the Niño3.4 SST index
 El Niño / La Niña events are defined by the December Niño3.4 value
 (3-point binomial smoothed) exceeding ±1 standard deviation.
 """
-import cftime
 import numpy as np
 import xarray as xr
 from scipy.stats import chi2
@@ -22,28 +21,18 @@ SST_INDEX_REGIONS = ["nino12", "nino3", "nino34", "nino4", "tna", "tsa", "tio",
                      "north_atlantic", "atlantic_nino", "southern_ocean"]
 
 
-def nino34_index(
-    ts: xr.DataArray,
-    time_start: cftime.datetime = None,
-    time_end: cftime.datetime = None,
-    smooth: bool = True,
-) -> xr.DataArray:
+def nino34_index(ts: xr.DataArray, smooth: bool = True) -> xr.DataArray:
     """
     Compute the Niño3.4 SST anomaly index.
 
-    Area-averaged SST anomalies over 5°S–5°N, 120–170°W. Anomalies are
-    computed relative to the full-period monthly climatology within
-    [time_start, time_end].
+    Area-averaged SST anomalies over 5°S–5°N, 120–170°W, relative to the
+    monthly climatology of ``ts`` (slice ``ts`` in time to set the period).
 
     Parameters
     ----------
     ts : xr.DataArray
         Monthly sea surface temperature, dims (time, lat, lon).
         The time coordinate must use cftime objects.
-    time_start : cftime.datetime, optional
-        Start of the analysis period. Defaults to the first time step of ``ts``.
-    time_end : cftime.datetime, optional
-        End of the analysis period. Defaults to the last time step of ``ts``.
     smooth : bool, optional
         Apply a 3-point binomial filter (weights [0.25, 0.5, 0.25]) to the
         index before returning. Default ``True``.
@@ -53,7 +42,6 @@ def nino34_index(
     xr.DataArray
         Monthly Niño3.4 index, dim (time). Units: °C (or same as ``ts``).
     """
-    ts = ts.sel(time=slice(time_start, time_end))
     index = monthly_anomalies(box_mean(ts, NINO34_BOUNDS))
     if smooth:
         # 3-point binomial filter [0.25, 0.5, 0.25]; endpoints keep the
