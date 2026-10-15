@@ -3,7 +3,8 @@ from cvdp.metrics.enso import NINO34_BOUNDS
 from cvdp.metrics.enso import nino34_monthly_stddev
 from cvdp.metrics.enso import nino34_autocorrelation
 from cvdp.metrics.enso import sst_indices, SST_INDEX_REGIONS
-from cvdp.metrics.regional_timeseries import box_mean, monthly_anomalies, REGIONS
+from cvdp.metrics.regional_timeseries import box_mean, REGIONS
+from cvdp.metrics.trends import monthly_anomalies
 from cvdp.tests.test_inputdata import *
 import numpy as np
 import xarray as xr

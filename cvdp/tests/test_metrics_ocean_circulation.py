@@ -1,4 +1,5 @@
 from cvdp.metrics.ocean_circulation import amoc
+from cvdp.metrics.seasons import CVDP_SEASONS
 from cvdp.tests.test_inputdata import *
 import numpy as np
 import xarray as xr
@@ -34,3 +35,9 @@ def test_amoc_annual_index(sample_moc):
 def test_amoc_invalid_detrend_raises(sample_moc):
     with pytest.raises(ValueError):
         amoc(sample_moc, detrend="not_a_method")
+
+
+def test_amoc_annual_is_ncl_annual_mean(sample_moc):
+    # amoc.ncl:148: runave_n(moc, 12, 0, 0) sampled at June (equal month weights).
+    index, annual = amoc(sample_moc)
+    assert np.allclose(annual, CVDP_SEASONS["ANN"].ncl_annual(index))

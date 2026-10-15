@@ -1,4 +1,5 @@
-from cvdp.metrics.trends import detrend, area_mean, trend_maps, seasonal_timeseries, DETREND_OPTIONS, HIGHPASS30_WEIGHTS
+from cvdp.metrics.trends import (detrend, area_mean, trend_maps, seasonal_timeseries, monthly_anomalies,
+                                 detrended_anomalies, DETREND_OPTIONS, HIGHPASS30_WEIGHTS)
 from cvdp.metrics.seasons import CVDP_SEASONS, NDJFM
 from cvdp.tests.test_inputdata import *
 import numpy as np
@@ -178,10 +179,24 @@ def test_trend_maps_recovers_slope_per_decade():
     assert np.allclose(out["ts_trend_ANN"], 5.0, atol=1e-6)
 
 
-def test_trend_maps_detrend_flattens_trend():
-    da = linear_field(slope_per_year=0.5)
-    out = trend_maps(da, seasons=CVDP_SEASONS.subset(["ANN"]), detrend="linear")
-    assert np.allclose(out["ts_trend_ANN"], 0.0, atol=1e-6)
+def test_trend_maps_uses_ncl_seasonal_means_of_anomalies():
+    # NCL: rmMonAnnCycTLL, then calculate_trends on equal-weight seasonal means
+    # (Season.ncl_annual). Anomalies matter: NCL's first DJF is mean(Jan, Feb),
+    # which on the raw field would carry an annual-cycle offset.
+    da = linear_field(slope_per_year=0.5, calendar="noleap")
+    da = (da + 10 * np.cos(2 * np.pi * da["time"].dt.month / 12)).rename("ts")
+    out = trend_maps(da, seasons=CVDP_SEASONS)
+    for season in CVDP_SEASONS:
+        series = season.ncl_annual(monthly_anomalies(da))
+        expected = series.polyfit("time", 1).polyfit_coefficients.sel(degree=1) * 10
+        assert np.allclose(out[f"ts_trend_{season.name}"], expected)
+
+
+def test_trend_maps_single_season_year_is_missing():
+    # NCL dtrend_msg_n returns missing with one valid value (GISTEMP parity).
+    da = linear_field()
+    da = da.where(da["time"].dt.year == SAMPLE_START_YEAR + 4)
+    assert trend_maps(da, seasons=CVDP_SEASONS.subset(["JJA"]))["ts_trend_JJA"].isnull().all()
 
 
 def test_trend_maps_accepts_ndjfm():
@@ -200,6 +215,24 @@ def test_seasonal_timeseries_structure():
     assert set(out["tas_ts_ANN"].dims) == {"time"}
 
 
+def test_seasonal_timeseries_is_area_mean_of_detrended_anomalies(sample_ts):
+    # NCL calculate_areaavg on rmMonAnnCycTLL + remove_trend output.
+    out = seasonal_timeseries(sample_ts, seasons=CVDP_SEASONS, detrend="linear")
+    anom = detrended_anomalies(sample_ts, "linear")
+    for season in CVDP_SEASONS:
+        assert np.allclose(out[f"ts_ts_{season.name}"], area_mean(season.ncl_annual(anom)))
+
+
+def test_seasonal_timeseries_has_no_years_past_record():
+    # O3: cross-year seasons add no partial season-year after the record.
+    da = linear_field(n_years=10)
+    out = seasonal_timeseries(da, seasons=CVDP_SEASONS + NDJFM)
+    last = SAMPLE_START_YEAR + 9
+    assert int(out["time"].max()) == last
+    assert out["ts_ts_DJF"].sel(time=last).notnull()
+    assert out["ts_ts_NDJFM"].sel(time=SAMPLE_START_YEAR).isnull()
+
+
 def test_seasonal_timeseries_values():
     da = linear_field(slope_per_year=0.5, n_years=10)
     out = seasonal_timeseries(da, seasons=CVDP_SEASONS.subset(["ANN"]))
@@ -208,3 +241,20 @@ def test_seasonal_timeseries_values():
     assert ts.time.size == 10
     # Annual means of a +0.5/yr ramp differ by 0.5 between consecutive years.
     assert np.allclose(np.diff(ts.values), 0.5, atol=1e-9)
+
+
+# --- monthly_anomalies / detrended_anomalies -------------------------------
+
+def test_monthly_anomalies_removes_climatology(sample_ts):
+    anom = monthly_anomalies(sample_ts)
+    # Each calendar month's anomalies average to zero over the record.
+    clim = anom.groupby("time.month").mean("time")
+    assert np.allclose(clim, 0.0, atol=1e-9)
+    assert anom.name == sample_ts.name
+    assert "month" not in anom.coords
+
+
+def test_detrended_anomalies_is_anomalies_then_detrend(sample_ts):
+    # CVDP-ncl order: rmMonAnnCycTLL, then remove_trend.
+    xr.testing.assert_allclose(detrended_anomalies(sample_ts, "none"), monthly_anomalies(sample_ts))
+    xr.testing.assert_allclose(detrended_anomalies(sample_ts, "linear"), detrend(monthly_anomalies(sample_ts), "linear"))

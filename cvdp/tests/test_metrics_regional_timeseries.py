@@ -1,4 +1,5 @@
-from cvdp.metrics.regional_timeseries import regional_timeseries, box_mean, box_select, monthly_anomalies, REGIONS
+from cvdp.metrics.regional_timeseries import regional_timeseries, box_mean, box_select, REGIONS
+from cvdp.metrics.trends import monthly_anomalies
 from cvdp.metrics.seasons import CVDP_SEASONS, NDJFM
 from cvdp.tests.test_inputdata import *
 import numpy as np
@@ -123,12 +124,10 @@ def test_seasonal_reduces_time_dimension(sample_ts):
     assert out["ts_nino34_JJA"].time.size == SAMPLE_LENGTH_YEARS
 
 
-# --- monthly_anomalies -----------------------------------------------------
-
-def test_monthly_anomalies_removes_climatology(sample_ts):
-    anom = monthly_anomalies(sample_ts)
-    # Each calendar month's anomalies average to zero over the record.
-    clim = anom.groupby("time.month").mean("time")
-    assert np.allclose(clim, 0.0, atol=1e-9)
-    assert anom.name == sample_ts.name
-    assert "month" not in anom.coords
+def test_seasonal_uses_ncl_seasonal_means(sample_psl):
+    # NDJFM north_pacific = CVDP-ncl NPI (psl.trends_timeseries.ncl:88: 5-month
+    # runave sampled at January); no season-year past the record.
+    out = regional_timeseries(sample_psl, regions=["north_pacific"], detrend="none", seasons=CVDP_SEASONS.subset(["DJF"]) + NDJFM)
+    index = monthly_anomalies(box_mean(sample_psl, REGIONS["north_pacific"]))
+    assert np.allclose(out["psl_north_pacific_NDJFM"], NDJFM.ncl_annual(index), equal_nan=True)
+    assert int(out["time"].max()) == SAMPLE_START_YEAR + SAMPLE_LENGTH_YEARS - 1

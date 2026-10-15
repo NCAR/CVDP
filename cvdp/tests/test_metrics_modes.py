@@ -1,5 +1,5 @@
 from cvdp.metrics.modes import seasonal_eof_mode
-from cvdp.metrics.regional_timeseries import monthly_anomalies
+from cvdp.metrics.trends import monthly_anomalies
 from cvdp.metrics.seasons import CVDP_SEASONS, NDJFM
 from cvdp.tests.test_inputdata import *
 import numpy as np

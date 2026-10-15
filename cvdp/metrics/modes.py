@@ -30,7 +30,8 @@ import xarray as xr
 
 from cvdp.metrics.eof import eof, regress
 from cvdp.metrics.filters import wgt_runave, lanczos_weights, smth9
-from cvdp.metrics.regional_timeseries import box_mean, box_select, detrended_anomalies as _anomalies
+from cvdp.metrics.regional_timeseries import box_mean, box_select
+from cvdp.metrics.trends import detrended_anomalies as _anomalies
 from cvdp.metrics.seasons import SeasonalDefinition, CVDP_SEASONS, NDJFM
 
 

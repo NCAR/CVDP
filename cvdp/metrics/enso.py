@@ -13,7 +13,8 @@ import xarray as xr
 from scipy.stats import chi2
 
 from cvdp.metrics.filters import wgt_runave
-from cvdp.metrics.regional_timeseries import box_mean, box_select, detrended_anomalies, monthly_anomalies, REGIONS
+from cvdp.metrics.regional_timeseries import box_mean, box_select, REGIONS
+from cvdp.metrics.trends import detrended_anomalies, monthly_anomalies
 
 
 NINO34_BOUNDS = (-5.0, 5.0, 190.0, 240.0)  # 5°S–5°N, 170–120°W

@@ -197,31 +197,43 @@ def test_enso_hovmoller(ncl, sst):
     assert_ncl_close(hov["ts_lanina_hovmoller"], ref["nino34_hov_lanina"])
 
 
-# --- Climatology & trends: known divergence, pending a decision --------------
-# NCL (calculate_means/_stddev/_trends/_areaavg) uses equal-weight NCL seasonal
-# means (Season.ncl_annual); stddev of detrended anomalies; trends of anomalies
-# x record length; global means of anomalies. Ours: day-weighted raw fields.
+# --- Climatology & trends (NCL calculate_means/_stddev/_trends/_areaavg) -----
+# Each variable as its *.mean_stddev.ncl / *.trends_timeseries.ncl reads it
+# (SST clipped and ocean-masked; others unmasked). Trends: ours per decade,
+# NCL per record length.
 
 from cvdp.metrics.climatology import get_seasonal_statistics
 from cvdp.metrics.trends import trend_maps, seasonal_timeseries
 
-PENDING = pytest.mark.xfail(strict=True, reason="climatology/trends not yet NCL-style (decisions.md O13)")
+FIELDS = {"sst": "ERSSTv5", "tas": "GISTEMPv4", "pr": "GPCP", "psl": "ERA5"}
 
 
-@PENDING
-def test_seasonal_statistics(ncl, sst):
-    stats = get_seasonal_statistics(sst.to_dataset(), seasons=CVDP_SEASONS.subset(["DJF"]))
-    assert_ncl_close(stats["ts_mean"].sel(season="DJF"), ncl["ERSSTv5"]["sst_spatialmean_djf"])
-    assert_ncl_close(stats["ts_std"].sel(season="DJF"), ncl["ERSSTv5"]["sst_spatialstddev_djf"])
+@pytest.fixture(scope="module")
+def fields(sst, tas, pr, psl):
+    return {"sst": sst, "tas": tas, "pr": pr, "psl": psl}
 
 
-@PENDING
-def test_trend_maps(ncl, sst):
-    trends = trend_maps(sst, seasons=CVDP_SEASONS.subset(["DJF"]))
-    assert_ncl_close(trends["ts_trend_DJF"] * 46 / 10, ncl["ERSSTv5"]["sst_trends_djf"])  # NCL: per 46 yr
+@pytest.mark.parametrize("nvar", FIELDS)
+def test_seasonal_statistics(ncl, fields, nvar):
+    da, ref = fields[nvar], ncl[FIELDS[nvar]]
+    stats = get_seasonal_statistics(da.to_dataset(), detrend="none")
+    for s in CVDP_SEASONS.names:
+        assert_ncl_close(stats[f"{da.name}_mean"].sel(season=s), ref[f"{nvar}_spatialmean_{s.lower()}"])
+        assert_ncl_close(stats[f"{da.name}_std"].sel(season=s), ref[f"{nvar}_spatialstddev_{s.lower()}"])
 
 
-@PENDING
-def test_global_mean_timeseries(ncl, sst):
-    series = seasonal_timeseries(sst, seasons=CVDP_SEASONS.subset(["ANN"]))
-    assert_ncl_close(series["ts_ts_ANN"], ncl["ERSSTv5"]["sst_global_avg_ann"])
+@pytest.mark.parametrize("nvar", FIELDS)
+def test_trend_maps(ncl, fields, nvar):
+    da, ref = fields[nvar], ncl[FIELDS[nvar]]
+    nyr = da.sizes["time"] / 12
+    trends = trend_maps(da)
+    for s in CVDP_SEASONS.names:
+        assert_ncl_close(trends[f"{da.name}_trend_{s}"] * nyr / 10, ref[f"{nvar}_trends_{s.lower()}"])
+
+
+@pytest.mark.parametrize("nvar", ["sst", "tas", "pr"])  # psl has no global mean in NCL
+def test_global_mean_timeseries(ncl, fields, nvar):
+    da, ref = fields[nvar], ncl[FIELDS[nvar]]
+    series = seasonal_timeseries(da, detrend="none")
+    for s in CVDP_SEASONS.names:
+        assert_ncl_close(series[f"{da.name}_ts_{s}"], ref[f"{nvar}_global_avg_{s.lower()}"])

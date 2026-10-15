@@ -1,7 +1,9 @@
 """
 cvdp.metrics.trends
 
-Seasonal linear trend maps and area-averaged timeseries.
+Detrending and anomalies (CVDP-ncl ``rmMonAnnCycTLL``, ``remove_trend``),
+seasonal linear trend maps and area-averaged timeseries. Seasonal values are
+CVDP-ncl seasonal means (:meth:`~cvdp.metrics.seasons.Season.ncl_annual`).
 Trends are expressed as change per decade.
 
 Seasons are supplied as a SeasonalDefinition (default CVDP_SEASONS).
@@ -71,6 +73,24 @@ def detrend(da: xr.DataArray, method: str) -> xr.DataArray:
 _detrend = detrend  # the `detrend` parameter below shadows the function
 
 
+def monthly_anomalies(da: xr.DataArray) -> xr.DataArray:
+    """Anomalies relative to the full-period monthly climatology of ``da``.
+
+    The baseline is the time span of ``da`` (slice beforehand to control it).
+    Works on gridded fields or a 1-D index. The leftover ``month`` coordinate
+    from the groupby is dropped.
+    """
+    anom = da.groupby("time.month") - da.groupby("time.month").mean("time")
+    return anom.drop_vars("month")
+
+
+def detrended_anomalies(da: xr.DataArray, detrend: str) -> xr.DataArray:
+    """Monthly anomalies, then detrending (``"none"`` skips it): the CVDP-ncl
+    order (``rmMonAnnCycTLL`` then ``remove_trend``)."""
+    anom = monthly_anomalies(da)
+    return anom if detrend == "none" else _detrend(anom, detrend)
+
+
 def area_mean(da: xr.DataArray) -> xr.DataArray:
     """Cosine-latitude weighted mean over lat and lon."""
     return da.weighted(np.cos(np.deg2rad(da["lat"]))).mean(["lat", "lon"])
@@ -79,10 +99,13 @@ def area_mean(da: xr.DataArray) -> xr.DataArray:
 def trend_maps(
     da: xr.DataArray,
     seasons: SeasonalDefinition = CVDP_SEASONS,
-    detrend: str = "none",
 ) -> xr.Dataset:
     """
-    Seasonal linear trend maps for an arbitrary variable.
+    Seasonal linear trend maps for an arbitrary variable, as CVDP-ncl
+    ``rmMonAnnCycTLL`` then ``calculate_trends``: least-squares slope of the
+    NCL seasonal means of monthly anomalies. Anomalies matter only for NCL's
+    first DJF (mean of Jan, Feb). No detrending: it would remove the trend
+    being measured.
 
     Parameters
     ----------
@@ -90,23 +113,20 @@ def trend_maps(
         Monthly field, dims (time, lat, lon). ``da.name`` labels outputs.
     seasons : SeasonalDefinition, optional
         Seasons to compute. Defaults to CVDP_SEASONS.
-    detrend : str, optional
-        Background removal before trend computation. ``"none"`` or one of
-        DETREND_OPTIONS.
 
     Returns
     -------
     xr.Dataset
-        ``{name}_trend_{season}`` per season, dims (lat, lon), units per decade.
+        ``{name}_trend_{season}`` per season, dims (lat, lon), units per
+        decade (NCL: per record length, i.e. ours x n_years / 10).
     """
-    if detrend != "none":
-        da = _detrend(da, detrend)
+    def per_decade(series):
+        slope = series.polyfit("time", 1).polyfit_coefficients.sel(degree=1, drop=True)
+        return (slope * 10).where(series.count("time") > 1)  # NCL dtrend_msg_n: missing for 1 value
+
+    anom = monthly_anomalies(da)
     return xr.Dataset({
-        f"{da.name}_trend_{season.name}": (
-            season.annual(da)
-            .polyfit("time", 1)
-            .polyfit_coefficients.sel(degree=1, drop=True) * 10
-        )
+        f"{da.name}_trend_{season.name}": per_decade(season.ncl_annual(anom))
         for season in seasons
     })
 
@@ -117,7 +137,8 @@ def seasonal_timeseries(
     detrend: str = "none",
 ) -> xr.Dataset:
     """
-    Area-weighted seasonal timeseries for an arbitrary variable.
+    Area-weighted seasonal timeseries of anomalies, as CVDP-ncl
+    ``calculate_areaavg`` after ``rmMonAnnCycTLL`` and ``remove_trend``.
 
     Parameters
     ----------
@@ -126,7 +147,7 @@ def seasonal_timeseries(
     seasons : SeasonalDefinition, optional
         Seasons to compute. Defaults to CVDP_SEASONS.
     detrend : str, optional
-        Background removal before computing timeseries. ``"none"`` or one of
+        Applied to the monthly anomalies. ``"none"`` or one of
         DETREND_OPTIONS.
 
     Returns
@@ -134,9 +155,8 @@ def seasonal_timeseries(
     xr.Dataset
         ``{name}_ts_{season}`` per season, dim (time), units preserved.
     """
-    if detrend != "none":
-        da = _detrend(da, detrend)
+    anom = detrended_anomalies(da, detrend)
     return xr.Dataset({
-        f"{da.name}_ts_{season.name}": area_mean(season.annual(da))
+        f"{da.name}_ts_{season.name}": area_mean(season.ncl_annual(anom))
         for season in seasons
     })

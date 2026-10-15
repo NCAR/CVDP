@@ -72,7 +72,7 @@ def amoc(
     if detrend != "none":
         index = apply_detrend(index, detrend)
     index.name = "amoc"
-    # Day-weighted annual mean via the shared ANN season.
-    annual_index = CVDP_SEASONS["ANN"].annual(index)
+    # NCL annual mean (amoc.ncl: 12-month runave sampled at June).
+    annual_index = CVDP_SEASONS["ANN"].ncl_annual(index)
     annual_index.name = "amoc_annual"
     return index, annual_index

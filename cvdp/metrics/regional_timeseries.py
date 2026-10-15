@@ -19,7 +19,7 @@ import numpy as np
 import xarray as xr
 
 from cvdp.metrics.seasons import Season, SeasonalDefinition
-from cvdp.metrics.trends import detrend as apply_detrend
+from cvdp.metrics.trends import detrend as apply_detrend, monthly_anomalies
 
 
 # Lat/lon bounds for each named region: (lat_south, lat_north, lon_west, lon_east)
@@ -68,24 +68,6 @@ def box_mean(da: xr.DataArray, bounds: tuple[float, float, float, float]) -> xr.
     """
     box = box_select(da, bounds)
     return box.weighted(np.cos(np.deg2rad(box["lat"]))).mean(["lat", "lon"])
-
-
-def monthly_anomalies(da: xr.DataArray) -> xr.DataArray:
-    """Anomalies relative to the full-period monthly climatology of ``da``.
-
-    The baseline is the time span of ``da`` (slice beforehand to control it).
-    Works on gridded fields or a 1-D index. The leftover ``month`` coordinate
-    from the groupby is dropped.
-    """
-    anom = da.groupby("time.month") - da.groupby("time.month").mean("time")
-    return anom.drop_vars("month")
-
-
-def detrended_anomalies(da: xr.DataArray, detrend: str) -> xr.DataArray:
-    """Monthly anomalies, then detrending (``"none"`` skips it): the CVDP-ncl
-    order (``rmMonAnnCycTLL`` then ``remove_trend``)."""
-    anom = monthly_anomalies(da)
-    return anom if detrend == "none" else apply_detrend(anom, detrend)
 
 
 def regional_timeseries(
@@ -142,6 +124,6 @@ def regional_timeseries(
             out[f"{da.name}_{region}"] = index
         else:
             for season in season_list:
-                out[f"{da.name}_{region}_{season.name}"] = season.annual(index)
+                out[f"{da.name}_{region}_{season.name}"] = season.ncl_annual(index)
 
     return xr.Dataset(out)
