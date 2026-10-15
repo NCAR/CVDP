@@ -14,7 +14,7 @@ import pytest
 import xarray as xr
 
 from cvdp.metrics import modes
-from cvdp.metrics.enso import (nino34_index, nino34_power_spectrum, nino34_wavelet,
+from cvdp.metrics.enso import (nino34_index, nino34_monthly_stddev, nino34_autocorrelation, nino34_power_spectrum, nino34_wavelet,
                                enso_composites, enso_hovmoller)
 from cvdp.metrics.seasons import CVDP_SEASONS
 
@@ -157,6 +157,17 @@ def test_nino34_index(ncl, ersst):
     assert_ncl_close(nino34_index(ersst, smooth=False), ncl["ERSSTv5"]["nino34"])
 
 
+def test_nino34_monthly_stddev(ncl, ersst):
+    std = nino34_monthly_stddev(nino34_index(ersst, smooth=False))
+    assert_ncl_close(std, ncl["ERSSTv5"]["nino34_monthly_stddev"])
+
+
+def test_nino34_autocorrelation(ncl, ersst):
+    # NCL esacr(nino34, 48): lags 0..48.
+    acf = nino34_autocorrelation(nino34_index(ersst, smooth=False), max_lag=48)
+    assert_ncl_close(acf.sel(lag=slice(0, None)), ncl["ERSSTv5"]["nino34_autocorrelation"])
+
+
 def test_power_spectrum(ncl):
     spec = nino34_power_spectrum(_monthly(ncl["ERSSTv5"]["nino34"].values))
     ref = ncl["ERSSTv5"]["nino34_spectra"]
@@ -176,16 +187,19 @@ def test_wavelet(ncl):
     assert_ncl_close(significance, ref["nino34_wavelet_significance"])
 
 
-def test_enso_composites(ncl, sst, tas, pr):
-    comp = enso_composites(sst, tas=tas, pr=pr, detrend="none")  # composites use unmasked TAS
+def test_enso_composites(ncl, sst, tas, pr, psl):
+    comp = enso_composites(sst, psl=psl, tas=tas, pr=pr, detrend="none")  # composites use unmasked TAS
     assert comp["ts_elnino"].attrs["elnino_events"] == ncl["ERSSTv5"]["nino34_elnino_spacomp_sst_djf1"].attrs["number_of_elnino_events"]
-    for var, key in (("ts", "ERSSTv5"), ("tas", "GISTEMPv4"), ("pr", "GPCP")):
+    for var, key in (("ts", "ERSSTv5"), ("tas", "GISTEMPv4"), ("pr", "GPCP"), ("psl", "ERA5")):
         nvar = "sst" if var == "ts" else var
         for season in ("jja0", "son0", "djf1", "mam1"):
             for ours, theirs in (("elnino", f"nino34_elnino_spacomp_{nvar}_{season}"),
                                  ("lanina", f"nino34_lanina_spacomp_{nvar}_{season}"),
                                  ("elnino_minus_lanina", f"nino34_spacomp_{nvar}_{season}")):
-                assert_ncl_close(comp[f"{var}_{ours}"].sel(season=season.upper()), ncl[key][theirs])
+                # PSL: NCL float32 hPa (~1000) resolves ~6e-5, the size of our
+                # difference on composite anomalies of a few hPa (D25).
+                rtol = 2e-5 if var == "psl" else 1e-5
+                assert_ncl_close(comp[f"{var}_{ours}"].sel(season=season.upper()), ncl[key][theirs], rtol=rtol)
 
 
 def test_enso_hovmoller(ncl, sst):

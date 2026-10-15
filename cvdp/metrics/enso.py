@@ -56,7 +56,8 @@ def nino34_monthly_stddev(
     nino34: xr.DataArray,
 ) -> xr.DataArray:
     """
-    Standard deviation of the Niño3.4 index by calendar month.
+    Sample standard deviation (n-1) of the Niño3.4 index by calendar month,
+    as CVDP-ncl ``dim_stddev`` (``sst.indices.ncl:412``).
 
     Parameters
     ----------
@@ -70,7 +71,7 @@ def nino34_monthly_stddev(
         Standard deviation for each calendar month, dim (month) with values
         1–12. Units same as ``nino34``.
     """
-    std = nino34.groupby("time.month").std("time")
+    std = nino34.groupby("time.month").std("time", ddof=1)  # NCL dim_stddev
     std.name = "nino34_monthly_stddev"
     return std
 
@@ -80,7 +81,9 @@ def nino34_autocorrelation(
     max_lag: int = 24,
 ) -> xr.DataArray:
     """
-    Lag-autocorrelation of the Niño3.4 index.
+    Lag-autocorrelation of the Niño3.4 index, as CVDP-ncl ``esacr``
+    (``sst.indices.ncl:994``, lags 0–48): sum of lag-k products divided by
+    n-k-1, over the variance (n-1).
 
     Parameters
     ----------
@@ -97,9 +100,11 @@ def nino34_autocorrelation(
         ``+max_lag`` in steps of 1 month. Dimensionless.
     """
     x = nino34 - nino34.mean("time")
-    denom = (x * x).sum("time")
+    n = x.sizes["time"]
+    variance = (x * x).sum("time") / (n - 1)
     lags = list(range(0, max_lag + 1))
-    pos = [(x * x.shift(time=-k)).sum("time") / denom for k in lags]
+    # NCL esacr: lag-k sum of products over n-k-1, variance over n-1.
+    pos = [(x * x.shift(time=-k)).sum("time") / (n - k - 1) / variance for k in lags]
     pos = xr.concat(pos, dim="lag").assign_coords(lag=lags)
     # Autocorrelation of a real series is symmetric: r(-k) == r(k).
     neg = pos.sel(lag=slice(1, None)).assign_coords(lag=[-k for k in lags[1:]])

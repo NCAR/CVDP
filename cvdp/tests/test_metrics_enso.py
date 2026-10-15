@@ -39,8 +39,8 @@ def test_nino34_monthly_stddev(sample_ts):
     assert set(std.dims) == {"month"}
     assert std.month.size == 12
     assert std.name == "nino34_monthly_stddev"
-    # Matches a direct groupby standard deviation.
-    expected = nino34.groupby("time.month").std("time")
+    # NCL dim_stddev: sample std (n-1) per calendar month.
+    expected = nino34.groupby("time.month").std("time", ddof=1)
     assert np.allclose(std.values, expected.values)
 
 
@@ -59,10 +59,11 @@ def test_nino34_autocorrelation(sample_ts):
 def test_nino34_autocorrelation_matches_manual(sample_ts):
     nino34 = nino34_index(sample_ts, smooth=False)
     acf = nino34_autocorrelation(nino34, max_lag=5)
+    # NCL esacr: sum of lag-k products over n-k-1, divided by the variance (n-1).
     x = (nino34 - nino34.mean("time")).values
-    denom = np.sum(x * x)
+    n = len(x)
     for k in range(0, 6):
-        manual = np.sum(x[: len(x) - k] * x[k:]) / denom
+        manual = (np.sum(x[: n - k] * x[k:]) / (n - k - 1)) / (np.sum(x * x) / (n - 1))
         assert np.isclose(acf.sel(lag=k), manual)
 
 
