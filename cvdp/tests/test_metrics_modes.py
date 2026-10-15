@@ -89,7 +89,7 @@ def test_seasonal_eof_mode_detrends(sample_psl):
 
 # --- section 1 wrappers ----------------------------------------------------
 
-from cvdp.metrics.modes import nam, nao, pna, npo, sam, psa1, psa2, soi, ipv_henley, amv, pdo, ipv_eof
+from cvdp.metrics.modes import nam, nao, pna, npo, sam, psa1, psa2, soi, ipv_henley, amv, pdo, ipv_eof, npmm, spmm
 from cvdp.metrics.eof import regress
 from cvdp.metrics.filters import smth9
 
@@ -267,6 +267,35 @@ def test_ipv_eof_tracks_low_frequency_signal():
     interior = slice(108, -108)
     assert abs(float(xr.corr(index.isel(time=interior), slow.isel(time=interior)))) > 0.99
     assert set(maps.data_vars) == {"ts_regr", "pr_regr"}
+
+
+def _meridional_mode_field(mode_box, seed):
+    """Strong ENSO patch plus a weaker independent patch in ``mode_box``."""
+    ts0 = create_sample_dataarray("ts", n_years=20)
+    enso, mode = _series(ts0, seed), _series(ts0, seed + 1)
+    ts = 5 * enso * _box(ts0, (-10, 10, 230, 280)) + 3 * mode * _box(ts0, mode_box) + 0.01 * ts0
+    return ts.rename("ts"), monthly_anomalies(mode)
+
+
+@pytest.mark.parametrize("func, name, mode_box, sign_point", [
+    (npmm, "npmm", (18, 30, 200, 250), (22, 240)),     # sst.indices.ncl:376-386
+    (spmm, "spmm", (-34, -22, 220, 285), (-25, 280)),  # sst.indices.ncl:393-400
+])
+def test_meridional_modes_remove_enso_then_eof(func, name, mode_box, sign_point):
+    # ENSO (PC1 over (-20, 20, 220, 290)) dominates the domain; once regressed
+    # out, EOF1 of the residual is the planted mode. Pattern positive at the
+    # NCL reference point; negating the input only negates the index.
+    ts, mode = _meridional_mode_field(mode_box, seed=3)
+    index, maps = func(ts, detrend="none")
+    assert index.name == name
+    assert abs(float(xr.corr(index, mode))) > 0.95
+    assert np.isclose(float(index.std(ddof=1)), 1.0)
+    assert set(maps.data_vars) == {"ts_regr"}
+    lat, lon = sign_point
+    assert float(maps["ts_regr"].sel(lat=lat, lon=lon, method="nearest")) >= 0
+    neg_index, neg_maps = func(-ts, detrend="none")
+    xr.testing.assert_allclose(neg_index, -index)
+    xr.testing.assert_allclose(neg_maps, maps)
 
 
 # --- domains pinned to CVDP-ncl (random field, so every gridpoint counts) --

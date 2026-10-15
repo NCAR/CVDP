@@ -7,8 +7,9 @@ Modes of climate variability, grouped by how they are computed:
    wrappers around :func:`seasonal_eof_mode`.
 2. Box-index modes (SOI per season; IPV-Henley, AMV monthly): area-mean
    index, fields regressed onto it.
-3. Monthly SST EOF modes (PDO, IPV): leading PC of SST anomalies, fields
-   regressed onto it.
+3. Monthly SST EOF modes (PDO, IPV, NPMM, SPMM): leading PC of SST
+   anomalies (for NPMM/SPMM after regressing out ENSO), fields regressed
+   onto it.
 
 Follows CVDP-ncl v6.1.0 scripts; definitions: ``docs/llm/metrics.md``.
 EOF modes follow NCL's per-mode sign convention: the pattern's sign at a
@@ -287,3 +288,34 @@ def ipv_eof(
     index = _pc(filtered, (-40, 60, 110, 290), sign_point=(40, 165)).rename("ipv")
     maps = _regression_maps(index, detrend, psl=psl, pr=pr, tas=tas)
     return index, maps.assign(ts_regr=regress(filtered, index))
+
+
+def _remove_enso(anom: xr.DataArray) -> xr.DataArray:
+    """SST anomalies minus their regression onto ENSO, the standardised PC 1
+    over (-20, 20, 220, 290), as CVDP-ncl ``sst.indices.ncl`` before
+    NPMM/SPMM. Pattern times PC does not depend on the PC's sign."""
+    pc = _pc(anom, (-20, 20, 220, 290))
+    return anom - regress(anom, pc) * pc
+
+
+def npmm(ts: xr.DataArray, detrend: str = "linear") -> tuple[xr.DataArray, xr.Dataset]:
+    """North Pacific Meridional Mode (CVDP-ncl ``sst.indices.ncl``): PC 1
+    over (-20, 30, 175, 265) of SST anomalies with ENSO regressed out.
+    Pattern positive at (22, 240).
+
+    Returns ``(index, regr_maps)``: standardised monthly index; ``ts_regr`` is
+    the ENSO-removed SST regressed onto it."""
+    resid = _remove_enso(_anomalies(ts, detrend))
+    index = _pc(resid, (-20, 30, 175, 265), sign_point=(22, 240), positive=True).rename("npmm")
+    return index, xr.Dataset({"ts_regr": regress(resid, index)})
+
+
+def spmm(ts: xr.DataArray, detrend: str = "linear") -> tuple[xr.DataArray, xr.Dataset]:
+    """South Pacific Meridional Mode (CVDP-ncl ``sst.indices.ncl``): PC 1
+    over (-35, -20, 180, 290) of SST anomalies with ENSO regressed out.
+    Pattern positive at (-25, 280).
+
+    Returns ``(index, regr_maps)`` as :func:`npmm`."""
+    resid = _remove_enso(_anomalies(ts, detrend))
+    index = _pc(resid, (-35, -20, 180, 290), sign_point=(-25, 280), positive=True).rename("spmm")
+    return index, xr.Dataset({"ts_regr": regress(resid, index)})

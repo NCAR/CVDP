@@ -237,3 +237,53 @@ def test_global_mean_timeseries(ncl, fields, nvar):
     series = seasonal_timeseries(da, detrend="none")
     for s in CVDP_SEASONS.names:
         assert_ncl_close(series[f"{da.name}_ts_{s}"], ref[f"{nvar}_global_avg_{s.lower()}"])
+
+
+# --- SST indices (sst.indices.ncl), NPI, PR land mean ------------------------
+
+from cvdp.metrics.eof import regress
+from cvdp.metrics.enso import sst_indices
+from cvdp.metrics.regional_timeseries import regional_timeseries
+from cvdp.metrics.seasons import NDJFM
+from cvdp.metrics.trends import monthly_anomalies
+
+SST_INDEX_NAMES = {  # ours -> NCL
+    "nino12": "nino12", "nino3": "nino3", "nino4": "nino4",
+    "tna": "north_tropical_atlantic", "tsa": "south_tropical_atlantic", "tio": "tropical_indian_ocean",
+    "north_atlantic": "north_atlantic", "atlantic_nino": "atlantic_nino", "southern_ocean": "southern_ocean",
+    "amm": "atlantic_meridional_mode", "iod": "indian_ocean_dipole",
+}
+
+
+def test_sst_indices(ncl, sst):
+    out = sst_indices(sst, detrend="none")
+    for ours, theirs in SST_INDEX_NAMES.items():
+        assert_ncl_close(out[ours], ncl["ERSSTv5"][theirs])
+
+
+def test_index_pattern_is_one_regression(ncl, sst):
+    # {index}_pattern_mon = regCoef(index, sst): done at runtime, not by a metric.
+    tna = sst_indices(sst, detrend="none")["tna"]
+    assert_ncl_close(regress(monthly_anomalies(sst), tna), ncl["ERSSTv5"]["north_tropical_atlantic_pattern_mon"])
+
+
+@pytest.mark.parametrize("name, theirs", [("npmm", "north_pacific_meridional_mode"),
+                                          ("spmm", "south_pacific_meridional_mode")])
+def test_pacific_meridional_modes(ncl, sst, name, theirs):
+    index, maps = getattr(modes, name)(sst, detrend="none")
+    assert_ncl_close(index, ncl["ERSSTv5"][theirs])
+    assert_ncl_close(maps["ts_regr"], ncl["ERSSTv5"][f"{theirs}_pattern_mon"])
+
+
+def test_north_pacific_index(ncl, psl):
+    npi = regional_timeseries(psl, ["north_pacific"], detrend="none", seasons=NDJFM)["psl_north_pacific_NDJFM"]
+    # NCL's first NDJFM is mean(Jan-Mar) of the first year (psl.trends_timeseries.ncl:89);
+    # ncl_annual leaves it NaN (decisions.md O19), so compare from the second year.
+    assert_ncl_close(npi.isel(time=slice(1, None)), ncl["ERA5"]["north_pacific_index_ndjfm"][1:])
+
+
+def test_pr_global_land_mean(ncl, pr):
+    # Land mask applied by the caller (runtime), as pr.trends_timeseries.ncl:113.
+    series = seasonal_timeseries(pr.where(_lsmask(pr) != 0), detrend="none")
+    for s in CVDP_SEASONS.names:
+        assert_ncl_close(series[f"pr_ts_{s}"], ncl["GPCP"][f"pr_global_avg_land_{s.lower()}"])

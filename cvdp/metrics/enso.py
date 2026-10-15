@@ -18,7 +18,8 @@ from cvdp.metrics.trends import detrended_anomalies, monthly_anomalies
 
 
 NINO34_BOUNDS = (-5.0, 5.0, 190.0, 240.0)  # 5°S–5°N, 170–120°W
-SST_INDEX_REGIONS = ["nino12", "nino3", "nino34", "nino4", "tna", "tsa", "tio"]
+SST_INDEX_REGIONS = ["nino12", "nino3", "nino34", "nino4", "tna", "tsa", "tio",
+                     "north_atlantic", "atlantic_nino", "southern_ocean"]
 
 
 def nino34_index(
@@ -322,47 +323,33 @@ def enso_hovmoller(
     )
 
 
-def sst_indices(
-    ts: xr.DataArray,
-    time_start: cftime.datetime = None,
-    time_end: cftime.datetime = None,
-) -> xr.Dataset:
+def sst_indices(ts: xr.DataArray, detrend: str = "linear") -> xr.Dataset:
     """
-    Regional SST anomaly indices.
+    Regional SST anomaly indices, as CVDP-ncl ``sst.indices.ncl``.
 
-    Computes area-weighted SST anomalies for standard ENSO and climate
-    index boxes. Anomalies are relative to the full-period monthly climatology
-    within [time_start, time_end].
-
-    Regions computed
-    ----------------
-    - Niño 1+2 : 0–10°S, 90–80°W
-    - Niño 3   : 5°N–5°S, 150–90°W
-    - Niño 3.4 : 5°N–5°S, 170–120°W
-    - Niño 4   : 5°N–5°S, 160°E–150°W
-    - Tropical North Atlantic (TNA) : 5–25°N, 55–15°W
-    - Tropical South Atlantic (TSA) : 0–20°S, 30°W–10°E
-    - Tropical Indian Ocean (TIO) : 20°S–20°N, 40–110°E
+    Area-weighted means of detrended monthly SST anomalies over the
+    ``SST_INDEX_REGIONS`` boxes (see ``REGIONS``), plus two box differences:
+    Atlantic Meridional Mode ``amm`` = (5, 15, 310, 340) − (−15, −5, 340, 10)
+    and Indian Ocean Dipole ``iod`` = (−10, 10, 50, 70) − (−10, 0, 90, 110).
+    Regression patterns are one :func:`~cvdp.metrics.eof.regress` call each,
+    left to the caller.
 
     Parameters
     ----------
     ts : xr.DataArray
-        Monthly sea surface temperature, dims (time, lat, lon).
-        The time coordinate must use cftime objects.
-    time_start : cftime.datetime, optional
-        Start of the analysis period. Defaults to the first time step of ``ts``.
-    time_end : cftime.datetime, optional
-        End of the analysis period. Defaults to the last time step of ``ts``.
+        Monthly sea surface temperature, dims (time, lat, lon), cftime time.
+    detrend : str, optional
+        ``"none"`` or a :func:`~cvdp.metrics.trends.detrend` method, applied
+        to the anomalies. Default ``"linear"``.
 
     Returns
     -------
     xr.Dataset
-        Variables ``nino12``, ``nino3``, ``nino34``, ``nino4``, ``tna``,
-        ``tsa``, ``tio``, each with dim (time). Units same as ``ts``.
+        One variable per region plus ``amm`` and ``iod``, dim (time). Units
+        same as ``ts``.
     """
-    ts = ts.sel(time=slice(time_start, time_end))
-    out = {
-        region: monthly_anomalies(box_mean(ts, REGIONS[region]))
-        for region in SST_INDEX_REGIONS
-    }
+    anom = detrended_anomalies(ts, detrend)
+    out = {region: box_mean(anom, REGIONS[region]) for region in SST_INDEX_REGIONS}
+    out["amm"] = box_mean(anom, (5, 15, 310, 340)) - box_mean(anom, (-15, -5, 340, 10))
+    out["iod"] = box_mean(anom, (-10, 10, 50, 70)) - box_mean(anom, (-10, 0, 90, 110))
     return xr.Dataset(out)

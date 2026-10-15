@@ -4,7 +4,7 @@ from cvdp.metrics.enso import nino34_monthly_stddev
 from cvdp.metrics.enso import nino34_autocorrelation
 from cvdp.metrics.enso import sst_indices, SST_INDEX_REGIONS
 from cvdp.metrics.regional_timeseries import box_mean, REGIONS
-from cvdp.metrics.trends import monthly_anomalies
+from cvdp.metrics.trends import monthly_anomalies, detrended_anomalies
 from cvdp.tests.test_inputdata import *
 import numpy as np
 import xarray as xr
@@ -69,16 +69,35 @@ def test_nino34_autocorrelation_matches_manual(sample_ts):
 def test_sst_indices_names_and_shape(sample_ts):
     out = sst_indices(sample_ts)
     assert isinstance(out, xr.Dataset)
-    assert set(out.data_vars) == set(SST_INDEX_REGIONS)
-    assert set(SST_INDEX_REGIONS) == {"nino12", "nino3", "nino34", "nino4", "tna", "tsa", "tio"}
-    for name in SST_INDEX_REGIONS:
+    assert set(SST_INDEX_REGIONS) == {"nino12", "nino3", "nino34", "nino4", "tna", "tsa", "tio",
+                                      "north_atlantic", "atlantic_nino", "southern_ocean"}
+    assert set(out.data_vars) == set(SST_INDEX_REGIONS) | {"amm", "iod"}
+    for name in out.data_vars:
         assert set(out[name].dims) == {"time"}
 
 
 def test_sst_indices_match_box_anomaly(sample_ts):
+    out = sst_indices(sample_ts, detrend="none")
+    for region in SST_INDEX_REGIONS:
+        expected = monthly_anomalies(box_mean(sample_ts, REGIONS[region]))
+        assert np.allclose(out[region].values, expected.values)
+
+
+def test_sst_indices_box_difference_indices(sample_ts):
+    # sst.indices.ncl:251-254, 338: AMM and IOD are differences of two box means.
+    out = sst_indices(sample_ts, detrend="none")
+    anom = monthly_anomalies(sample_ts)
+    amm = box_mean(anom, (5, 15, 310, 340)) - box_mean(anom, (-15, -5, 340, 10))
+    iod = box_mean(anom, (-10, 10, 50, 70)) - box_mean(anom, (-10, 0, 90, 110))
+    assert np.allclose(out["amm"], amm)
+    assert np.allclose(out["iod"], iod)
+
+
+def test_sst_indices_detrend(sample_ts):
+    # As NCL: remove_trend after the anomalies (default linear, like other metrics).
     out = sst_indices(sample_ts)
-    expected = monthly_anomalies(box_mean(sample_ts, REGIONS["nino34"]))
-    assert np.allclose(out["nino34"].values, expected.values)
+    expected = box_mean(detrended_anomalies(sample_ts, "linear"), REGIONS["tio"])
+    assert np.allclose(out["tio"], expected)
 
 
 # --- ENSO events, composites, Hovmollers (CVDP-ncl sst.indices.ncl) --------

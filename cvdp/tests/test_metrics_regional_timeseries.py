@@ -131,3 +131,11 @@ def test_seasonal_uses_ncl_seasonal_means(sample_psl):
     index = monthly_anomalies(box_mean(sample_psl, REGIONS["north_pacific"]))
     assert np.allclose(out["psl_north_pacific_NDJFM"], NDJFM.ncl_annual(index), equal_nan=True)
     assert int(out["time"].max()) == SAMPLE_START_YEAR + SAMPLE_LENGTH_YEARS - 1
+
+
+def test_regions_match_ncl_boxes():
+    # sst.indices.ncl box definitions (lon 0-360; west > east wraps 0E).
+    assert REGIONS["tna"] == (5.5, 23.5, 302.5, 345.0)
+    assert REGIONS["tio"] == (-15.0, 15.0, 40.0, 110.0)
+    assert REGIONS["atlantic_nino"] == (-3.0, 3.0, 340.0, 360.0)
+    assert REGIONS["southern_ocean"] == (-70.0, -50.0, 0.0, 360.0)
