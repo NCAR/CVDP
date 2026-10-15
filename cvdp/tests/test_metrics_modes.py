@@ -145,6 +145,50 @@ def test_eof_mode_default_seasons(sample_psl):
     assert "sam_pc_NDJFM" not in sam(sample_psl)[1]
 
 
+
+# --- monthly PSL modes (CVDP-ncl MONTHLY_MODES) ----------------------------
+
+from cvdp.metrics.modes import monthly_psl_mode, PSL_EOF_MODES as MODE_TABLE
+
+
+def test_mode_table_matches_wrappers():
+    # One source of truth for domain, EOF number and sign point (D29).
+    assert {n: (b, e, p) for _, n, b, e, p in PSL_EOF_MODES} == MODE_TABLE
+
+
+@pytest.mark.parametrize("name", list(MODE_TABLE))
+def test_monthly_psl_mode_is_seasonal_recipe_on_monthly_anomalies(sample_psl, name):
+    # calculate_eofs_mon: no seasonal averaging; same domain, EOF and sign point
+    # (nam.ncl:137-150 etc.). Pattern = monthly anomalies regressed onto the PC.
+    bounds, number, (lat, lon) = MODE_TABLE[name]
+    pattern, index = monthly_psl_mode(sample_psl, name, detrend="none")
+    anom = monthly_anomalies(sample_psl)
+    assert index.name == f"{name}_mon" and pattern.name == f"{name}_pattern_mon"
+    assert index.sizes["time"] == sample_psl.sizes["time"]
+    assert np.isclose(float(index.std(ddof=1)), 1.0)
+    xr.testing.assert_allclose(pattern, regress(anom, index).rename(pattern.name))
+    assert float(pattern.sel(lat=lat, lon=lon, method="nearest")) <= 0
+    neg_pattern, neg_index = monthly_psl_mode(-sample_psl, name, detrend="none")
+    xr.testing.assert_allclose(neg_pattern, pattern)
+    xr.testing.assert_allclose(neg_index, -index)
+
+
+def test_monthly_psl_mode_recovers_planted_monthly_signal(sample_psl):
+    signal, pc = _planted(sample_psl, 5.0, (300, 340), seed=1)
+    _, index = monthly_psl_mode(signal + 0.1 * sample_psl, "nao", detrend="none")
+    assert abs(_corr(index, monthly_anomalies(pc))) > 0.99
+
+
+def test_monthly_soi_is_box_difference(sample_psl):
+    # soi.ncl:131-143: monthly west - east box means, not standardised.
+    pattern, index = monthly_psl_mode(sample_psl, "soi", detrend="none")
+    anom = monthly_anomalies(sample_psl)
+    expected = box_mean(anom, (-30, 0, 70, 170)) - box_mean(anom, (-30, 0, 200, 280))
+    assert np.allclose(index, expected)
+    assert index.name == "soi_mon"
+    xr.testing.assert_allclose(pattern, regress(anom, index).rename("soi_pattern_mon"))
+
+
 # --- section 2: box-index modes --------------------------------------------
 
 def _box(da, bounds):

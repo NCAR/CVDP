@@ -46,6 +46,19 @@ from cvdp.metrics.seasons import SeasonalDefinition, CVDP_SEASONS, NDJFM
 # Northern Hemisphere modes add the extended-winter NDJFM season.
 NH_SEASONS = CVDP_SEASONS + NDJFM
 
+# Section 1 PSL EOF modes: name -> (domain, EOF number, sign reference point
+# where the pattern is made negative). NCL nam.ncl, nao.ncl, pna_npo.ncl, sam_psa.ncl.
+PSL_EOF_MODES = {
+    "nam": ((20, 90, 0, 360), 1, (85, 5)),
+    "nao": ((20, 80, 270, 40), 1, (70, 350)),
+    "pna": ((20, 85, 120, 240), 1, (50, 185)),
+    "npo": ((20, 85, 120, 240), 2, (65, 185)),
+    "sam": ((-90, -20, 0, 360), 1, (-85, 5)),
+    "psa1": ((-90, -20, 0, 360), 2, (-62, 210)),
+    "psa2": ((-90, -20, 0, 360), 3, (-60, 280)),
+}
+SOI_BOXES = ((-30, 0, 70, 170), (-30, 0, 200, 280))  # west, east (soi.ncl)
+
 
 def _regression_maps(index: xr.DataArray, detrend: str, **fields) -> dict[str, xr.DataArray]:
     """``{var}_regr``: anomalies of each supplied field regressed onto ``index``,
@@ -140,38 +153,58 @@ def seasonal_eof_mode(
 
 def nam(psl: xr.DataArray, seasons: SeasonalDefinition = NH_SEASONS, detrend: str = "linear"):
     """Northern Annular Mode: EOF 1 over (20, 90, 0, 360). See :func:`seasonal_eof_mode`."""
-    return seasonal_eof_mode(psl, "nam", (20, 90, 0, 360), 1, seasons, detrend, (85, 5))
+    return seasonal_eof_mode(psl, "nam", *PSL_EOF_MODES["nam"][:2], seasons, detrend, PSL_EOF_MODES["nam"][2])
 
 
 def nao(psl: xr.DataArray, seasons: SeasonalDefinition = NH_SEASONS, detrend: str = "linear"):
     """North Atlantic Oscillation: EOF 1 over (20, 80, 270, 40). See :func:`seasonal_eof_mode`."""
-    return seasonal_eof_mode(psl, "nao", (20, 80, 270, 40), 1, seasons, detrend, (70, 350))
+    return seasonal_eof_mode(psl, "nao", *PSL_EOF_MODES["nao"][:2], seasons, detrend, PSL_EOF_MODES["nao"][2])
 
 
 def pna(psl: xr.DataArray, seasons: SeasonalDefinition = NH_SEASONS, detrend: str = "linear"):
     """Pacific-North American pattern: EOF 1 over (20, 85, 120, 240). See :func:`seasonal_eof_mode`."""
-    return seasonal_eof_mode(psl, "pna", (20, 85, 120, 240), 1, seasons, detrend, (50, 185))
+    return seasonal_eof_mode(psl, "pna", *PSL_EOF_MODES["pna"][:2], seasons, detrend, PSL_EOF_MODES["pna"][2])
 
 
 def npo(psl: xr.DataArray, seasons: SeasonalDefinition = NH_SEASONS, detrend: str = "linear"):
     """North Pacific Oscillation: EOF 2 over (20, 85, 120, 240). See :func:`seasonal_eof_mode`."""
-    return seasonal_eof_mode(psl, "npo", (20, 85, 120, 240), 2, seasons, detrend, (65, 185))
+    return seasonal_eof_mode(psl, "npo", *PSL_EOF_MODES["npo"][:2], seasons, detrend, PSL_EOF_MODES["npo"][2])
 
 
 def sam(psl: xr.DataArray, seasons: SeasonalDefinition = CVDP_SEASONS, detrend: str = "linear"):
     """Southern Annular Mode: EOF 1 over (-90, -20, 0, 360). See :func:`seasonal_eof_mode`."""
-    return seasonal_eof_mode(psl, "sam", (-90, -20, 0, 360), 1, seasons, detrend, (-85, 5))
+    return seasonal_eof_mode(psl, "sam", *PSL_EOF_MODES["sam"][:2], seasons, detrend, PSL_EOF_MODES["sam"][2])
 
 
 def psa1(psl: xr.DataArray, seasons: SeasonalDefinition = CVDP_SEASONS, detrend: str = "linear"):
     """Pacific-South American pattern 1: EOF 2 over (-90, -20, 0, 360). See :func:`seasonal_eof_mode`."""
-    return seasonal_eof_mode(psl, "psa1", (-90, -20, 0, 360), 2, seasons, detrend, (-62, 210))
+    return seasonal_eof_mode(psl, "psa1", *PSL_EOF_MODES["psa1"][:2], seasons, detrend, PSL_EOF_MODES["psa1"][2])
 
 
 def psa2(psl: xr.DataArray, seasons: SeasonalDefinition = CVDP_SEASONS, detrend: str = "linear"):
     """Pacific-South American pattern 2: EOF 3 over (-90, -20, 0, 360). See :func:`seasonal_eof_mode`."""
-    return seasonal_eof_mode(psl, "psa2", (-90, -20, 0, 360), 3, seasons, detrend, (-60, 280))
+    return seasonal_eof_mode(psl, "psa2", *PSL_EOF_MODES["psa2"][:2], seasons, detrend, PSL_EOF_MODES["psa2"][2])
 
+
+
+def monthly_psl_mode(psl: xr.DataArray, name: str, detrend: str = "linear") -> tuple[xr.DataArray, xr.DataArray]:
+    """Monthly version of a PSL mode (CVDP-ncl ``MONTHLY_MODES``): the
+    seasonal recipe on monthly anomalies, without seasonal averaging.
+
+    ``name`` is a ``PSL_EOF_MODES`` key (``calculate_eofs_mon``: same domain,
+    EOF number and sign convention; standardised PC) or ``"soi"``
+    (``soi.ncl:131``: west minus east box means, not standardised).
+
+    Returns ``(pattern, index)``: ``{name}_pattern_mon`` (monthly anomalies
+    regressed onto the index) and ``{name}_mon``, on the monthly time axis."""
+    anom = _anomalies(psl, detrend)
+    if name == "soi":
+        index = box_mean(anom, SOI_BOXES[0]) - box_mean(anom, SOI_BOXES[1])
+    else:
+        bounds, number, sign_point = PSL_EOF_MODES[name]
+        index = _pc(anom, bounds, number, sign_point)
+    index = index.rename(f"{name}_mon")
+    return regress(anom, index).rename(f"{name}_pattern_mon"), index
 
 # --- 2. Box-index modes ----------------------------------------------------
 
@@ -191,7 +224,7 @@ def soi(
     patterns, timeseries = {}, {}
     for season in seasons:
         seasonal = season.ncl_annual(anom)
-        index = box_mean(seasonal, (-30, 0, 70, 170)) - box_mean(seasonal, (-30, 0, 200, 280))
+        index = box_mean(seasonal, SOI_BOXES[0]) - box_mean(seasonal, SOI_BOXES[1])
         timeseries[f"soi_index_{season.name}"] = index
         patterns[f"soi_pattern_{season.name}"] = regress(seasonal, index)
     return xr.Dataset(patterns), xr.Dataset(timeseries)
