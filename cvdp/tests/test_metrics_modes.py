@@ -94,21 +94,49 @@ from cvdp.metrics.eof import regress
 from cvdp.metrics.filters import smth9
 
 
-@pytest.mark.parametrize("func, name, bounds, eof_number", [
-    (nam, "nam", (20, 90, 0, 360), 1),
-    (nao, "nao", (20, 80, 270, 40), 1),
-    (pna, "pna", (20, 85, 120, 240), 1),
-    (npo, "npo", (20, 85, 120, 240), 2),
-    (sam, "sam", (-90, -20, 0, 360), 1),
-    (psa1, "psa1", (-90, -20, 0, 360), 2),
-    (psa2, "psa2", (-90, -20, 0, 360), 3),
-])
-def test_eof_mode_wrappers_use_ncl_domain_and_eof(sample_psl, func, name, bounds, eof_number):
+PSL_EOF_MODES = [  # NCL domain, EOF number and sign reference point (pattern < 0 there)
+    (nam, "nam", (20, 90, 0, 360), 1, (85, 5)),
+    (nao, "nao", (20, 80, 270, 40), 1, (70, 350)),
+    (pna, "pna", (20, 85, 120, 240), 1, (50, 185)),
+    (npo, "npo", (20, 85, 120, 240), 2, (65, 185)),
+    (sam, "sam", (-90, -20, 0, 360), 1, (-85, 5)),
+    (psa1, "psa1", (-90, -20, 0, 360), 2, (-62, 210)),
+    (psa2, "psa2", (-90, -20, 0, 360), 3, (-60, 280)),
+]
+
+
+@pytest.mark.parametrize("func, name, bounds, eof_number, sign_point", PSL_EOF_MODES)
+def test_eof_mode_wrappers_use_ncl_domain_and_eof(sample_psl, func, name, bounds, eof_number, sign_point):
     seasons = CVDP_SEASONS.subset(["ANN", "DJF"])
     got = func(sample_psl, seasons=seasons, detrend="none")
-    expected = seasonal_eof_mode(sample_psl, name, bounds, eof_number, seasons, "none")
+    expected = seasonal_eof_mode(sample_psl, name, bounds, eof_number, seasons, "none", sign_point)
     for g, e in zip(got, expected):
         xr.testing.assert_allclose(g, e)
+
+
+@pytest.mark.parametrize("func, name, bounds, eof_number, sign_point", PSL_EOF_MODES)
+def test_eof_mode_sign_follows_ncl(sample_psl, func, name, bounds, eof_number, sign_point):
+    # Negating the input must not change the pattern, only the PC.
+    seasons = CVDP_SEASONS.subset(["ANN", "DJF"])
+    patterns, pcs = func(sample_psl, seasons=seasons, detrend="none")
+    neg_patterns, neg_pcs = func(-sample_psl, seasons=seasons, detrend="none")
+    lat, lon = sign_point
+    for s in seasons.names:
+        assert float(patterns[f"{name}_pattern_{s}"].sel(lat=lat, lon=lon, method="nearest")) <= 0
+    xr.testing.assert_allclose(neg_patterns, patterns)
+    xr.testing.assert_allclose(neg_pcs, -pcs)
+
+
+def test_seasonal_eof_mode_missing_sign_point_leaves_sign(sample_psl):
+    # As NCL: a missing value at the reference point skips the flip.
+    psl = sample_psl.where(~((sample_psl["lat"] == sample_psl["lat"].sel(lat=85, method="nearest"))
+                             & (sample_psl["lon"] == sample_psl["lon"].sel(lon=5, method="nearest"))))
+    seasons = CVDP_SEASONS.subset(["ANN"])
+    for sign in (1, -1):
+        got = seasonal_eof_mode(sign * psl, "nam", (20, 90, 0, 360), 1, seasons, "none", (85, 5))
+        expected = seasonal_eof_mode(sign * psl, "nam", (20, 90, 0, 360), 1, seasons, "none")
+        for g, e in zip(got, expected):
+            xr.testing.assert_allclose(g, e)
 
 
 def test_eof_mode_default_seasons(sample_psl):
@@ -199,6 +227,26 @@ def test_pdo_recovers_planted_mode(sample_ts, sample_tas):
     assert inside > 10 * float(abs(maps["ts_regr"].sel(lat=-48)).max())
 
 
+def test_pdo_sign_follows_ncl(sample_ts, sample_tas):
+    # NCL pdv.ncl: pattern forced positive at (57N, 220E); all maps share the PC.
+    index, maps = pdo(sample_ts, tas=sample_tas, detrend="none")
+    neg_index, neg_maps = pdo(-sample_ts, tas=sample_tas, detrend="none")
+    assert float(maps["ts_regr"].sel(lat=57, lon=220, method="nearest")) >= 0
+    xr.testing.assert_allclose(neg_maps["ts_regr"], maps["ts_regr"])
+    xr.testing.assert_allclose(neg_index, -index)
+    xr.testing.assert_allclose(neg_maps["tas_regr"], -maps["tas_regr"])
+
+
+def test_ipv_eof_sign_follows_ncl():
+    # NCL ipv.ncl: pattern forced negative at (40N, 165E).
+    ts = create_sample_dataarray("ts", n_years=40)
+    index, maps = ipv_eof(ts, detrend="none")
+    neg_index, neg_maps = ipv_eof(-ts, detrend="none")
+    assert float(maps["ts_regr"].sel(lat=40, lon=165, method="nearest")) <= 0
+    xr.testing.assert_allclose(neg_maps["ts_regr"], maps["ts_regr"])
+    xr.testing.assert_allclose(neg_index, -index)
+
+
 def test_ipv_eof_requires_min_years(sample_ts):
     with pytest.raises(ValueError):
         ipv_eof(sample_ts)
@@ -244,9 +292,16 @@ def test_box_index_modes_use_ncl_boxes(sample_ts, sample_psl):
 def test_sst_eof_modes_use_ncl_domains():
     ts = create_sample_dataarray("ts", n_years=40)
     anom = monthly_anomalies(ts)
+    def pc1(field, bounds):
+        pc = eof(box_select(field, bounds)).sel(mode=1)
+        return pc / pc.std(ddof=1)
+
+    def same_up_to_sign(a, b):
+        return np.allclose(a, b) or np.allclose(a, -b)
+
     pdo_index, _ = pdo(ts, detrend="none")
-    assert np.allclose(pdo_index, eof(box_select(anom, (20, 70, 110, 260))).sel(mode=1))
+    assert same_up_to_sign(pdo_index, pc1(anom, (20, 70, 110, 260)))
     from cvdp.metrics.filters import wgt_runave, lanczos_weights
     filtered = wgt_runave(anom, lanczos_weights(217, 1 / 157), kopt=1)
     ipv_index, _ = ipv_eof(ts, detrend="none")
-    assert np.allclose(ipv_index, eof(box_select(filtered, (-40, 60, 110, 290))).sel(mode=1))
+    assert same_up_to_sign(ipv_index, pc1(filtered, (-40, 60, 110, 290)))

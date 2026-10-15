@@ -11,7 +11,9 @@ Modes of climate variability, grouped by how they are computed:
    regressed onto it.
 
 Follows CVDP-ncl v6.1.0 scripts; definitions: ``docs/llm/metrics.md``.
-EOF/PC signs are arbitrary (NCL's per-mode sign flips are not applied).
+EOF modes follow NCL's per-mode sign convention: the pattern's sign at a
+reference point (e.g. ``nam.ncl:104``), fixed on the raw PC before it is
+standardised and fields are regressed onto it.
 Bounds are ``(lat_south, lat_north, lon_west, lon_east)``, lon 0–360.
 
 Common parameters
@@ -44,9 +46,21 @@ def _regression_maps(index: xr.DataArray, detrend: str, **fields) -> xr.Dataset:
     })
 
 
-def _pc(anom: xr.DataArray, bounds, number: int = 1) -> xr.DataArray:
-    """Standardised PC ``number`` over ``bounds``; explained variance in attrs."""
+def _pc(anom: xr.DataArray, bounds, number: int = 1, sign_point=None, positive: bool = False) -> xr.DataArray:
+    """Standardised PC ``number`` over ``bounds``; explained variance in attrs.
+
+    With ``sign_point`` (lat, lon), the raw PC is flipped, before
+    standardising, so that ``anom`` regressed onto it is negative at the
+    nearest gridpoint (positive if ``positive``). This is the sign NCL gives
+    the pattern after regressing (``.ge.0``/``.lt.0`` flip). A missing value
+    there leaves the sign arbitrary, as NCL ``ismissing``."""
     pc = eof(box_select(anom, bounds), n=number).sel(mode=number)
+    if sign_point is not None:
+        lat, lon = sign_point
+        slope = float(regress(anom.sel(lat=lat, lon=lon, method="nearest"), pc))
+        if (slope < 0) if positive else (slope >= 0):  # NaN: no flip
+            pc = -pc
+    pc = pc / pc.std("time", ddof=1)  # NCL dim_standardize; mean already 0
     return pc.drop_vars(["mode", "variance_fraction"]).assign_attrs(
         variance_fraction=float(pc["variance_fraction"])
     )
@@ -61,6 +75,7 @@ def seasonal_eof_mode(
     eof_number: int,
     seasons: SeasonalDefinition = CVDP_SEASONS,
     detrend: str = "linear",
+    sign_point: tuple[float, float] | None = None,
 ) -> tuple[xr.Dataset, xr.Dataset]:
     """
     One EOF mode of seasonal-mean anomalies, per season. Shared core of the
@@ -70,7 +85,8 @@ def seasonal_eof_mode(
     ``calculate_eofs``): monthly anomalies are detrended, averaged to one
     value per year with :meth:`~cvdp.metrics.seasons.Season.ncl_annual`
     (equal month weights), the EOFs are computed over ``bounds``, and the
-    global field is regressed onto the standardised PC. The sign of the mode
+    global field is regressed onto the standardised PC. With ``sign_point``
+    the pattern is made negative there (NCL convention); otherwise the sign
     is arbitrary.
 
     Parameters
@@ -89,6 +105,9 @@ def seasonal_eof_mode(
     detrend : str, optional
         ``"none"`` or a :func:`~cvdp.metrics.trends.detrend` method, applied
         to the monthly anomalies. Default ``"linear"``.
+    sign_point : tuple, optional
+        ``(lat, lon)`` where the pattern is made negative (nearest
+        gridpoint). Default None: sign arbitrary.
 
     Returns
     -------
@@ -103,7 +122,7 @@ def seasonal_eof_mode(
     patterns, pcs = {}, {}
     for season in seasons:
         seasonal = season.ncl_annual(anom)
-        pc = _pc(seasonal, bounds, eof_number)
+        pc = _pc(seasonal, bounds, eof_number, sign_point)
         pcs[f"{name}_pc_{season.name}"] = pc
         patterns[f"{name}_pattern_{season.name}"] = regress(seasonal, pc)
     return xr.Dataset(patterns), xr.Dataset(pcs)
@@ -111,37 +130,37 @@ def seasonal_eof_mode(
 
 def nam(psl: xr.DataArray, seasons: SeasonalDefinition = NH_SEASONS, detrend: str = "linear"):
     """Northern Annular Mode: EOF 1 over (20, 90, 0, 360). See :func:`seasonal_eof_mode`."""
-    return seasonal_eof_mode(psl, "nam", (20, 90, 0, 360), 1, seasons, detrend)
+    return seasonal_eof_mode(psl, "nam", (20, 90, 0, 360), 1, seasons, detrend, (85, 5))
 
 
 def nao(psl: xr.DataArray, seasons: SeasonalDefinition = NH_SEASONS, detrend: str = "linear"):
     """North Atlantic Oscillation: EOF 1 over (20, 80, 270, 40). See :func:`seasonal_eof_mode`."""
-    return seasonal_eof_mode(psl, "nao", (20, 80, 270, 40), 1, seasons, detrend)
+    return seasonal_eof_mode(psl, "nao", (20, 80, 270, 40), 1, seasons, detrend, (70, 350))
 
 
 def pna(psl: xr.DataArray, seasons: SeasonalDefinition = NH_SEASONS, detrend: str = "linear"):
     """Pacific-North American pattern: EOF 1 over (20, 85, 120, 240). See :func:`seasonal_eof_mode`."""
-    return seasonal_eof_mode(psl, "pna", (20, 85, 120, 240), 1, seasons, detrend)
+    return seasonal_eof_mode(psl, "pna", (20, 85, 120, 240), 1, seasons, detrend, (50, 185))
 
 
 def npo(psl: xr.DataArray, seasons: SeasonalDefinition = NH_SEASONS, detrend: str = "linear"):
     """North Pacific Oscillation: EOF 2 over (20, 85, 120, 240). See :func:`seasonal_eof_mode`."""
-    return seasonal_eof_mode(psl, "npo", (20, 85, 120, 240), 2, seasons, detrend)
+    return seasonal_eof_mode(psl, "npo", (20, 85, 120, 240), 2, seasons, detrend, (65, 185))
 
 
 def sam(psl: xr.DataArray, seasons: SeasonalDefinition = CVDP_SEASONS, detrend: str = "linear"):
     """Southern Annular Mode: EOF 1 over (-90, -20, 0, 360). See :func:`seasonal_eof_mode`."""
-    return seasonal_eof_mode(psl, "sam", (-90, -20, 0, 360), 1, seasons, detrend)
+    return seasonal_eof_mode(psl, "sam", (-90, -20, 0, 360), 1, seasons, detrend, (-85, 5))
 
 
 def psa1(psl: xr.DataArray, seasons: SeasonalDefinition = CVDP_SEASONS, detrend: str = "linear"):
     """Pacific-South American pattern 1: EOF 2 over (-90, -20, 0, 360). See :func:`seasonal_eof_mode`."""
-    return seasonal_eof_mode(psl, "psa1", (-90, -20, 0, 360), 2, seasons, detrend)
+    return seasonal_eof_mode(psl, "psa1", (-90, -20, 0, 360), 2, seasons, detrend, (-62, 210))
 
 
 def psa2(psl: xr.DataArray, seasons: SeasonalDefinition = CVDP_SEASONS, detrend: str = "linear"):
     """Pacific-South American pattern 2: EOF 3 over (-90, -20, 0, 360). See :func:`seasonal_eof_mode`."""
-    return seasonal_eof_mode(psl, "psa2", (-90, -20, 0, 360), 3, seasons, detrend)
+    return seasonal_eof_mode(psl, "psa2", (-90, -20, 0, 360), 3, seasons, detrend, (-60, 280))
 
 
 # --- 2. Box-index modes ----------------------------------------------------
@@ -233,12 +252,12 @@ def pdo(
     detrend: str = "linear",
 ) -> tuple[xr.DataArray, xr.Dataset]:
     """Pacific Decadal Oscillation (CVDP-ncl ``pdv.ncl``): PC 1 of monthly
-    SST anomalies over (20, 70, 110, 260). Sign arbitrary.
+    SST anomalies over (20, 70, 110, 260). Pattern positive at (57, 220).
 
     Returns ``(index, regr_maps)``: standardised monthly index
     (``variance_fraction`` in attrs), and ``{var}_regr`` per supplied field
     (``ts_regr`` is the PDO pattern, °C per std dev)."""
-    index = _pc(_anomalies(ts, detrend), (20, 70, 110, 260)).rename("pdo")
+    index = _pc(_anomalies(ts, detrend), (20, 70, 110, 260), sign_point=(57, 220), positive=True).rename("pdo")
     return index, _regression_maps(index, detrend, ts=ts, psl=psl, pr=pr, tas=tas)
 
 
@@ -253,13 +272,14 @@ def ipv_eof(
     """Interdecadal Pacific Variability, EOF method (CVDP-ncl ``ipv.ncl``):
     PC 1 over (-40, 60, 110, 290) of SST anomalies low-pass filtered with
     217 Lanczos weights, cut-off 1/157 per month (~13 yr), reflected ends.
-    Raises ``ValueError`` for records shorter than ``min_years``. Sign arbitrary.
+    Raises ``ValueError`` for records shorter than ``min_years``. Pattern
+    negative at (40, 165).
 
     Returns ``(index, regr_maps)``: standardised monthly index; ``ts_regr``
     from the filtered SST, other ``{var}_regr`` from unfiltered anomalies."""
     if ts.sizes["time"] < 12 * min_years:
         raise ValueError(f"ipv_eof needs at least {min_years} years of data")
     filtered = wgt_runave(_anomalies(ts, detrend), lanczos_weights(217, 1 / 157), kopt=1)
-    index = _pc(filtered, (-40, 60, 110, 290)).rename("ipv")
+    index = _pc(filtered, (-40, 60, 110, 290), sign_point=(40, 165)).rename("ipv")
     maps = _regression_maps(index, detrend, psl=psl, pr=pr, tas=tas)
     return index, maps.assign(ts_regr=regress(filtered, index))

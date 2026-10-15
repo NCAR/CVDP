@@ -29,10 +29,13 @@ def test_eof_recovers_single_mode(sample_ts):
     assert abs(_corr(pcs.sel(mode=1), pc)) > 0.99
 
 
-def test_eof_pcs_are_standardized(sample_ts):
+def test_eof_pcs_are_centred_not_standardized(sample_ts):
+    # Standardising is left to the caller, after any sign convention.
     pcs = eof(sample_ts, n=3)
     assert np.allclose(pcs.mean("time"), 0.0, atol=1e-10)
-    assert np.allclose(pcs.std("time", ddof=1), 1.0)
+    std = pcs.std("time", ddof=1)
+    assert not np.allclose(std, 1.0)
+    assert (std.diff("mode") <= 0).all()  # ordered by variance
 
 
 def test_eof_orders_modes_by_variance(sample_ts):

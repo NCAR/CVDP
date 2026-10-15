@@ -6,8 +6,8 @@ cvdp/test-data/validation/*.cvdp_data.1979-2024.nc files (detrend "none").
 Inputs are prepared as NCL's data_read_in + per-script steps do (units,
 SST clip/land mask, TAS land mask for mode regressions). NCL writes float32,
 so tolerances are relative to the field's maximum, ~1e-5.
-EOF_SIGNS: NCL flips EOF signs per mode; ours are arbitrary, so EOF-based
-outputs are compared after aligning the sign.
+EOF-based outputs are compared with their sign: both follow NCL's per-mode
+convention.
 """
 import numpy as np
 import pytest
@@ -44,14 +44,12 @@ def _ncl_ocean_sst(ts):
     return ts.where(ts > -1.8, -1.8).where(ts.notnull()).where(_lsmask(ts) < 1)
 
 
-def assert_ncl_close(ours, theirs, rtol=1e-5, align_sign=False):
+def assert_ncl_close(ours, theirs, rtol=1e-5):
     """Equal to NCL within rtol * max|NCL|, with the same missing values."""
     if "lat" in getattr(ours, "dims", ()):
         ours = ours.sel(lat=theirs["lat"], lon=theirs["lon"])
     a, b = np.asarray(ours, float), np.asarray(theirs, float)
     np.testing.assert_array_equal(np.isnan(a), np.isnan(b))
-    if align_sign and np.nansum(a * b) < 0:
-        a = -a
     assert np.nanmax(np.abs(a - b)) <= rtol * np.nanmax(np.abs(b))
 
 
@@ -103,9 +101,8 @@ def test_psl_eof_modes(ncl, psl, name):
     patterns, pcs = getattr(modes, name)(psl, seasons=CVDP_SEASONS.subset(["DJF", "ANN"]), detrend="none")
     for s in ("DJF", "ANN"):
         ref = ncl["ERA5"]
-        sign = np.sign(np.nansum(patterns[f"{name}_pattern_{s}"].values * ref[f"{name}_pattern_{s.lower()}"].values))
-        assert_ncl_close(sign * patterns[f"{name}_pattern_{s}"], ref[f"{name}_pattern_{s.lower()}"])
-        assert_ncl_close(sign * pcs[f"{name}_pc_{s}"].dropna("time"), ref[f"{name}_timeseries_{s.lower()}"])
+        assert_ncl_close(patterns[f"{name}_pattern_{s}"], ref[f"{name}_pattern_{s.lower()}"])
+        assert_ncl_close(pcs[f"{name}_pc_{s}"].dropna("time"), ref[f"{name}_timeseries_{s.lower()}"])
 
 
 def test_soi(ncl, psl):
@@ -119,10 +116,10 @@ def test_soi(ncl, psl):
 
 def test_pdo(ncl, sst, tas_land, pr):
     index, maps = modes.pdo(sst, tas=tas_land, pr=pr, detrend="none")
-    assert_ncl_close(index, ncl["ERSSTv5"]["pdv_timeseries_mon"], align_sign=True)
-    assert_ncl_close(maps["ts_regr"], ncl["ERSSTv5"]["pdv_pattern_mon"], align_sign=True)
-    assert_ncl_close(maps["tas_regr"], ncl["GISTEMPv4"]["pdv_tas_regression_mon"], align_sign=True)
-    assert_ncl_close(maps["pr_regr"], ncl["GPCP"]["pdv_pr_regression_mon"], align_sign=True)
+    assert_ncl_close(index, ncl["ERSSTv5"]["pdv_timeseries_mon"])
+    assert_ncl_close(maps["ts_regr"], ncl["ERSSTv5"]["pdv_pattern_mon"])
+    assert_ncl_close(maps["tas_regr"], ncl["GISTEMPv4"]["pdv_tas_regression_mon"])
+    assert_ncl_close(maps["pr_regr"], ncl["GPCP"]["pdv_pr_regression_mon"])
 
 
 def test_ipv_henley(ncl, sst, tas_land, pr):
@@ -137,8 +134,8 @@ def test_ipv_eof(ncl, sst):
     # Residual ~1e-3 (corr 0.9999999 with NCL): a slight PC1/PC2 mix, not the
     # filter weights, ends or missing-value rule; likely NCL's eigen-solver.
     index, maps = modes.ipv_eof(sst, detrend="none")
-    assert_ncl_close(index, ncl["ERSSTv5"]["ipv_timeseries_mon"], rtol=1e-3, align_sign=True)
-    assert_ncl_close(maps["ts_regr"], ncl["ERSSTv5"]["ipv_pattern_mon"], rtol=1e-3, align_sign=True)
+    assert_ncl_close(index, ncl["ERSSTv5"]["ipv_timeseries_mon"], rtol=1e-3)
+    assert_ncl_close(maps["ts_regr"], ncl["ERSSTv5"]["ipv_pattern_mon"], rtol=1e-3)
 
 
 def test_amv(ncl, sst, tas_land, pr):

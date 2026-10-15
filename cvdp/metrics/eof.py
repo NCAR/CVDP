@@ -17,7 +17,8 @@ def eof(da: xr.DataArray, n: int = 1) -> xr.DataArray:
     each gridpoint contributes in proportion to its area. Time steps missing
     everywhere (e.g. the ends of a ``highpass30`` record) are dropped, then
     gridpoints with any missing value (e.g. land in SST) are excluded. The
-    sign of each PC is arbitrary.
+    sign of each PC is arbitrary; callers apply any sign convention, then
+    standardise (as CVDP-ncl: ``eofunc_ts``, sign, ``dim_standardize``).
 
     Parameters
     ----------
@@ -30,11 +31,10 @@ def eof(da: xr.DataArray, n: int = 1) -> xr.DataArray:
     Returns
     -------
     xr.DataArray
-        PCs standardised to zero mean and unit (sample) standard deviation,
-        dims (mode, time) with ``mode`` numbered from 1. The
+        PCs with zero mean, not standardised (weighted field units), dims
+        (mode, time) with ``mode`` numbered from 1. The
         ``variance_fraction`` coordinate on ``mode`` holds the fraction of
-        weighted variance each mode explains. Regress fields onto the PCs with
-        :func:`regress` to get patterns in units per standard deviation.
+        weighted variance each mode explains.
     """
     weights = np.sqrt(np.cos(np.deg2rad(da["lat"])))
     da = da.dropna("time", how="all")
@@ -42,7 +42,6 @@ def eof(da: xr.DataArray, n: int = 1) -> xr.DataArray:
     X = anom.stack(space=("lat", "lon")).dropna("space", how="any").transpose("time", "space")
     u, s, _ = np.linalg.svd(X.values, full_matrices=False)
     pcs = u[:, :n] * s[:n]
-    pcs = pcs / pcs.std(axis=0, ddof=1)
     return xr.DataArray(
         pcs.T,
         coords={
