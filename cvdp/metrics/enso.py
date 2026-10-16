@@ -268,6 +268,7 @@ def enso_composites(
     psl: xr.DataArray = None,
     pr: xr.DataArray = None,
     tas: xr.DataArray = None,
+    zos: xr.DataArray = None,
     detrend: str = "linear",
     threshold: float = 1.0,
 ) -> dict[str, xr.DataArray]:
@@ -293,7 +294,7 @@ def enso_composites(
 
     events = {"elnino_events": len(elnino), "lanina_events": len(lanina)}
     out = {}
-    for var, field in {"ts": ts, "psl": psl, "pr": pr, "tas": tas}.items():
+    for var, field in {"ts": ts, "psl": psl, "pr": pr, "tas": tas, "zos": zos}.items():
         if field is None:
             continue
         en, ln = composite(field, elnino), composite(field, lanina)
@@ -305,40 +306,48 @@ def enso_composites(
 
 def enso_hovmoller(
     ts: xr.DataArray,
+    zos: xr.DataArray = None,
     detrend: str = "linear",
     threshold: float = 1.0,
     lat_bounds: tuple[float, float] = (-3.0, 3.0),
-) -> xr.Dataset:
-    """El Niño / La Niña Hovmöllers of equatorial SST anomalies, as CVDP-ncl
+) -> dict[str, xr.DataArray]:
+    """El Niño / La Niña Hovmöllers of equatorial anomalies, as CVDP-ncl
     ``sst.indices.ncl``: unweighted mean over ``lat_bounds``, 120–280°E,
-    averaged over :func:`enso_events` years from Jan of year 0 to May of
-    year +2. Events in the first two or last three years are skipped.
-    Raises ``ValueError`` for records shorter than 15 years.
+    averaged over :func:`enso_events` years (from ``ts``) from Jan of year 0
+    to May of year +2. Events in the first two or last three years are
+    skipped. Raises ``ValueError`` for records shorter than 15 years.
 
-    Returns Dataset with ``ts_elnino_hovmoller``, ``ts_lanina_hovmoller``,
-    dims (lead_month, lon), lead_month 0–28; attrs ``elnino_events``,
-    ``lanina_events`` (events used)."""
+    ``zos`` adds ZOS Hovmöllers with the same events; NCL first regrids ZOS
+    onto the SST grid (runtime, as other input preparation).
+
+    Returns a dict of ``{var}_elnino_hovmoller``, ``{var}_lanina_hovmoller``
+    (var ``ts``, ``zos``), dims (lead_month, lon), lead_month 0–28, each on
+    its field's own grid, with attrs ``elnino_events``, ``lanina_events``
+    (events used)."""
     years = ts["time"].dt.year
     first, last = int(years.min()), int(years.max())
     if last - first + 1 < 15:
         raise ValueError("enso_hovmoller needs at least 15 years of data")
-    anom = detrended_anomalies(ts, detrend)
-    band = _by_month(box_select(anom, (lat_bounds[0], lat_bounds[1], 120, 280)).mean("lat"))
+    elnino, lanina = (
+        [y for y in event_years if first + 2 <= y <= last - 3]
+        for event_years in enso_events(ts, detrend, threshold)
+    )
+    events = {"elnino_events": len(elnino), "lanina_events": len(lanina)}
 
-    def hovmoller(event_years):
-        event_years = [y for y in event_years if first + 2 <= y <= last - 3]
+    def hovmoller(field, event_years):
+        anom = detrended_anomalies(field, detrend)
+        band = _by_month(box_select(anom, (lat_bounds[0], lat_bounds[1], 120, 280)).mean("lat"))
         windows = [band.sel(time=np.arange(y * 12, y * 12 + 29)).assign_coords(time=np.arange(29))
                    for y in event_years]
         hov = xr.concat(windows, dim="event").mean("event") if windows else band.isel(time=slice(0, 29)) * np.nan
-        return hov.rename(time="lead_month").assign_coords(lead_month=np.arange(29)), len(event_years)
+        return hov.rename(time="lead_month").assign_coords(lead_month=np.arange(29)).assign_attrs(events)
 
-    elnino, lanina = enso_events(ts, detrend, threshold)
-    hov_en, n_en = hovmoller(elnino)
-    hov_ln, n_ln = hovmoller(lanina)
-    return xr.Dataset(
-        {"ts_elnino_hovmoller": hov_en, "ts_lanina_hovmoller": hov_ln},
-        attrs={"elnino_events": n_en, "lanina_events": n_ln},
-    )
+    out = {}
+    for var, field in {"ts": ts, "zos": zos}.items():
+        if field is not None:
+            out[f"{var}_elnino_hovmoller"] = hovmoller(field, elnino)
+            out[f"{var}_lanina_hovmoller"] = hovmoller(field, lanina)
+    return out
 
 
 def sst_indices(ts: xr.DataArray, detrend: str = "linear") -> xr.Dataset:

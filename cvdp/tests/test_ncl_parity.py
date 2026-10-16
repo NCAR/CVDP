@@ -265,8 +265,8 @@ def test_enso_composites(ncl, sst, tas, pr, psl):
 def test_enso_hovmoller(ncl, sst):
     hov = enso_hovmoller(sst, detrend="none")
     ref = ncl["ERSSTv5"]
-    assert hov.attrs["elnino_events"] == ref["nino34_hov_elnino"].attrs["number_of_events"]
-    assert hov.attrs["lanina_events"] == ref["nino34_hov_lanina"].attrs["number_of_events"]
+    assert hov["ts_elnino_hovmoller"].attrs["elnino_events"] == ref["nino34_hov_elnino"].attrs["number_of_events"]
+    assert hov["ts_lanina_hovmoller"].attrs["lanina_events"] == ref["nino34_hov_lanina"].attrs["number_of_events"]
     assert_ncl_close(hov["ts_elnino_hovmoller"], ref["nino34_hov_elnino"])
     assert_ncl_close(hov["ts_lanina_hovmoller"], ref["nino34_hov_lanina"])
 

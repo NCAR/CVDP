@@ -189,12 +189,12 @@ def test_enso_composites_keep_native_grids():
 def test_enso_hovmoller_composites_equatorial_band():
     ts = _enso_ts()
     out = enso_hovmoller(ts, detrend="none")
-    assert set(out.data_vars) == {"ts_elnino_hovmoller", "ts_lanina_hovmoller"}
+    assert set(out) == {"ts_elnino_hovmoller", "ts_lanina_hovmoller"}
     hov = out["ts_elnino_hovmoller"]
     assert hov.dims == ("lead_month", "lon")
     assert list(hov["lead_month"].values) == list(range(29))  # Jan yr0 .. May yr+2
     assert float(hov["lon"].min()) >= 120 and float(hov["lon"].max()) <= 280
-    assert out.attrs["elnino_events"] == 3
+    assert hov.attrs["elnino_events"] == 3 and hov.attrs["lanina_events"] == 3
     band = monthly_anomalies(ts).sel(lat=slice(-3, 3), lon=slice(120, 280)).mean("lat")
     year = band["time"].dt.year - SAMPLE_START_YEAR
     windows = [band.sel(time=(year >= y) & (year <= y + 2)).isel(time=slice(0, 29)).values for y in EN_YEARS]
@@ -205,7 +205,25 @@ def test_enso_hovmoller_skips_events_near_record_ends():
     # 30-yr record (years 0..29): NCL uses event years 2..26 only.
     ts = _enso_ts(en_years=[1, 2, 26, 27], ln_years=[10, 20])
     assert list(enso_events(ts, detrend="none")[0] - SAMPLE_START_YEAR) == [1, 2, 26, 27]
-    assert enso_hovmoller(ts, detrend="none").attrs["elnino_events"] == 2
+    assert enso_hovmoller(ts, detrend="none")["ts_elnino_hovmoller"].attrs["elnino_events"] == 2
+
+
+def test_enso_diagnostics_take_zos():
+    # sst.indices.ncl:497-520, 700-905: ZOS composites and Hovmollers use the
+    # SST events and the same recipe; each map on its own grid (D46).
+    ts = _enso_ts()
+    zos = create_sample_dataarray("tas", n_years=30).rename("zos")
+    comp = enso_composites(ts, tas=zos.rename("tas"), zos=zos, detrend="none")
+    for kind in ("elnino", "lanina", "elnino_minus_lanina"):
+        xr.testing.assert_allclose(comp[f"zos_{kind}"], comp[f"tas_{kind}"].rename(f"zos_{kind}"))
+    hov = enso_hovmoller(ts, zos=ts.rename("zos"), detrend="none")
+    for kind in ("elnino", "lanina"):
+        assert np.allclose(hov[f"zos_{kind}_hovmoller"], hov[f"ts_{kind}_hovmoller"])
+        assert hov[f"zos_{kind}_hovmoller"].attrs == hov[f"ts_{kind}_hovmoller"].attrs
+    offset = ts.rename("zos").assign_coords(lon=ts["lon"] + 1)  # other grid
+    hov = enso_hovmoller(ts, zos=offset, detrend="none")
+    assert isinstance(hov, dict)
+    assert np.allclose(hov["zos_elnino_hovmoller"]["lon"], offset["lon"].sel(lon=slice(120, 280)))
 
 
 def test_enso_hovmoller_requires_15_years(sample_ts):
