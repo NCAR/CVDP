@@ -27,7 +27,7 @@ VARIABLES = ("ts", "psl", "tas", "pr")
 
 
 @dataclass(frozen=True)
-class Dataset:
+class DatasetConfig:
     name: str
     years: tuple[int, int]
     variables: dict[str, tuple[str, ...]]  # cvdp name -> absolute paths/globs
@@ -37,7 +37,7 @@ class Dataset:
 
 @dataclass(frozen=True)
 class Config:
-    datasets: dict[str, Dataset] = field(default_factory=dict)
+    datasets: dict[str, DatasetConfig] = field(default_factory=dict)
     detrend: str = "none"
 
 
@@ -54,7 +54,7 @@ def load_config(path) -> Config:
                    for name, entry in raw["datasets"].items()}, detrend)
 
 
-def _dataset(name, entry, base, where) -> Dataset:
+def _dataset(name, entry, base, where) -> DatasetConfig:
     _check_keys(entry, {"years", "variables", "reference", "members"}, where)
     years = entry.get("years")
     if not (isinstance(years, list) and len(years) == 2 and all(isinstance(y, int) for y in years)):
@@ -63,7 +63,7 @@ def _dataset(name, entry, base, where) -> Dataset:
     if not variables:
         raise ValueError(f"{where}: no variables")
     _check_keys(variables, set(VARIABLES), f"{where}: variables")
-    return Dataset(
+    return DatasetConfig(
         name=name,
         years=tuple(years),
         variables={var: tuple(str(base / p) for p in ([paths] if isinstance(paths, str) else paths))

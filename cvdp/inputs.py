@@ -30,7 +30,7 @@ CELSIUS = ("degrees_C", "degrees C", "degree_C", "degree C", "degC")
 
 
 def read_variable(dataset, var, member=None) -> xr.DataArray:
-    """Monthly ``var`` of a :class:`~cvdp.config.Dataset` over its years, dims
+    """Monthly ``var`` of a :class:`~cvdp.config.DatasetConfig` over its years, dims
     (time, lat, lon). ``member`` (a file-name substring) selects one member's files."""
     files = _files(dataset.variables[var], member)
     da, calendar = _read(files, var)

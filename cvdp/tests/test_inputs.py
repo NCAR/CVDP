@@ -2,7 +2,7 @@ import numpy as np
 import pytest
 import xarray as xr
 
-from cvdp.config import Dataset
+from cvdp.config import DatasetConfig
 from cvdp.inputs import lsmask, ocean_sst, read_variable
 
 pytest.importorskip("netCDF4")
@@ -22,7 +22,7 @@ def _file(tmp_path, fname, var, values, units, lat=(-10.0, 10.0), lon=(0.0, 180.
 
 
 def _dataset(years, **variables):
-    return Dataset("D", years, {k: (v,) if isinstance(v, str) else tuple(v) for k, v in variables.items()})
+    return DatasetConfig("D", years, {k: (v,) if isinstance(v, str) else tuple(v) for k, v in variables.items()})
 
 
 def test_time_axis_from_file_names_and_years_selected(tmp_path):
@@ -93,7 +93,7 @@ def test_lat_ascending_and_lon_0_360(tmp_path):
 def test_members_select_files_by_name(tmp_path):
     for m, v in [("001", 1.0), ("002", 2.0)]:
         _file(tmp_path, f"x.{m}.PSL.000101-000112.nc", "PSL", np.full(12, v), "hPa")
-    ds = Dataset("D", (1, 1), {"psl": (str(tmp_path / "x.*.PSL.*.nc"),)}, members=(".001.", ".002."))
+    ds = DatasetConfig("D", (1, 1), {"psl": (str(tmp_path / "x.*.PSL.*.nc"),)}, members=(".001.", ".002."))
     assert float(read_variable(ds, "psl", member=".002.").mean()) == 2.0
 
 
