@@ -1,17 +1,5 @@
 [build-system]
-requires = [
-  "setuptools",
-  "setuptools-scm",
-  "numpy",
-  "netCDF4",
-  "matplotlib",
-  "xarray",
-  "scipy",
-  "cartopy",
-  "xskillscore",
-  "xesmf",
-  "geocat-comp"
-]
+requires = ["setuptools>=61"]
 build-backend = "setuptools.build_meta"
 
 [project]
@@ -28,7 +16,12 @@ requires-python = ">=3.10"
 dependencies = [
   "numpy",
   "netCDF4",
+  "cftime",
   "matplotlib",
+  "pandas",
+  "pyyaml",
+  "jinja2",
+  "requests",
   "xarray",
   "scipy",
   "cartopy",
@@ -49,12 +42,10 @@ Issues = "https://github.com/NCAR/CVDP/issues"
 [project.scripts]
 cvdp = "cvdp.cli:main"
 
-[tool.setuptools]
-packages = ["cvdp"]
+[tool.setuptools.packages.find]
+include = ["cvdp*"]
 
 [tool.setuptools.package-data]
-cvdp = [
-    "colormaps/*",
-    "old_utils/landsea.nc",
-    "visualization/banner.png"
-]
+cvdp = ["variable_defaults.yaml", "template_*.html", "file_not_found_image.png"]
+"cvdp.vis" = ["colormaps/*", "cas_cvdp-le_banner.png", "cvdp.mplstyle"]
+"cvdp.cvdp_utils" = ["landsea.nc"]
