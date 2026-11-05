@@ -14,6 +14,8 @@ import cvdp_utils.avg_functions as af
 EOF_VARS = ["NAM", "SAM", "PSA1", "PSA2"]
 NH_VARS = ["NAM"]
 SH_VARS = ["SAM", "PSA1", "PSA2"]
+# (lat, lon) where each mode's pattern is forced negative, matching NCL CVDP
+EOF_SIGN_POINTS = {"NAM": (85, 5), "SAM": (-85, 5), "PSA1": (-62, 210), "PSA2": (-60, 280)}
 
 # Now you can import the script
 #import analysis as an
@@ -148,7 +150,10 @@ def interp_diff(arr_anom1, arr_anom2):
     Check if the Obs array needs to be interpolated
     to the ensemble file
 
-    Most likely the input array will need to be interpolated!
+    Returns the reference array on the simulation grid, or None if the
+    grids are already identical. Any mismatch in either lat or lon triggers
+    regridding; xarray arithmetic would otherwise align on coordinate labels
+    and silently drop non-matching points.
     """
     test_lons = arr_anom1.lon
     test_lats = arr_anom1.lat
@@ -156,56 +161,25 @@ def interp_diff(arr_anom1, arr_anom2):
     obs_lons = arr_anom2.lon
     obs_lats = arr_anom2.lat
 
-    # Just set these to true for now
-    same_lats = True
-    same_lons = True
+    same_lons = (obs_lons.shape == test_lons.shape) and np.allclose(obs_lons.values, test_lons.values)
+    same_lats = (obs_lats.shape == test_lats.shape) and np.allclose(obs_lats.values, test_lats.values)
 
-    arr_prime = None
+    if same_lons and same_lats:
+        if np.array_equal(obs_lons.values, test_lons.values) and np.array_equal(obs_lats.values, test_lats.values):
+            return None
+        # Grids match to within floating point noise; use the sim coordinates so labels align exactly
+        return arr_anom2.assign_coords(lat=test_lats.values, lon=test_lons.values)
 
-    if obs_lons.shape == test_lons.shape:
-        try:
-            xr.testing.assert_equal(test_lons, obs_lons)
-            print("the lons ARE the same")
-        except AssertionError as e:
-            same_lons = False
-            print("the lons aren't the same")
-        try:
-            xr.testing.assert_equal(test_lats, obs_lats)
-            print("the lats ARE the same")
-        except AssertionError as e:
-            same_lats = False
-            print("the lats aren't the same")
-    else:
-        same_lats = False
-        same_lons = False
-        #print("The ensemble array lat/lon shape does not match the " \
-        #     "obs mask array.\nRegridding to ensemble lats and lons")
+    ds_out = xr.Dataset(
+        {
+            "lat": (["lat"], test_lats.values, {"units": "degrees_north"}),
+            "lon": (["lon"], test_lons.values, {"units": "degrees_east"}),
+        }
+    )
 
-    if (not same_lons) and (not same_lats):
-
-        """ds_out = xr.Dataset(
-            {
-                "lat": (["lat"], obs_lats.values, {"units": "degrees_north"}),
-                "lon": (["lon"], obs_lons.values, {"units": "degrees_east"}),
-            }
-        )
-
-        # Regrid to the ensemble grid to make altered obs grid
-        regridder = xe.Regridder(arr_anom1, ds_out, "bilinear", periodic=True)
-        arr_prime = regridder(arr_anom1, keep_attrs=True)"""
-
-        ds_out = xr.Dataset(
-            {
-                "lat": (["lat"], test_lats.values, {"units": "degrees_north"}),
-                "lon": (["lon"], test_lons.values, {"units": "degrees_east"}),
-            }
-        )
-
-        # Regrid to the ensemble grid to make altered obs grid
-        regridder = xe.Regridder(arr_anom2, ds_out, "bilinear", periodic=True)
-        arr_prime = regridder(arr_anom2, keep_attrs=True)
-
-        #print("\n\narr_prime",arr_prime,"\n\n")
+    # Regrid to the ensemble grid to make altered obs grid
+    regridder = xe.Regridder(arr_anom2, ds_out, "bilinear", periodic=True)
+    arr_prime = regridder(arr_anom2, keep_attrs=True)
 
     # Return the new interpolated obs array
     return arr_prime
@@ -234,8 +208,18 @@ def compute_eof(var, run_anom, season, run_name):
         """
         eofs, pcs, slp = calculate_eof(arr, season, bounds, neof=3, run_name=run_name, eof_var=var)
         pcs_std = (pcs.sel(pc=num) - pcs.sel(pc=num).mean("time")) / pcs.sel(pc=num).std("time")
+        pattern = xs.linslope(pcs_std, slp, dim="time")
 
-        return xs.linslope(pcs_std, slp, dim="time"), pcs_std
+        # EOF signs are arbitrary, so force a consistent sign across all datasets
+        # (same reference points as NCL CVDP); otherwise differences between
+        # datasets with opposite signs double the pattern instead of showing bias
+        lat0, lon0 = EOF_SIGN_POINTS[var]
+        ref_val = pattern.sel(lat=lat0, lon=lon0, method="nearest")
+        if ref_val.notnull() and ref_val >= 0:
+            pattern = pattern * -1.
+            pcs_std = pcs_std * -1.
+
+        return pattern, pcs_std
 
     run_pattern, run_pc = _eof(run_anom, run_name)
     run_pattern.attrs = run_attrs
@@ -253,7 +237,11 @@ def calculate_eof(ds, season, latlon_dict, neof, run_name, eof_var):
 
     # To facilitate data subsetting
     ds2 = ds.copy()
-    slp = month_to_season(ds2, season)
+    if season == "ANN":
+        # month_to_season has no annual option, so use the days-in-month weighted annual mean
+        slp = af.weighted_temporal_mean(ds2)
+    else:
+        slp = month_to_season(ds2, season)
 
     clat = slp['lat'].astype(np.float64)
     clat = np.sqrt(np.cos(np.deg2rad(clat)))

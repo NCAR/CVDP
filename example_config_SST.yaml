@@ -1,0 +1,49 @@
+---
+Data:
+  #LENS1_TREFHTMN:
+  #  reference: False
+  #  variable: "TREFHTMN"
+  #  start_yr: 2090
+  #  end_yr: 2095
+  #  paths: "/projects/dgs/persad_research/SIMULATION_DATA/DATA/LENS1/CESM1/all/*/day/TREFHTMN/*TREFHTMN.20810101-21001231.nc"
+  #  members: ['.001.', '.002.', '.003.', '.004.', '.005.']
+  #LENS1_TREFHTMX:
+  #  reference: False
+  #  variable: "TREFHTMX"
+  #  paths: "/projects/dgs/persad_research/SIMULATION_DATA/DATA/LENS1/CESM1/all/*/day/TREFHTMX/*TREFHTMX.20810101-21001231.nc"
+  #  members: ['.001.', '.002.', '.003.', '.004.', '.005.']
+  #CanESM5:
+  #  reference: False
+  #  variable: "psl"
+  #  start_yr: 2015
+  #  end_yr: 2088
+  #  paths: "/glade/campaign/cgd/cas/asphilli/CVDPv6_directory_test/CanESM5_r14i1p1f1_diff/psl/psl_Amon_CanESM5_ssp585_r14i1p1f1_gn_201501-210012.nc"
+  #  #paths: "/glade/campaign/cgd/cas/asphilli/CVDPv6_directory_test/CanESM5_r14i1p1f1_diff/psl/*.nc"
+  
+  CESM2-LE:
+    reference: False
+    variable: TS
+    start_yr: 1979
+    end_yr: 2013
+    #paths: /glade/campaign/cgd/cesm/CESM2-LE/*/proc/tseries/month_1/*/*1251.001.**.PSL.*
+    paths: /glade/campaign/cgd/cesm/CESM2-LE/*/proc/tseries/month_1/*/*1251.**.TS.*
+    members: ['.001.', '.002.']
+
+  1-CESM1-LENS_1-10:
+    reference: False
+    variable: TS
+    start_yr: 1979
+    end_yr: 2013
+    paths: /glade/campaign/cesm/collections/cesmLE/CESM-CAM5-BGC-LE/atm/proc/tseries/monthly/*/b.e11.B*C5CNBDRD.f09_g16.001.cam**.TS.*.nc
+  
+  ERSST v5:
+    reference: True
+    variable: sst
+    start_yr: 1979
+    end_yr: 2020
+    paths: /glade/campaign/cgd/cas/asphilli/CVDP-OBS/ersstv5.185401-202012.nc
+
+
+Paths:
+  nc_save_loc: /glade/derecho/scratch/richling/cvdp-output/netcdf_ensemble_sept2026/
+...

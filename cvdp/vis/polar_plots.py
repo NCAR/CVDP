@@ -141,6 +141,8 @@ def polar_ensemble_plot(arrs: list, arr_diff, vn, ptype, plot_dict, title, var=N
         for r in range(0,ncols):
             if r == 2:
                 prefix = "diff"
+                # Compute the difference before the levels so default levels come from the diff itself
+                arr = an.compute_diff(arrs[0][row], arrs[1][row])
 
                 levels = vis_utils.get_levels(plot_info, prefix,
                                         default_arr_max=arr.max().item(),
@@ -181,11 +183,6 @@ def polar_ensemble_plot(arrs: list, arr_diff, vn, ptype, plot_dict, title, var=N
 
             # Difference plot
             if r == 2:
-                #print("arrs[0][row] BEFORE compute_diff",arrs[0][row].shape,"\n\n")
-                arr = compute_diff(arrs[0][row], arrs[1][row])
-                #print("arr AFTER compute_diff",arr.shape,"\n\n")
-                #print("arr_diff",arr_diff)
-                #arr = arr_diff[0][row]
                 arr.attrs["units"] = arrs[0][row].attrs["units"]
                 run = f"{arrs[0][row].run} - {arrs[1][row].run}"
                 yrs_text = ''
