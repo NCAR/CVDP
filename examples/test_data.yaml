@@ -1,0 +1,32 @@
+# Runs on the repository's test data: CESM2 piControl (one member) against
+# observational references. Paths are relative to this file.
+detrend: none
+datasets:
+  CESM2:
+    years: [451, 500]
+    members: [".001."]
+    variables:
+      ts: ../cvdp/test-data/b.e21.B1850.f19_g17.CMIP6-piControl-2deg/*.cam.h0.TS.*.nc
+      psl: ../cvdp/test-data/b.e21.B1850.f19_g17.CMIP6-piControl-2deg/*.cam.h0.PSL.*.nc
+      tas: ../cvdp/test-data/b.e21.B1850.f19_g17.CMIP6-piControl-2deg/*.cam.h0.TREFHT.*.nc
+      pr: ../cvdp/test-data/b.e21.B1850.f19_g17.CMIP6-piControl-2deg/*.cam.h0.PREC[CL].*.nc
+  ERSSTv5:
+    reference: true
+    years: [1979, 2024]
+    variables:
+      ts: ../cvdp/test-data/observations/ersstv5.197901-202412.nc
+  ERA5:
+    reference: true
+    years: [1979, 2024]
+    variables:
+      psl: ../cvdp/test-data/observations/era5.msl.rg2x2.197901-202412.nc
+  GISTEMPv4:
+    reference: true
+    years: [1979, 2024]
+    variables:
+      tas: ../cvdp/test-data/observations/gistempv4.tas.197901-202412.nc
+  GPCP:
+    reference: true
+    years: [1979, 2024]
+    variables:
+      pr: ../cvdp/test-data/observations/gpcp.mon.mean.197901-202412.nc

@@ -7,9 +7,9 @@ on both):
 - cesm: CESM2 piControl CAM h0 (TS, PSL, TREFHT, PRECC+PRECL; 451-500) against
   validation/CESM2_2deg_piControl.cvdp_data.451-500.nc.
 
-Detrend "none". Inputs are prepared as NCL's data_read_in + per-script steps
-do (units, SST clip/land mask, TAS land mask for mode regressions); that is
-the runtime script's job (decisions.md D32, D33). NCL writes float32, so
+Detrend "none". Inputs are read with cvdp.inputs (NCL data_read_in) from
+examples/test_data.yaml, plus the per-script masks (SST clip/ocean mask, TAS
+land mask for mode regressions; decisions.md D32, D33). NCL writes float32, so
 tolerances are relative to the field's maximum, ~1e-5.
 EOF-based outputs are compared with their sign: both follow NCL's per-mode
 convention.
@@ -18,6 +18,8 @@ import numpy as np
 import pytest
 import xarray as xr
 
+from cvdp.config import load_config
+from cvdp.inputs import lsmask, ocean_sst, read_variable
 from cvdp.metrics import modes
 from cvdp.metrics.enso import (nino34_index, nino34_monthly_stddev, nino34_autocorrelation, power_spectrum, nino34_wavelet, nino34_running_stddev,
                                enso_composites, enso_hovmoller)
@@ -25,28 +27,8 @@ from cvdp.metrics.seasons import CVDP_SEASONS
 
 pytest.importorskip("netCDF4")
 
-OBS = "cvdp/test-data/observations/"
 VAL = "cvdp/test-data/validation/"
-LANDSEA = "cvdp/cvdp_utils/landsea.nc"  # NCL's 1x1 LSMASK: 0 ocean, 1 land, 2 lake, 3 island, 4 ice shelf
-
-
-def _obs(fname, var, name, scale=1.0):
-    da = xr.open_dataset(OBS + fname, decode_times=False)[var]
-    da = da.rename(dict(zip(da.dims, ("time", "lat", "lon"))))
-    t = xr.date_range("1979-01", periods=da.sizes["time"], freq="MS", calendar="standard", use_cftime=True)
-    da = da.assign_coords(time=t, lon=da["lon"] % 360).astype(float) * scale
-    return da.sortby("lat").sortby("lon").rename(name)
-
-
-def _lsmask(da):
-    """NCL landsea_mask: nearest 1x1 LSMASK cell for each gridpoint."""
-    lsm = xr.open_dataset(LANDSEA)["LSMASK"]
-    return lsm.sel(lat=da["lat"], lon=da["lon"], method="nearest").assign_coords(lat=da["lat"], lon=da["lon"])
-
-
-def _ncl_ocean_sst(ts):
-    """As CVDP-ncl SST scripts: clip at -1.8 C, then keep only ocean (LSMASK 0)."""
-    return ts.where(ts > -1.8, -1.8).where(ts.notnull()).where(_lsmask(ts) < 1)
+CONFIG = load_config("examples/test_data.yaml")
 
 
 def assert_ncl_close(ours, theirs, rtol=1e-5):
@@ -58,31 +40,14 @@ def assert_ncl_close(ours, theirs, rtol=1e-5):
     assert np.nanmax(np.abs(a - b)) <= rtol * np.nanmax(np.abs(b))
 
 
-CESM = ("cvdp/test-data/b.e21.B1850.f19_g17.CMIP6-piControl-2deg/"
-        "b.e21.B1850.f19_g17.CMIP6-piControl-2deg.001.cam.h0.{}.045101-050012.nc")
-
-
-def _cesm(var, name, scale=1.0, offset=0.0):
-    """CAM h0 as NCL data_read_in (K -> C, Pa -> hPa, m/s -> mm/day). CAM stamps
-    each month at its end (January at 1 Feb), so time is rebuilt as month starts."""
-    da = xr.open_dataset(CESM.format(var), decode_times=False)[var].astype(float)
-    t = xr.date_range("0451-01", periods=da.sizes["time"], freq="MS", calendar="noleap", use_cftime=True)
-    return ((da + offset) * scale).assign_coords(time=t).rename(name)
+def _reader(dataset, var):
+    return lambda: read_variable(CONFIG.datasets[dataset], var)
 
 
 INPUTS = {  # source -> loaders for ts (deg C, unmasked), psl (hPa), tas (deg C), pr (mm/day)
-    "obs": {
-        "ts": lambda: _obs("ersstv5.197901-202412.nc", "sst", "ts"),
-        "psl": lambda: _obs("era5.msl.rg2x2.197901-202412.nc", "msl", "psl", scale=0.01),  # Pa -> hPa
-        "tas": lambda: _obs("gistempv4.tas.197901-202412.nc", "tempanomaly", "tas"),
-        "pr": lambda: _obs("gpcp.mon.mean.197901-202412.nc", "precip", "pr"),
-    },
-    "cesm": {
-        "ts": lambda: _cesm("TS", "ts", offset=-273.15),
-        "psl": lambda: _cesm("PSL", "psl", scale=0.01),
-        "tas": lambda: _cesm("TREFHT", "tas", offset=-273.15),
-        "pr": lambda: (_cesm("PRECC", "pr") + _cesm("PRECL", "pr")).rename("pr") * 86400000.0,
-    },
+    "obs": {"ts": _reader("ERSSTv5", "ts"), "psl": _reader("ERA5", "psl"),
+            "tas": _reader("GISTEMPv4", "tas"), "pr": _reader("GPCP", "pr")},
+    "cesm": {var: _reader("CESM2", var) for var in ("ts", "psl", "tas", "pr")},
 }
 REFERENCE_KEYS = ("ERSSTv5", "ERA5", "GISTEMPv4", "GPCP")  # obs file per variable
 
@@ -108,7 +73,7 @@ def ersst(source):
 
 @pytest.fixture(scope="module")
 def sst(ersst):
-    return _ncl_ocean_sst(ersst)
+    return ocean_sst(ersst)
 
 
 @pytest.fixture(scope="module")
@@ -123,7 +88,7 @@ def tas(source):
 
 @pytest.fixture(scope="module")
 def tas_land(tas):
-    return tas.where(_lsmask(tas) != 0)  # SST-mode scripts regress TAS over land only
+    return tas.where(lsmask(tas) != 0)  # SST-mode scripts regress TAS over land only
 
 
 @pytest.fixture(scope="module")
@@ -356,6 +321,6 @@ def test_north_pacific_index(ncl, psl):
 
 def test_pr_global_land_mean(ncl, pr):
     # Land mask applied by the caller (runtime), as pr.trends_timeseries.ncl:113.
-    series = seasonal_timeseries(pr.where(_lsmask(pr) != 0), detrend="none")
+    series = seasonal_timeseries(pr.where(lsmask(pr) != 0), detrend="none")
     for s in CVDP_SEASONS.names:
         assert_ncl_close(series[f"pr_ts_{s}"], ncl["GPCP"][f"pr_global_avg_land_{s.lower()}"])
