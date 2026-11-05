@@ -14,16 +14,9 @@ from mpl_toolkits.axes_grid1.inset_locator import inset_axes
 from cartopy.util import add_cyclic_point
 import cartopy.feature as cfeature
 
-from vis import WinkelTripel
-#from vis.vis_utils import *
-import vis.vis_utils as vis_utils
-import cvdp_utils.avg_functions as af
-lsmask, ncl_masks = af.land_mask()
-import cvdp_utils.analysis as an
-
-def compute_diff(sim, ref):
-    interp = an.interp_diff(sim, ref)
-    return sim - (interp if interp is not None else ref)
+from cvdp.vis import WinkelTripel
+import cvdp.vis.vis_utils as vis_utils
+lsmask, ncl_masks = vis_utils.land_mask()
 
 def global_ensemble_plot(arrs: list, arr_diffs:list, vn, ptype, plot_dict, title) -> plt.Figure:
     """
@@ -92,7 +85,7 @@ def global_ensemble_plot(arrs: list, arr_diffs:list, vn, ptype, plot_dict, title
                 prefix = "diff"
                 # Compute the difference from this row's sim and ref so the panel always
                 # matches columns 0 and 1, and so default levels come from the diff itself
-                arr = an.compute_diff(arrs[0][row], arrs[1][row])
+                arr = vis_utils.compute_diff(arrs[0][row], arrs[1][row])
                 levels = vis_utils.get_levels(plot_info, prefix,
                                         default_arr_max=arr.max().item(),
                                         default_arr_min=arr.min().item())
@@ -135,7 +128,7 @@ def global_ensemble_plot(arrs: list, arr_diffs:list, vn, ptype, plot_dict, title
                 yrs_text = f'{syr}-{eyr}'
             # Rank plot
             if col == 3:
-                arr = af.zeros_array(arrs[-1][row].shape[0], arrs[-1][row].shape[1])
+                arr = vis_utils.zeros_array(arrs[-1][row].shape[0], arrs[-1][row].shape[1])
                 run = "Rank of Observations within Ensemble"
                 cmap = vis_utils.bg_cmap
                 levels = [-5,0,5,10,20,80,90,95,100,105]

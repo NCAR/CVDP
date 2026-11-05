@@ -15,14 +15,9 @@ from cartopy.util import add_cyclic_point
 import cartopy.feature as cfeature
 import matplotlib.path as mpath
 
-from vis import get_NCL_colormap
-import vis.vis_utils as vis_utils
-import cvdp_utils.avg_functions as af
-lsmask, ncl_masks = af.land_mask()
-import cvdp_utils.analysis as an
-def compute_diff(sim, ref):
-    interp = an.interp_diff(sim, ref)
-    return sim - (interp if interp is not None else ref)
+from cvdp.vis import get_NCL_colormap
+import cvdp.vis.vis_utils as vis_utils
+lsmask, ncl_masks = vis_utils.land_mask()
 
 #mpl.rcParams['axes.unicode_minus'] = False
 
@@ -142,7 +137,7 @@ def polar_ensemble_plot(arrs: list, arr_diff, vn, ptype, plot_dict, title, var=N
             if r == 2:
                 prefix = "diff"
                 # Compute the difference before the levels so default levels come from the diff itself
-                arr = an.compute_diff(arrs[0][row], arrs[1][row])
+                arr = vis_utils.compute_diff(arrs[0][row], arrs[1][row])
 
                 levels = vis_utils.get_levels(plot_info, prefix,
                                         default_arr_max=arr.max().item(),
@@ -167,7 +162,7 @@ def polar_ensemble_plot(arrs: list, arr_diff, vn, ptype, plot_dict, title, var=N
             #------------------------
             # Rank plot
             if r == 3:
-                arr = af.zeros_array(arrs[-1][row].shape[0], arrs[-1][row].shape[1])
+                arr = vis_utils.zeros_array(arrs[-1][row].shape[0], arrs[-1][row].shape[1])
                 run = "Rank of Observations within Ensemble"
                 cmap = vis_utils.bg_cmap
                 levels = [-5,0,5,10,20,80,90,95,100,105]
