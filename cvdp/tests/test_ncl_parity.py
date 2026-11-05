@@ -18,6 +18,7 @@ import numpy as np
 import pytest
 import xarray as xr
 
+from cvdp.compute import npi
 from cvdp.config import load_config
 from cvdp.inputs import lsmask, ocean_sst, read_variable
 from cvdp.metrics import modes
@@ -317,6 +318,13 @@ def test_pacific_meridional_modes(ncl, sst, name, theirs):
 def test_north_pacific_index(ncl, psl):
     npi = regional_timeseries(psl, ["north_pacific"], detrend="none", seasons=NDJFM)["psl_north_pacific_NDJFM"]
     assert_ncl_close(npi, ncl["ERA5"]["north_pacific_index_ndjfm"])
+
+
+def test_north_pacific_index_pattern(ncl, psl):
+    # Runtime recipe (compute.npi), psl.trends_timeseries.ncl:88-106.
+    out = npi(psl, detrend="none")
+    assert_ncl_close(out["npi_index_NDJFM"], ncl["ERA5"]["north_pacific_index_ndjfm"])
+    assert_ncl_close(out["npi_pattern_NDJFM"], ncl["ERA5"]["north_pacific_index_pattern_ndjfm"])
 
 
 def test_pr_global_land_mean(ncl, pr):
