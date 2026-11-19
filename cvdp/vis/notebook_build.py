@@ -52,7 +52,7 @@ class CVDPNotebook():
     
     
     def save_notebook(self, path="CVDP_output.ipynb", title=None):
-        from cvdp.cvdp_utils import get_version, get_time_stamp
+        from importlib.metadata import version
         from cvdp.definitions import PATH_BANNER_PNG
 
         cell_data = ""
@@ -67,8 +67,8 @@ class CVDPNotebook():
             '\n',
             '```\n',
             'Webpage: https://github.com/NCAR/CVDP/tree/main\n',
-            f'Version: CVDP {get_version()}\n',
-            f'Generation Timestamp: {get_time_stamp()}\n',
+            f'Version: CVDP {version("cvdp")}\n',
+            f'Generation Timestamp: {datetime.now():%Y-%m-%d %H:%M}\n',
             f'Figures Generated: {self.__num_figs}\n',
             '```\n'
         ]
