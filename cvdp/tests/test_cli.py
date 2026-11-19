@@ -23,3 +23,8 @@ def test_run_on_test_data_writes_the_legacy_png_set(tmp_path, monkeypatch):
     assert sorted(f.name for f in (tmp_path / "netcdf").glob("*.nc")) == [
         "CESM2.001.pr.nc", "CESM2.001.psl.nc", "CESM2.001.tas.nc", "CESM2.001.ts.nc",
         "ERA5.psl.nc", "ERSSTv5.ts.nc", "GISTEMPv4.tas.nc", "GPCP.pr.nc"]
+
+
+def test_main_without_run_subcommand_prints_usage():
+    with pytest.raises(SystemExit, match="usage: cvdp run CONFIG OUT_DIR"):
+        cli.main(["out_dir"])

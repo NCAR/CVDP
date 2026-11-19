@@ -25,9 +25,7 @@ dependencies = [
   "xarray",
   "scipy",
   "cartopy",
-  "xskillscore",
-  "xesmf",
-  "geocat-comp"
+  "xesmf"
 ]
 classifiers = [
     "Programming Language :: Python :: 3",
