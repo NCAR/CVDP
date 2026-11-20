@@ -25,9 +25,7 @@ dependencies = [
   "xarray",
   "scipy",
   "cartopy",
-  "xskillscore",
-  "xesmf",
-  "geocat-comp"
+  "xesmf"
 ]
 classifiers = [
     "Programming Language :: Python :: 3",
@@ -46,6 +44,5 @@ cvdp = "cvdp.cli:main"
 include = ["cvdp*"]
 
 [tool.setuptools.package-data]
-cvdp = ["variable_defaults.yaml", "template_*.html", "file_not_found_image.png"]
+cvdp = ["variable_defaults.yaml", "template_*.html", "file_not_found_image.png", "landsea.nc"]
 "cvdp.vis" = ["colormaps/*", "cas_cvdp-le_banner.png", "cvdp.mplstyle"]
-"cvdp.cvdp_utils" = ["landsea.nc"]

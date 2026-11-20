@@ -4,13 +4,11 @@ channels:
 dependencies:
   - cartopy
   - cftime
-  - geocat-comp
   - matplotlib
   - nc-time-axis
   - netcdf4
   - numpy
   - xesmf
-  - xskillscore
   - pandas
   - pip
   - python
