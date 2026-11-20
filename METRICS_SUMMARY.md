@@ -1,6 +1,8 @@
 # CVDP Metrics Summary
 
-NCL version metrics from [CVDP-ncl](https://github.com/NCAR/CVDP-ncl), organized by category. Each entry notes whether a Python implementation exists in this package.
+Metrics from [CVDP-ncl](https://github.com/NCAR/CVDP-ncl) (v6.1.0), organized by category, with the Python implementation in `cvdp/metrics/`. Definitions follow the CVDP-ncl source scripts. Where these differ from older CVDP documentation, the source wins.
+
+All functions are generic: one function serves every variable. Bounds are given as latitude south–north, longitude west–east.
 
 ---
 
@@ -10,45 +12,40 @@ Seasonal (DJF, JFM, MAM, JJA, JAS, SON, ANN) climatological means and standard d
 
 | Metric | Variable | Python Implementation |
 |--------|----------|-----------------------|
-| SST Mean & Std Dev | TS / ts | `cvdp/diag/climatology.py:compute_seasonal_avgs()`, `cvdp/diag/AtmOcnMean.py:mean_seasonal_calc()` |
+| SST Mean & Std Dev | TS / ts | `climatology.get_seasonal_statistics()` |
 | TAS Mean & Std Dev | TREFHT / tas | same as above |
-| PSL Mean & Std Dev | PSL / psl | same as above (uses 5-month smoothing for NDJFM) |
+| PSL Mean & Std Dev | PSL / psl | same as above |
 | PR Mean & Std Dev | PRECT / pr | same as above |
-| SICONC Mean & Std Dev | aice_nh, aice_sh / siconc | same as above (variable support TBD) |
-| ZOS Mean & Std Dev | SSH / zos | same as above (variable support TBD) |
+| SICONC Mean & Std Dev | aice_nh, aice_sh / siconc | same as above; hemispheric sea-ice extent series in `sea_ice.sea_ice_extent()` |
+| ZOS Mean & Std Dev | SSH / zos | same as above |
 
 ---
 
 ## Trends & Timeseries
 
-Linear trends and global/regional area-averaged timeseries, computed per season.
+Linear trends and global area-averaged timeseries, computed per season.
 
 | Metric | Variable | Python Implementation |
 |--------|----------|-----------------------|
-| SST Trends & Timeseries | TS / ts | `cvdp/diag/linear_trends.py:lin_regress()`, `cvdp/cvdp_utils/avg_functions.py:seasonal_trends_timeseries()`, `cvdp/vis/AtmOcnGR.py:compute_trend()` |
-| TAS Trends & Timeseries | TREFHT / tas | same as above |
-| PSL Trends & Timeseries | PSL / psl | same as above |
-| PR Trends & Timeseries | PRECT / pr | same as above |
-| SICONC Trends & Timeseries | siconc | same as above (variable support TBD) |
-| ZOS Trends | SSH / zos | same as above (variable support TBD) |
-| Global area-averaged timeseries | all variables | `cvdp/diag/time_series.py:seasonal_timeseries()`, `cvdp/cvdp_utils/avg_functions.py:seasonal_timeseries()` |
+| SST / TAS / PSL / PR / SICONC / ZOS Trends | all | `trends.trend_maps()` (change per decade) |
+| Global area-averaged timeseries | all | `trends.seasonal_timeseries()` |
 
 ---
 
 ## ENSO (El Niño-Southern Oscillation)
 
-All metrics derive from the Niño3.4 index: area-averaged SST anomalies over 5°S–5°N, 120–170°W. El Niño/La Niña events defined when the December Niño3.4 value (3-point binomial smoothed) exceeds ±1 std dev.
+All metrics derive from the Niño3.4 index: area-averaged SST anomalies over 5°S–5°N, 120–170°W. El Niño/La Niña events are defined when the December Niño3.4 value (3-point binomial smoothed) exceeds ±1 std dev.
 
 | Metric | Description | Python Implementation |
 |--------|-------------|-----------------------|
-| Niño3.4 index timeseries | Monthly SST anomaly index | **Not implemented** |
-| Niño3.4 monthly std devs | Std dev by calendar month | **Not implemented** |
-| Niño3.4 autocorrelations | Monthly autocorrelation function | **Not implemented** |
-| Niño3.4 power spectra | Frequency-domain variance | **Not implemented** |
-| Niño3.4 wavelet | Morlet wavelet (wavenumber=6), 95% chi-square significance | **Not implemented** |
-| ENSO spatial composites | Composite maps of SST, PSL, PR, TAS during El Niño / La Niña | **Not implemented** |
-| El Niño / La Niña Hovmöllers | 3°S–3°N meridional mean SST, Jan yr0–May yr+2 | **Not implemented** |
-| SST indices | Niño 1+2, 3, 3.4, 4; Tropical N/S Atlantic; Tropical Indian Ocean | **Not implemented** |
+| Niño3.4 index timeseries | Monthly SST anomaly index | `enso.nino34_index()` |
+| Niño3.4 monthly std devs | Std dev by calendar month | `enso.nino34_monthly_stddev()` |
+| Niño3.4 autocorrelations | Monthly autocorrelation function | `enso.nino34_autocorrelation()` |
+| SST indices | Niño 1+2, 3, 3.4, 4; Tropical N/S Atlantic; Tropical Indian Ocean; North Atlantic; Atlantic Niño; Southern Ocean; Atlantic Meridional Mode; Indian Ocean Dipole | `enso.sst_indices()` |
+| Niño3.4 power spectra | Smoothed spectrum with Markov red-noise spectrum and 95%/99% confidence bounds | `enso.power_spectrum()` (also used for the PDO, IPV and AMV spectra) |
+| Niño3.4 wavelet | Morlet wavelet (wavenumber=6), 95% red-noise significance, cone of influence | `enso.nino34_wavelet()` |
+| ENSO spatial composites | Seasonal (JJA0, SON0, DJF+1, MAM+1) composites of SST, PSL, PR, TAS for El Niño, La Niña, and their difference | `enso.enso_composites()` |
+| El Niño / La Niña Hovmöllers | 3°S–3°N mean SST anomalies, 120°E–80°W, Jan yr0–May yr+2 | `enso.enso_hovmoller()` |
 
 ---
 
@@ -56,9 +53,9 @@ All metrics derive from the Niño3.4 index: area-averaged SST anomalies over 5°
 
 | Metric | Definition | Python Implementation |
 |--------|------------|-----------------------|
-| **PDO / PDV** | Leading PC of North Pacific (20–70°N, 110°E–100°W) area-weighted SST anomalies; 61-month low-pass filter applied | **Not implemented** (EOF infrastructure exists: `cvdp/diag/eof.py:get_eof()`, `cvdp/vis/AtmOcnGR.py:compute_eof()`) |
-| **IPV (EOF-based)** | Leading PC of 13-yr low-pass filtered Pacific (40°S–60°N, 110°E–70°W) SST anomalies; requires ≥40 yrs | **Not implemented** |
-| **IPV-Henley** | Central tropical Pacific (10°S–10°N, 170°E–90°W) SST anomalies minus average of NW and SW Pacific boxes | **Not implemented** |
+| **PDO / PDV** | Leading PC of monthly North Pacific (20–70°N, 110°E–100°W) area-weighted SST anomalies; pattern = SST anomalies regressed onto the standardized PC | `modes.pdo()` |
+| **IPV (EOF-based)** | Leading PC of 13-yr low-pass filtered (Lanczos) Pacific (40°S–60°N, 110°E–70°W) SST anomalies; requires ≥40 yrs | `modes.ipv_eof()` |
+| **IPV-Henley** | Central tropical Pacific (10°S–10°N, 170°E–90°W) SST anomalies minus the average of the North (25–45°N, 140°E–145°W) and South (15–50°S, 150°E–160°W) Pacific boxes | `modes.ipv_henley()` |
 
 ---
 
@@ -66,24 +63,26 @@ All metrics derive from the Niño3.4 index: area-averaged SST anomalies over 5°
 
 | Metric | Definition | Python Implementation |
 |--------|------------|-----------------------|
-| **AMV** | Area-weighted SST anomalies over North Atlantic (0–60°N, 80°W–0°E); 61-month low-pass filter; regression maps also computed with 10-yr running mean ("Regr LP") | **Not implemented** |
+| **AMV** | Area-weighted SST anomalies over the North Atlantic (0–60°N, 80°W–0°E); 121-month running-mean low-pass index; regression maps smoothed with a 9-point filter; low-pass maps ("Regr LP") use the 121-month running mean on both index and field | `modes.amv()` |
 
 ---
 
-## Atmospheric Modes of Variability (PSL-based EOFs)
+## Atmospheric Modes of Variability (PSL-based)
 
-All modes use seasonal/annual PSL averages with √cos(lat) weighting applied before EOF decomposition. Patterns are formed by regressing global PSL anomalies onto the normalized PC timeseries.
+EOF modes use seasonal/annual PSL averages with √cos(lat) weighting applied before EOF decomposition. Patterns are formed by regressing global PSL anomalies onto the normalized PC timeseries. All seven EOF modes share `modes.seasonal_eof_mode()`.
 
 | Metric | Domain | EOF # | Python Implementation |
 |--------|--------|-------|-----------------------|
-| **NAM** (Northern Annular Mode) | 20–90°N | EOF 1 | `cvdp/diag/eof.py:get_eof()`, `cvdp/vis/AtmOcnGR.py:compute_eof()` — domain/wiring not finalized |
-| **NAO** (North Atlantic Oscillation) | 20–80°N, 90°W–40°E | EOF 1 | same — domain/wiring not finalized |
-| **PNA** (Pacific-North American) | 20–85°N, 120°E–120°W | EOF 1 | same |
-| **NPO** (North Pacific Oscillation) | 20–85°N, 120°E–120°W | EOF 2 | same |
-| **SAM** (Southern Annular Mode) | 20–90°S | EOF 1 | same |
-| **PSA1** (Pacific-South American 1) | 20–90°S | EOF 2 | same |
-| **PSA2** (Pacific-South American 2) | 20–90°S | EOF 3 | same |
-| **SOI** (Southern Oscillation Index) | PSL difference: 30°S–0°N, 70–170°E minus 30°S–0°N, 160–80°W | — | **Not implemented** (`compute_npi()` in `cvdp/vis/AtmOcnGR.py` is an NPI analog, not SOI) |
+| **NAM** (Northern Annular Mode) | 20–90°N | EOF 1 | `modes.nam()` |
+| **NAO** (North Atlantic Oscillation) | 20–80°N, 90°W–40°E | EOF 1 | `modes.nao()` |
+| **PNA** (Pacific-North American) | 20–85°N, 120°E–120°W | EOF 1 | `modes.pna()` |
+| **NPO** (North Pacific Oscillation) | 20–85°N, 120°E–120°W | EOF 2 | `modes.npo()` |
+| **SAM** (Southern Annular Mode) | 20–90°S | EOF 1 | `modes.sam()` |
+| **PSA1** (Pacific-South American 1) | 20–90°S | EOF 2 | `modes.psa1()` |
+| **PSA2** (Pacific-South American 2) | 20–90°S | EOF 3 | `modes.psa2()` |
+| **SOI** (Southern Oscillation Index) | Seasonal PSL difference: 30°S–0°N, 70–170°E minus 30°S–0°N, 160–80°W | — | `modes.soi()` |
+
+EOF/PC signs follow CVDP-ncl's per-mode conventions (sign of the pattern at a fixed reference point).
 
 ---
 
@@ -91,15 +90,32 @@ All modes use seasonal/annual PSL averages with √cos(lat) weighting applied be
 
 | Metric | Variable | Description | Python Implementation |
 |--------|----------|-------------|-----------------------|
-| **AMOC** | MOC / msftmz | Maximum of the zonally-integrated, vertically-accumulated Atlantic meridional streamfunction (in Sv) | **Not implemented** |
+| **AMOC** | MOC / msftmz | Leading EOF of the annual Atlantic meridional overturning streamfunction (depth × latitude, area-weighted, south of 33°S excluded): index, pattern, mean, standard deviation, and SST/TAS/ZOS regressions | `ocean_circulation.amoc()` |
 
 ---
 
 ## Regional Timeseries
 
-A set of basin- and region-averaged indices computed from monthly fields of SST, PSL, PR, and TAS. See [NCL methodology page](https://webext.cgd.ucar.edu/Multi-Case/CVDP_repository/cesm2-lens_quadquad_1850-2100/methodology.html) for the full index list.
+Basin- and region-averaged indices computed from monthly fields of SST, PSL, PR, and TAS. See the [NCL methodology page](https://webext.cgd.ucar.edu/Multi-Case/CVDP_repository/cesm2-lens_quadquad_1850-2100/methodology.html) for the full index list.
 
-**Python implementation:** **Not implemented**
+**Python implementation:** `regional_timeseries.regional_timeseries()`, covering Niño 1+2/3/3.4/4, TNA, TSA, TIO, North Pacific, North Atlantic, Darwin, Tahiti.
+
+The remaining CVDP-ncl SST indices are in `enso.sst_indices()`, and the North/South Pacific Meridional Modes in `modes.npmm()` / `modes.spmm()`. The land-only global PR mean is the global timeseries of land-masked precipitation. The North Pacific Index (PSL, 30–65°N, 160–220°E) is available as the `north_pacific` region. Its NDJFM value uses CVDP-ncl's 5-month running mean sampled at January.
+
+---
+
+## Detrending Options
+
+Applied before most calculations, following CVDP-ncl `remove_trend` (see `trends.detrend()`):
+
+| CVDP-ncl option | Python `detrend=` | Description |
+|-----------------|-------------------|-------------|
+| None | `"none"` | No trend removed |
+| LinearTrend | `"linear"` | Linear trend removed separately for each calendar month; mean kept |
+| QuadraticTrend | `"quadratic"` | Quadratic trend removed separately for each calendar month; mean kept |
+| 30yrRunningMean | `"highpass30"` | 30-yr weighted running mean (IPCC AR4 weights) subtracted for each calendar month; ends reflected |
+| rmEM | — | Ensemble mean removed; applied before the metrics are called, since it needs the other ensemble members |
+| rmGMST_EM | — | Ensemble-mean global-mean TAS regressed out; applied before the metrics are called |
 
 ---
 
@@ -109,15 +125,15 @@ A set of basin- and region-averaged indices computed from monthly fields of SST,
 |----------|--------------|-------------|---------------------|
 | Climatological Mean & Std Dev | 6 | 6 | 0 |
 | Trends & Timeseries | 7 | 7 | 0 |
-| ENSO | 8 | 0 | 8 |
-| Pacific Decadal Modes | 3 | 0 | 3 |
-| Atlantic Modes (AMV) | 1 | 0 | 1 |
-| Atmospheric EOF Modes | 8 | partial (infrastructure only) | 8 |
-| Ocean Circulation (AMOC) | 1 | 0 | 1 |
-| Regional Timeseries | 1 | 0 | 1 |
-| **Total** | **35** | **13** | **22** |
+| ENSO | 8 | 8 | 0 |
+| Pacific Decadal Modes | 3 | 3 | 0 |
+| Atlantic Modes (AMV) | 1 | 1 | 0 |
+| Atmospheric Modes | 8 | 8 | 0 |
+| Ocean Circulation (AMOC) | 1 | 1 | 0 |
+| Regional Timeseries | 1 | 1 | 0 |
+| **Total** | **35** | **35** | **0** |
 
-> "Implemented" counts metrics where end-to-end Python code exists. EOF infrastructure (`get_eof`, `compute_eof`) is present but the per-mode domain definitions and output pipeline are not finalized.
+> "Implemented" means computation code exists in `cvdp/metrics/` with unit tests. All modes of variability and ENSO metrics also match real CVDP-ncl output (ERSSTv5, ERA5, GISTEMPv4, GPCP, 1979–2024). Climatology, trends and global means also match CVDP-ncl (trends reported per decade rather than per record length); sea-ice concentration is not yet checked against CVDP-ncl output. Plotting (`cvdp/vis/`) is not yet connected to these functions.
 
 ---
 
