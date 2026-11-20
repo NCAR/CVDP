@@ -9,8 +9,8 @@ from cartopy.util import add_cyclic_point
 import cartopy.crs as ccrs
 import cartopy.feature as cfeature
 
-from vis import get_NCL_colormap
-import cvdp_utils.avg_functions as af
+from cvdp.vis import get_NCL_colormap
+from cvdp.definitions import PATH_COLORMAPS_DIR, PATH_LANDSEA_MASK_NC
 
 # Land mask: for TS -> SST masking
 def land_mask():
@@ -31,13 +31,45 @@ def land_mask():
      - lsmask: xarray.DataArray
         data array of the masked data set
     """
-    ncl_masks = xr.open_mfdataset("landsea.nc", decode_times=True)
-    lsmask = ncl_masks.LSMASK
-    ncl_masks.close()
-    return lsmask, ncl_masks
+    ncl_masks = xr.load_dataset(PATH_LANDSEA_MASK_NC)
+    return ncl_masks.LSMASK, ncl_masks
+
+
+def zeros_array(lat_shape, lon_shape):
+    """(lat, lon) array of zeros with index coordinates."""
+    return xr.DataArray(data=0, dims=('lat', 'lon'),
+                        coords={'lat': range(lat_shape), 'lon': range(lon_shape)})
+
+
+def interp_diff(sim, ref):
+    """``ref`` on the ``sim`` grid, or None if the grids are identical.
+    Grids equal to within floating point get ``sim``'s coordinates; otherwise
+    bilinear regridding (xesmf, imported only when needed)."""
+    same_lon = sim.lon.shape == ref.lon.shape and np.allclose(sim.lon.values, ref.lon.values)
+    same_lat = sim.lat.shape == ref.lat.shape and np.allclose(sim.lat.values, ref.lat.values)
+    if same_lon and same_lat:
+        if np.array_equal(sim.lon.values, ref.lon.values) and np.array_equal(sim.lat.values, ref.lat.values):
+            return None
+        return ref.assign_coords(lat=sim.lat.values, lon=sim.lon.values)
+
+    import xesmf as xe
+    ds_out = xr.Dataset({
+        "lat": (["lat"], sim.lat.values, {"units": "degrees_north"}),
+        "lon": (["lon"], sim.lon.values, {"units": "degrees_east"}),
+    })
+    return xe.Regridder(ref, ds_out, "bilinear", periodic=True)(ref, keep_attrs=True)
+
+
+def compute_diff(sim, ref):
+    """``sim - ref`` on the ``sim`` grid, labelled for plot titles."""
+    interp = interp_diff(sim, ref)
+    diff = sim - (interp if interp is not None else ref)
+    diff.attrs["units"] = sim.attrs.get("units")
+    diff.attrs["run"] = f"{sim.attrs['run']} - {ref.attrs['run']}"
+    return diff
 
 def add_landmask(ax):
-    lsmask, ncl_masks = af.land_mask()
+    lsmask, ncl_masks = land_mask()
     # Mask out land using masking data
     land_data = lsmask.where(lsmask == 1)
 
@@ -102,7 +134,7 @@ class PiecewiseNorm(Normalize):
 
 # NCL rainbow - used for most plots
 #---------------------------------
-amwg = pd.read_csv("/glade/work/richling/CVDP-LE/dev/ncl_default.csv")
+amwg = pd.read_csv(f"{PATH_COLORMAPS_DIR}ncl_default.csv")
 amwg_colors = []
 for i in range(0,254):
     amwg_colors.append((float(amwg["r "][i]),
@@ -117,7 +149,8 @@ amwg_cmap = LinearSegmentedColormap.from_list(
 
 # Blue Green - used for Rank plots
 #---------------------------------
-bg = pd.read_csv("/glade/work/richling/CVDP-LE/dev/BlueGreen14.csv")
+bg = pd.DataFrame(np.loadtxt(f"{PATH_COLORMAPS_DIR}BlueGreen14.rgb", comments=["#", "ncolors"]),
+                  columns=["r", "g", "b"])
 bg_colors = []
 for i in range(1,14):
     bg_colors.append((float(bg["r"][i]/255),

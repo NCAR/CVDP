@@ -1,0 +1,413 @@
+from cvdp.metrics.modes import seasonal_eof_mode
+from cvdp.metrics.trends import monthly_anomalies, detrended_anomalies
+from cvdp.metrics.filters import wgt_runave
+from cvdp.metrics.seasons import CVDP_SEASONS, NDJFM
+from cvdp.tests.test_inputdata import *
+import numpy as np
+import xarray as xr
+import pytest
+
+
+BOX = (20.0, 80.0, 270.0, 40.0)  # NAO-like domain, wraps the prime meridian
+
+
+def _planted(psl, amplitude, lon_range, seed=None, pc=None):
+    """Monthly timeseries (random unless given) times a unit patch at 40–60°N
+    over lon_range."""
+    if pc is None:
+        pc = np.random.default_rng(seed).standard_normal(psl.time.size)
+    pc = xr.DataArray(pc, coords={"time": psl["time"]}, dims="time")
+    lon = psl["lon"]
+    patch = (psl["lat"] >= 40) & (psl["lat"] <= 60) & (lon >= lon_range[0]) & (lon <= lon_range[1])
+    return amplitude * pc * patch, pc
+
+
+def _corr(a, b):
+    return float(xr.corr(a, b, "time"))
+
+
+def test_seasonal_eof_mode_output_names_and_dims(sample_psl):
+    seasons = CVDP_SEASONS.subset(["DJF", "JJA"]) + NDJFM
+    patterns, pcs = seasonal_eof_mode(sample_psl, "nao", BOX, 1, seasons=seasons, detrend="none")
+    assert set(patterns.data_vars) == {f"nao_pattern_{s}" for s in seasons.names}
+    assert set(pcs.data_vars) == {f"nao_pc_{s}" for s in seasons.names}
+    # Patterns are global (regressed outside the EOF domain too).
+    assert patterns["nao_pattern_JJA"].shape == sample_psl.isel(time=0).shape
+    assert pcs["nao_pc_JJA"].dims == ("time",)
+    # Seasonal means follow CVDP-ncl (Season.ncl_annual): one value per
+    # calendar year, no trailing partial DJF year.
+    assert pcs["nao_pc_JJA"].count() == 10
+    assert pcs["nao_pc_DJF"].count() == 10
+    assert pcs["nao_pc_NDJFM"].count() == 10
+
+
+def test_seasonal_eof_mode_recovers_planted_mode(sample_psl):
+    signal, pc = _planted(sample_psl, 5.0, (300, 340), seed=1)
+    psl = signal + 0.1 * sample_psl
+    jja = CVDP_SEASONS["JJA"]
+    patterns, pcs = seasonal_eof_mode(psl, "nao", BOX, 1, seasons=CVDP_SEASONS.subset(["JJA"]), detrend="none")
+    expected = jja.ncl_annual(monthly_anomalies(pc))
+    assert abs(_corr(pcs["nao_pc_JJA"], expected)) > 0.99
+    pattern = abs(patterns["nao_pattern_JJA"])
+    inside = pattern.sel(lat=slice(40, 60), lon=slice(300, 340))
+    assert float(inside.min()) > 10 * float(pattern.sel(lat=slice(-60, -40)).max())
+
+
+def test_seasonal_eof_mode_selects_eof_number(sample_psl):
+    # With only 10 annual samples, random series are correlated by chance and
+    # EOFs are orthogonal, so plant series that are orthogonal after annual
+    # averaging: each year's anomaly is a constant, and the two yearly
+    # sequences are orthogonal, zero-mean contrasts.
+    a = np.repeat([1, -1] * 5, 12).astype(float)
+    b = np.repeat([1, 1, -1, -1] * 2 + [0, 0], 12).astype(float)
+    strong, _ = _planted(sample_psl, 5.0, (300, 340), pc=a)
+    weak, pc_weak = _planted(sample_psl, 2.0, (0, 30), pc=b)
+    psl = strong + weak + 0.1 * sample_psl
+    ann = CVDP_SEASONS["ANN"]
+    _, pcs = seasonal_eof_mode(psl, "npo", BOX, 2, seasons=CVDP_SEASONS.subset(["ANN"]), detrend="none")
+    assert abs(_corr(pcs["npo_pc_ANN"], ann.ncl_annual(monthly_anomalies(pc_weak)))) > 0.99
+
+
+def test_seasonal_eof_mode_highpass30_keeps_every_year():
+    psl = create_sample_dataarray("psl", n_years=40)
+    patterns, pcs = seasonal_eof_mode(psl, "nao", BOX, 1, seasons=CVDP_SEASONS.subset(["ANN"]), detrend="highpass30")
+    pc = pcs["nao_pc_ANN"]
+    assert pc.count() == 40
+    assert np.isclose(float(pc.std(ddof=1)), 1.0)
+    assert patterns["nao_pattern_ANN"].notnull().all()
+
+
+def test_seasonal_eof_mode_detrends(sample_psl):
+    # A huge linear trend confined to the domain would dominate EOF1 unless removed.
+    signal, pc = _planted(sample_psl, 5.0, (300, 340), seed=1)
+    years = sample_psl["time"].dt.year + (sample_psl["time"].dt.month - 1) / 12
+    trend = 100.0 * (years - years.mean()) * ((sample_psl["lat"] >= 60) & (sample_psl["lon"] <= 20))
+    psl = signal + trend + 0.1 * sample_psl
+    _, pcs = seasonal_eof_mode(psl, "nao", BOX, 1, seasons=CVDP_SEASONS.subset(["ANN"]), detrend="linear")
+    expected = CVDP_SEASONS["ANN"].ncl_annual(monthly_anomalies(pc))
+    assert abs(_corr(pcs["nao_pc_ANN"], expected)) > 0.95
+
+
+# --- section 1 wrappers ----------------------------------------------------
+
+from cvdp.metrics.modes import nam, nao, pna, npo, sam, psa1, psa2, soi, ipv_henley, amv, pdo, ipv_eof, npmm, spmm
+from cvdp.metrics.eof import regress
+from cvdp.metrics.filters import smth9
+
+
+PSL_EOF_MODES = [  # NCL domain, EOF number and sign reference point (pattern < 0 there)
+    (nam, "nam", (20, 90, 0, 360), 1, (85, 5)),
+    (nao, "nao", (20, 80, 270, 40), 1, (70, 350)),
+    (pna, "pna", (20, 85, 120, 240), 1, (50, 185)),
+    (npo, "npo", (20, 85, 120, 240), 2, (65, 185)),
+    (sam, "sam", (-90, -20, 0, 360), 1, (-85, 5)),
+    (psa1, "psa1", (-90, -20, 0, 360), 2, (-62, 210)),
+    (psa2, "psa2", (-90, -20, 0, 360), 3, (-60, 280)),
+]
+
+
+@pytest.mark.parametrize("func, name, bounds, eof_number, sign_point", PSL_EOF_MODES)
+def test_eof_mode_wrappers_use_ncl_domain_and_eof(sample_psl, func, name, bounds, eof_number, sign_point):
+    seasons = CVDP_SEASONS.subset(["ANN", "DJF"])
+    got = func(sample_psl, seasons=seasons, detrend="none")
+    expected = seasonal_eof_mode(sample_psl, name, bounds, eof_number, seasons, "none", sign_point)
+    for g, e in zip(got, expected):
+        xr.testing.assert_allclose(g, e)
+
+
+@pytest.mark.parametrize("func, name, bounds, eof_number, sign_point", PSL_EOF_MODES)
+def test_eof_mode_sign_follows_ncl(sample_psl, func, name, bounds, eof_number, sign_point):
+    # Negating the input must not change the pattern, only the PC.
+    seasons = CVDP_SEASONS.subset(["ANN", "DJF"])
+    patterns, pcs = func(sample_psl, seasons=seasons, detrend="none")
+    neg_patterns, neg_pcs = func(-sample_psl, seasons=seasons, detrend="none")
+    lat, lon = sign_point
+    for s in seasons.names:
+        assert float(patterns[f"{name}_pattern_{s}"].sel(lat=lat, lon=lon, method="nearest")) <= 0
+    xr.testing.assert_allclose(neg_patterns, patterns)
+    xr.testing.assert_allclose(neg_pcs, -pcs)
+
+
+def test_seasonal_eof_mode_missing_sign_point_leaves_sign(sample_psl):
+    # As NCL: a missing value at the reference point skips the flip.
+    psl = sample_psl.where(~((sample_psl["lat"] == sample_psl["lat"].sel(lat=85, method="nearest"))
+                             & (sample_psl["lon"] == sample_psl["lon"].sel(lon=5, method="nearest"))))
+    seasons = CVDP_SEASONS.subset(["ANN"])
+    for sign in (1, -1):
+        got = seasonal_eof_mode(sign * psl, "nam", (20, 90, 0, 360), 1, seasons, "none", (85, 5))
+        expected = seasonal_eof_mode(sign * psl, "nam", (20, 90, 0, 360), 1, seasons, "none")
+        for g, e in zip(got, expected):
+            xr.testing.assert_allclose(g, e)
+
+
+def test_eof_mode_default_seasons(sample_psl):
+    assert "nam_pc_NDJFM" in nam(sample_psl)[1]
+    assert "sam_pc_NDJFM" not in sam(sample_psl)[1]
+
+
+
+# --- monthly PSL modes (CVDP-ncl MONTHLY_MODES) ----------------------------
+
+from cvdp.metrics.modes import monthly_psl_mode, PSL_EOF_MODES as MODE_TABLE
+
+
+def test_mode_table_matches_wrappers():
+    # One source of truth for domain, EOF number and sign point (D29).
+    assert {n: (b, e, p) for _, n, b, e, p in PSL_EOF_MODES} == MODE_TABLE
+
+
+@pytest.mark.parametrize("name", list(MODE_TABLE))
+def test_monthly_psl_mode_is_seasonal_recipe_on_monthly_anomalies(sample_psl, name):
+    # calculate_eofs_mon: no seasonal averaging; same domain, EOF and sign point
+    # (nam.ncl:137-150 etc.). Pattern = monthly anomalies regressed onto the PC.
+    bounds, number, (lat, lon) = MODE_TABLE[name]
+    pattern, index = monthly_psl_mode(sample_psl, name, detrend="none")
+    anom = monthly_anomalies(sample_psl)
+    assert index.name == f"{name}_mon" and pattern.name == f"{name}_pattern_mon"
+    assert index.sizes["time"] == sample_psl.sizes["time"]
+    assert np.isclose(float(index.std(ddof=1)), 1.0)
+    xr.testing.assert_allclose(pattern, regress(anom, index).rename(pattern.name))
+    assert float(pattern.sel(lat=lat, lon=lon, method="nearest")) <= 0
+    neg_pattern, neg_index = monthly_psl_mode(-sample_psl, name, detrend="none")
+    xr.testing.assert_allclose(neg_pattern, pattern)
+    xr.testing.assert_allclose(neg_index, -index)
+
+
+def test_monthly_psl_mode_recovers_planted_monthly_signal(sample_psl):
+    signal, pc = _planted(sample_psl, 5.0, (300, 340), seed=1)
+    _, index = monthly_psl_mode(signal + 0.1 * sample_psl, "nao", detrend="none")
+    assert abs(_corr(index, monthly_anomalies(pc))) > 0.99
+
+
+def test_monthly_soi_is_box_difference(sample_psl):
+    # soi.ncl:131-143: monthly west - east box means, not standardised.
+    pattern, index = monthly_psl_mode(sample_psl, "soi", detrend="none")
+    anom = monthly_anomalies(sample_psl)
+    expected = box_mean(anom, (-30, 0, 70, 170)) - box_mean(anom, (-30, 0, 200, 280))
+    assert np.allclose(index, expected)
+    assert index.name == "soi_mon"
+    xr.testing.assert_allclose(pattern, regress(anom, index).rename("soi_pattern_mon"))
+
+
+# --- section 2: box-index modes --------------------------------------------
+
+def _box(da, bounds):
+    """Unit patch over a box, inclusive; lon bounds taken mod 360 (so an east
+    bound of 360 includes 0°E, as NCL's lonFlip + {-80:0} does for AMV)."""
+    lat_s, lat_n, lon_w, lon_e = bounds
+    lon_w, lon_e = lon_w % 360, lon_e % 360
+    lat_ok = (da["lat"] >= lat_s) & (da["lat"] <= lat_n)
+    lon_ok = ((da["lon"] >= lon_w) & (da["lon"] <= lon_e)) if lon_w <= lon_e else ((da["lon"] >= lon_w) | (da["lon"] <= lon_e))
+    return (lat_ok & lon_ok).astype(float)
+
+
+def _series(da, seed):
+    return xr.DataArray(np.random.default_rng(seed).standard_normal(da.time.size),
+                        coords={"time": da["time"]}, dims="time")
+
+
+def test_soi_is_seasonal_west_minus_east_box(sample_psl):
+    s = _series(sample_psl, 1)
+    psl = s * (_box(sample_psl, (-30, 0, 70, 170)) - _box(sample_psl, (-30, 0, 200, 280)))
+    seasons = CVDP_SEASONS.subset(["DJF", "ANN"])
+    patterns, timeseries = soi(psl, seasons=seasons, detrend="none")
+    for season in seasons:
+        expected = 2 * season.ncl_annual(monthly_anomalies(s))  # west - east = s - (-s)
+        assert np.allclose(timeseries[f"soi_index_{season.name}"], expected)
+        pattern = patterns[f"soi_pattern_{season.name}"]
+        assert np.allclose(pattern.sel(lat=-16, lon=120), 0.5)  # hPa per hPa
+        assert np.allclose(pattern.sel(lat=-16, lon=240), -0.5)
+        assert np.allclose(pattern.sel(lat=40), 0.0)
+
+
+def test_ipv_henley_is_tripole_index(sample_ts, sample_pr):
+    s = _series(sample_ts, 1)
+    ts = s * (_box(sample_ts, (-10, 10, 170, 270)) - _box(sample_ts, (25, 45, 140, 215))
+              - _box(sample_ts, (-50, -15, 150, 200)))
+    index, maps = ipv_henley(ts, pr=sample_pr, detrend="none")
+    # centre - (north + south)/2 = s - (-s - s)/2
+    assert np.allclose(index, 2 * monthly_anomalies(s))
+    assert index.name == "ipv_henley"
+    assert set(maps) == {"ts_regr", "pr_regr"}
+    assert np.allclose(maps["ts_regr"].sel(lat=0, lon=200), 0.5)
+
+
+def test_amv_index_low_pass_and_maps():
+    ts0 = create_sample_dataarray("ts", n_years=20)
+    s = _series(ts0, 1)
+    ts = s * _box(ts0, (0, 60, 280, 360))
+    spike = xr.zeros_like(ts0.isel(time=0)).where(~((ts0["lat"] == 0) & (ts0["lon"] == 100)), 1.0)
+    pr = s * spike
+    index, maps = amv(ts, pr=pr, detrend="none")
+    assert np.allclose(index, monthly_anomalies(s))
+    assert index.name == "amv"
+    # low_pass: NCL runave(index, 121, 0): centred mean, 60 missing steps at each end
+    expected_lp = index.rolling(time=121, center=True).mean()
+    assert np.allclose(index["low_pass"], expected_lp, equal_nan=True)
+    assert int(index["low_pass"].isnull().sum()) == 120
+    assert set(maps) == {"ts_regr", "ts_regr_lp", "pr_regr", "pr_regr_lp"}
+    # ts map smoothed with exactly 3 smth9 passes: interior of the box stays 1, its edge is blurred
+    raw = regress(monthly_anomalies(ts), index)
+    xr.testing.assert_allclose(maps["ts_regr"], smth9(smth9(smth9(raw))).drop_vars("low_pass", errors="ignore"))
+    assert np.isclose(maps["ts_regr"].sel(lat=32, lon=320), 1.0)
+    assert maps["ts_regr"].sel(lat=60, lon=320) < 0.99
+    assert np.isclose(maps["ts_regr_lp"].sel(lat=60, lon=320), 1.0)
+    # other fields are not smoothed
+    assert np.isclose(maps["pr_regr"].sel(lat=0, lon=100), 1.0)
+    assert np.isclose(maps["pr_regr"].sel(lat=4, lon=100), 0.0)
+
+
+# --- section 3: SST EOF modes ----------------------------------------------
+
+def test_pdo_recovers_planted_mode(sample_ts, sample_tas):
+    s = _series(sample_ts, 1)
+    ts = 5 * s * _box(sample_ts, (40, 60, 160, 240)) + 0.01 * sample_ts
+    index, maps = pdo(ts, tas=sample_tas, detrend="none")
+    assert index.name == "pdo"
+    assert abs(float(xr.corr(index, monthly_anomalies(s)))) > 0.99
+    assert np.isclose(float(index.std(ddof=1)), 1.0)
+    assert 0 < index.attrs["variance_fraction"] <= 1
+    assert set(maps) == {"ts_regr", "tas_regr"}
+    inside = abs(float(maps["ts_regr"].sel(lat=48, lon=200)))
+    assert inside > 10 * float(abs(maps["ts_regr"].sel(lat=-48)).max())
+
+
+def test_pdo_sign_follows_ncl(sample_ts, sample_tas):
+    # NCL pdv.ncl: pattern forced positive at (57N, 220E); all maps share the PC.
+    index, maps = pdo(sample_ts, tas=sample_tas, detrend="none")
+    neg_index, neg_maps = pdo(-sample_ts, tas=sample_tas, detrend="none")
+    assert float(maps["ts_regr"].sel(lat=57, lon=220, method="nearest")) >= 0
+    xr.testing.assert_allclose(neg_maps["ts_regr"], maps["ts_regr"])
+    xr.testing.assert_allclose(neg_index, -index)
+    xr.testing.assert_allclose(neg_maps["tas_regr"], -maps["tas_regr"])
+
+
+def test_ipv_eof_sign_follows_ncl():
+    # NCL ipv.ncl: pattern forced negative at (40N, 165E).
+    ts = create_sample_dataarray("ts", n_years=40)
+    index, maps = ipv_eof(ts, detrend="none")
+    neg_index, neg_maps = ipv_eof(-ts, detrend="none")
+    assert float(maps["ts_regr"].sel(lat=40, lon=165, method="nearest")) <= 0
+    xr.testing.assert_allclose(neg_maps["ts_regr"], maps["ts_regr"])
+    xr.testing.assert_allclose(neg_index, -index)
+
+
+def test_ipv_eof_requires_min_years(sample_ts):
+    with pytest.raises(ValueError):
+        ipv_eof(sample_ts)
+
+
+def test_ipv_eof_tracks_low_frequency_signal():
+    ts0 = create_sample_dataarray("ts", n_years=45)
+    months = np.arange(ts0.time.size)
+    slow = xr.DataArray(np.sin(2 * np.pi * months / 240), coords={"time": ts0["time"]}, dims="time")
+    fast = xr.DataArray(np.sin(2 * np.pi * months / 24), coords={"time": ts0["time"]}, dims="time")
+    patch = _box(ts0, (-10, 10, 180, 260))
+    ts = (slow + 3 * fast) * patch + 0.01 * ts0
+    index, maps = ipv_eof(ts, pr=ts0, detrend="none")
+    assert index.name == "ipv"
+    assert index.time.size == ts0.time.size  # reflected filter ends: no loss
+    # Away from the ends (108 months = half the 217-point filter, which uses
+    # reflected data there) the index follows the slow signal, not the noise.
+    interior = slice(108, -108)
+    assert abs(float(xr.corr(index.isel(time=interior), slow.isel(time=interior)))) > 0.99
+    assert set(maps) == {"ts_regr", "pr_regr"}
+
+
+def _meridional_mode_field(mode_box, seed):
+    """Strong ENSO patch plus a weaker independent patch in ``mode_box``."""
+    ts0 = create_sample_dataarray("ts", n_years=20)
+    enso, mode = _series(ts0, seed), _series(ts0, seed + 1)
+    ts = 5 * enso * _box(ts0, (-10, 10, 230, 280)) + 3 * mode * _box(ts0, mode_box) + 0.01 * ts0
+    return ts.rename("ts"), monthly_anomalies(mode)
+
+
+@pytest.mark.parametrize("func, name, mode_box, sign_point", [
+    (npmm, "npmm", (18, 30, 200, 250), (22, 240)),     # sst.indices.ncl:376-386
+    (spmm, "spmm", (-34, -22, 220, 285), (-25, 280)),  # sst.indices.ncl:393-400
+])
+def test_meridional_modes_remove_enso_then_eof(func, name, mode_box, sign_point):
+    # ENSO (PC1 over (-20, 20, 220, 290)) dominates the domain; once regressed
+    # out, EOF1 of the residual is the planted mode. Pattern positive at the
+    # NCL reference point; negating the input only negates the index.
+    ts, mode = _meridional_mode_field(mode_box, seed=3)
+    index, maps = func(ts, detrend="none")
+    assert index.name == name
+    assert abs(float(xr.corr(index, mode))) > 0.95
+    assert np.isclose(float(index.std(ddof=1)), 1.0)
+    assert set(maps) == {"ts_regr"}
+    lat, lon = sign_point
+    assert float(maps["ts_regr"].sel(lat=lat, lon=lon, method="nearest")) >= 0
+    neg_index, neg_maps = func(-ts, detrend="none")
+    xr.testing.assert_allclose(neg_index, -index)
+    xr.testing.assert_allclose(neg_maps["ts_regr"], maps["ts_regr"])
+
+
+@pytest.mark.parametrize("func", [pdo, ipv_eof, ipv_henley, amv])
+def test_sst_modes_regress_zos(func):
+    # NCL pdv.ncl:286, ipv.ncl:341/343, amv.ncl:296-297: detrended zos
+    # anomalies regressed onto the index, unmasked; AMV adds the low-pass map.
+    ts = create_sample_dataarray("ts", n_years=40)
+    zos = create_sample_dataarray("zos", n_years=40)
+    index, maps = func(ts, zos=zos, detrend="linear")
+    anom = detrended_anomalies(zos, "linear")
+    assert np.allclose(maps["zos_regr"], regress(anom, index), equal_nan=True)
+    if func is amv:
+        expected_lp = regress(wgt_runave(anom, [1.0] * 121), index["low_pass"])
+        assert np.allclose(maps["zos_regr_lp"], expected_lp, equal_nan=True)
+    else:
+        assert "zos_regr_lp" not in maps
+
+
+
+@pytest.mark.parametrize("func", [pdo, ipv_eof, ipv_henley, amv, npmm, spmm])
+def test_sst_mode_maps_keep_native_grids(func):
+    # As NCL (one grid per variable): maps are a dict, not merged onto a union grid.
+    ts = create_sample_dataarray("ts", n_years=40)
+    pr = create_sample_dataarray("pr", n_years=40)
+    pr = pr.assign_coords(lat=pr["lat"] + 1, lon=pr["lon"] + 1)  # offset grid
+    kwargs = {} if func in (npmm, spmm) else {"pr": pr}
+    _, maps = func(ts, detrend="none", **kwargs)
+    assert isinstance(maps, dict)
+    assert maps["ts_regr"].shape == ts.isel(time=0).shape
+    if kwargs:
+        assert maps["pr_regr"].shape == pr.isel(time=0).shape
+        assert maps["pr_regr"].notnull().all()
+
+
+# --- domains pinned to CVDP-ncl (random field, so every gridpoint counts) --
+
+from cvdp.metrics.eof import eof
+from cvdp.metrics.regional_timeseries import box_mean, box_select
+
+
+def test_box_index_modes_use_ncl_boxes(sample_ts, sample_psl):
+    ts_anom, psl_anom = monthly_anomalies(sample_ts), monthly_anomalies(sample_psl)
+    henley, _ = ipv_henley(sample_ts, detrend="none")
+    expected = box_mean(ts_anom, (-10, 10, 170, 270)) - (
+        box_mean(ts_anom, (25, 45, 140, 215)) + box_mean(ts_anom, (-50, -15, 150, 200))) / 2
+    assert np.allclose(henley, expected)
+    ts20 = create_sample_dataarray("ts", n_years=20)  # AMV low-pass needs > 121 months
+    amv_index, _ = amv(ts20, detrend="none")
+    assert np.allclose(amv_index, box_mean(monthly_anomalies(ts20), (0, 60, 280, 360)))
+    _, soi_ts = soi(sample_psl, seasons=CVDP_SEASONS.subset(["ANN"]), detrend="none")
+    ann = CVDP_SEASONS["ANN"].ncl_annual(psl_anom)
+    assert np.allclose(soi_ts["soi_index_ANN"], box_mean(ann, (-30, 0, 70, 170)) - box_mean(ann, (-30, 0, 200, 280)))
+
+
+def test_sst_eof_modes_use_ncl_domains():
+    ts = create_sample_dataarray("ts", n_years=40)
+    anom = monthly_anomalies(ts)
+    def pc1(field, bounds):
+        pc = eof(box_select(field, bounds)).sel(mode=1)
+        return pc / pc.std(ddof=1)
+
+    def same_up_to_sign(a, b):
+        return np.allclose(a, b) or np.allclose(a, -b)
+
+    pdo_index, _ = pdo(ts, detrend="none")
+    assert same_up_to_sign(pdo_index, pc1(anom, (20, 70, 110, 260)))
+    from cvdp.metrics.filters import wgt_runave, lanczos_weights
+    filtered = wgt_runave(anom, lanczos_weights(217, 1 / 157), kopt=1)
+    ipv_index, _ = ipv_eof(ts, detrend="none")
+    assert same_up_to_sign(ipv_index, pc1(filtered, (-40, 60, 110, 290)))

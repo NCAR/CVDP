@@ -10,20 +10,43 @@ Parses user input from command line and passes arguments to automation in cvdp.p
 #import cvdp
 
 import argparse
+import sys
 from importlib.metadata import version as getVersion
-#from diag.AtmOcnMean import *
-from diag.AtmOcnMean import get_run_dict
-#from vis.AtmOcnGR import *
-from vis.AtmOcnGR import graphics
-import cvdp_utils.web as web
-from definitions import PARENT_DIR, PATH_VARIABLE_DEFAULTS
 
 #from cvdp.diag.AtmOcnMean import *
 #from cvdp.vis.AtmOcnGR import *
 #from cvdp.definitions import * #PARENT_DIR,PATH_VARIABLE_DEFAULTS
 #from vis import *
 
-def main():
+def run(argv=None):
+    """``cvdp run CONFIG OUT_DIR``: metrics to ``OUT_DIR/netcdf/``, plots and web pages to ``OUT_DIR``."""
+    import xarray as xr
+
+    from cvdp.compute import compute
+    from cvdp.config import load_config
+    from cvdp.products import products
+    from cvdp.vis.driver import plot, write_webpages
+
+    parser = argparse.ArgumentParser(prog="cvdp run", description="Compute CVDP metrics and plot them.")
+    parser.add_argument("config", help="run configuration YAML (see cvdp/config.py)")
+    parser.add_argument("out_dir", help="output directory")
+    args = parser.parse_args(argv)
+    paths = compute(load_config(args.config), f"{args.out_dir}/netcdf")
+    plot(products([xr.open_dataset(p) for p in paths]), args.out_dir)
+    write_webpages(args.out_dir)
+
+
+def main(argv=None):
+    argv = sys.argv[1:] if argv is None else argv
+    if argv[:1] == ["run"]:
+        return run(argv[1:])
+
+    # Legacy workflow (retired in Phase 6); bare imports need cvdp/ on sys.path.
+    from diag.AtmOcnMean import get_run_dict
+    from vis.AtmOcnGR import graphics
+    import cvdp_utils.web as web
+    from definitions import PARENT_DIR, PATH_VARIABLE_DEFAULTS
+
     #parser = argparse.ArgumentParser(description = f"Command Line Interface (CLI) for Climate Variability and Diagnostics Package (CVDP) Version {getVersion('cvdp')}")
     parser = argparse.ArgumentParser(description = f"Command Line Interface (CLI) for Climate Variability and Diagnostics Package (CVDP) Version 0.0.1")
     parser.add_argument("output_dir", nargs = 1, metavar = "output_dir", type = str, help = "Path to output directory.")
@@ -31,7 +54,7 @@ def main():
     #parser.add_argument("sim_yml", nargs = 1, metavar = "sim_yml", type = str, help = "Path to simulation dataset YML file.")
     parser.add_argument("-c", nargs = 1, metavar = "--config", type = str, help = "Optional path to YML file to override default variable configurations.")
 
-    args = parser.parse_args()
+    args = parser.parse_args(argv)
     var_configs = args.c
     print(args)
     from pathlib import Path
